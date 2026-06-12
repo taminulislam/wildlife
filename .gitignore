@@ -17,6 +17,9 @@ _docx_media/
 *.jpeg
 # but DO allow small docs/diagram images if ever needed:
 !docs/**/*.png
+# Team-facing deliverables ARE tracked (small demo media), despite the rules above:
+!results/
+!results/**
 
 # Annotations export dumps can be large; keep curated ones explicitly
 data/annotations_raw/
