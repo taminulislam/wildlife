@@ -1,0 +1,12 @@
+# Dataset-creation pipeline (CPU-only is fine for everything here)
+numpy>=1.24
+opencv-python>=4.8
+python-docx>=1.1        # reading the project overview doc
+
+# Detector training / inference (run on a GPU machine; CPU works but slow)
+# Install separately there, or uncomment if training locally:
+# ultralytics>=8.3       # YOLO + ByteTrack/BoT-SORT trackers
+# torch>=2.2             # match the CUDA build to the GPU box
+
+# Annotation is done in CVAT (self-hosted via Docker) — not a pip dependency.
+# See docs/WORKFLOW.md for the CVAT setup.

@@ -44,4 +44,14 @@ separate GPU machine. Python + OpenCV + ultralytics (YOLO) + CVAT for annotation
 
 ## Status
 
-Bootstrapping: building the event-mining script to triage raw footage before annotation.
+Dataset-creation pipeline is built and tested on the example video (CPU-only). See
+[`docs/WORKFLOW.md`](docs/WORKFLOW.md) for the end-to-end runbook and
+[`docs/ANNOTATION_GUIDELINES.md`](docs/ANNOTATION_GUIDELINES.md) for the label rules.
+
+Ready to run on the full archive as soon as videos land in `data/raw/`:
+
+1. `src/mining/batch_mine.py` — mine warm-body events across all videos → master index
+2. `src/dataset/select_for_annotation.py` — balanced annotation batch across sites
+3. `src/dataset/extract_clips.py` / `extract_frames.py` — clips/frames for CVAT
+4. Annotate in CVAT → `src/dataset/build_yolo_dataset.py` — site-split YOLO dataset
+5. Train on GPU machine; tracking + counting pipeline (`src/track/`) comes next.
