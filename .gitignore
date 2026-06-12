@@ -21,6 +21,9 @@ _docx_media/
 # Annotations export dumps can be large; keep curated ones explicitly
 data/annotations_raw/
 
+# Generated review contact sheets reference local (git-ignored) thumbnails
+data/events/review/
+
 # ── Model artifacts ──
 *.pt
 *.onnx
