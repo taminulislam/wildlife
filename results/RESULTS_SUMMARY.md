@@ -39,9 +39,14 @@ false alarms (hot rocks, tree trunks, vehicles). Confirmed results:
 
 ## What the prototype demonstrates (the deliverables)
 
-- **`deer_detections.mp4`** — a montage of every confirmed deer with its detection box and
-  a running count. This is exactly the *form* of the final output: video in → boxed deer
-  out → a count.
+- **`smooth_demo_SHB__RedFoxLn_v1_LS.mp4`** — a continuous detection demo on a real
+  transect (the most deer-active video). It plays through naturally — mostly empty forest —
+  and each time a deer appears, a box pops up and the live counter increments. This is the
+  clearest picture of the final output: *video in → boxes + running count out.* (Condensed
+  to the moments around each deer so it's ~90s instead of 24 minutes; the on-screen clock
+  shows the real timestamps.)
+- **`deer_detections.mp4`** — a montage of every confirmed deer (all 72) with its detection
+  box and a cumulative count, for a quick overview of all detections.
 - **`deer_grid.png`** — all 72 verified deer on one sheet (overview of the detections).
 - **`per_site_counts.csv`** — the per-site counts above, machine-readable.
 
