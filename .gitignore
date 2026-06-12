@@ -1,0 +1,52 @@
+# ── Large raw data: NEVER commit (videos are ~25 GB total) ──
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.seq
+*.ts
+
+# Extracted frames and clips (regenerable, large)
+data/raw/
+data/frames/
+data/clips/
+_sample_frames/
+_docx_media/
+*.png
+*.jpg
+*.jpeg
+# but DO allow small docs/diagram images if ever needed:
+!docs/**/*.png
+
+# Annotations export dumps can be large; keep curated ones explicitly
+data/annotations_raw/
+
+# ── Model artifacts ──
+*.pt
+*.onnx
+*.engine
+runs/
+weights/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+*.egg-info/
+.pytest_cache/
+
+# ── OS / editor ──
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ── Secrets ──
+*.pem
+*.key
+deploy_key*
+id_*
+.env
