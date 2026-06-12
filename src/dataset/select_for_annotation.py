@@ -57,10 +57,11 @@ def select(rows: list[dict], *, total: int, per_video: int,
             if float(r.get("duration_s", 0) or 0) >= min_duration
             and float(r.get("peak_score", 0) or 0) >= min_score]
 
-    # site -> video -> [events], each video's events ordered for variety.
+    # site -> video(key) -> [events], each video's events ordered for variety.
+    # Group by 'key' not 'video': same transect filename can recur across visits.
     by_site: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
     for r in rows:
-        by_site[r["site"]][r["video"]].append(r)
+        by_site[r["site"]][r["key"]].append(r)
     for site in by_site:
         for vid in by_site[site]:
             by_site[site][vid] = _spread_order(by_site[site][vid])
@@ -95,7 +96,7 @@ def select(rows: list[dict], *, total: int, per_video: int,
 
 def write_batch(rows: list[dict], out_path: str) -> None:
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    cols = ["video", "site", "visit_key", "date", "side", "event_id",
+    cols = ["video", "key", "site", "transect", "visit", "date", "side", "event_id",
             "start_frame", "end_frame", "start_s", "end_s", "duration_s",
             "n_hits", "peak_frame", "peak_score"]
     with open(out_path, "w", newline="") as f:

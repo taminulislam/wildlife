@@ -277,8 +277,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     a = parse_args()
-    stem = os.path.splitext(os.path.basename(a.video))[0]
-    out_dir = a.out or os.path.join("data", "events", stem)
+    from filename_meta import parse_path
+    out_dir = a.out or os.path.join("data", "events", parse_path(a.video).key)
     mine(
         a.video, out_dir,
         sample_every=a.sample_every, gap_seconds=a.gap_seconds,

@@ -30,9 +30,13 @@ import os
 
 import cv2
 
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mining"))
+from filename_meta import iter_videos, parse_path  # noqa: E402
 
-def _events_csv_for(events_root: str, stem: str) -> str:
-    return os.path.join(events_root, stem, "events.csv")
+
+def _events_csv_for(events_root: str, key: str) -> str:
+    return os.path.join(events_root, key, "events.csv")
 
 
 def read_events(events_csv: str) -> list[dict]:
@@ -52,8 +56,8 @@ def extract_for_video(
     min_duration: float = 0.0,
     manifest_writer: "csv.writer | None" = None,
 ) -> int:
-    stem = os.path.splitext(os.path.basename(video_path))[0]
-    events = read_events(_events_csv_for(events_root, stem))
+    key = parse_path(video_path).key
+    events = read_events(_events_csv_for(events_root, key))
     if not events:
         return 0
 
@@ -66,7 +70,7 @@ def extract_for_video(
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    out_dir = os.path.join(clips_root, stem)
+    out_dir = os.path.join(clips_root, key)
     os.makedirs(out_dir, exist_ok=True)
     # Sampling stride to hit roughly out_fps from src_fps.
     stride = max(1, round(src_fps / out_fps))
@@ -97,7 +101,7 @@ def extract_for_video(
                 writer.write(frame)
                 if manifest_writer is not None:
                     manifest_writer.writerow([
-                        stem, eid, os.path.relpath(clip_path).replace("\\", "/"),
+                        key, eid, os.path.relpath(clip_path).replace("\\", "/"),
                         clip_idx, src_idx, round(src_idx / src_fps, 3),
                     ])
                 clip_idx += 1
@@ -106,19 +110,17 @@ def extract_for_video(
         n_written += 1
 
     cap.release()
-    print(f"  {stem}: wrote {n_written} clips -> {out_dir}")
+    print(f"  {key}: wrote {n_written} clips -> {out_dir}")
     return n_written
 
 
 def discover_mined_videos(raw_dir: str, events_root: str) -> list[str]:
-    """Find raw videos that have a matching events.csv."""
+    """Find raw videos that have a matching events.csv (by VideoMeta.key)."""
     out: list[str] = []
-    for ext in (".mp4", ".avi", ".mov", ".mkv", ".ts"):
-        for v in glob.glob(os.path.join(raw_dir, "**", f"*{ext}"), recursive=True):
-            stem = os.path.splitext(os.path.basename(v))[0]
-            if os.path.isfile(_events_csv_for(events_root, stem)):
-                out.append(v)
-    return sorted(set(out))
+    for v, meta in iter_videos(raw_dir):
+        if os.path.isfile(_events_csv_for(events_root, meta.key)):
+            out.append(v)
+    return out
 
 
 def parse_args() -> argparse.Namespace:

@@ -29,9 +29,13 @@ import os
 
 import cv2
 
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mining"))
+from filename_meta import iter_videos, parse_path  # noqa: E402
 
-def _events_csv_for(events_root: str, stem: str) -> str:
-    return os.path.join(events_root, stem, "events.csv")
+
+def _events_csv_for(events_root: str, key: str) -> str:
+    return os.path.join(events_root, key, "events.csv")
 
 
 def read_event_spans(events_csv: str) -> list[tuple[int, int]]:
@@ -61,8 +65,8 @@ def extract_for_video(
     neg_pad_s: float = 2.0,
     manifest_writer: "csv.writer | None" = None,
 ) -> tuple[int, int]:
-    stem = os.path.splitext(os.path.basename(video_path))[0]
-    spans = read_event_spans(_events_csv_for(events_root, stem))
+    key = parse_path(video_path).key
+    spans = read_event_spans(_events_csv_for(events_root, key))
 
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -71,7 +75,7 @@ def extract_for_video(
     src_fps = cap.get(cv2.CAP_PROP_FPS) or 60.0
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    out_dir = os.path.join(frames_root, stem)
+    out_dir = os.path.join(frames_root, key)
     os.makedirs(out_dir, exist_ok=True)
     pos_stride = max(1, round(src_fps / pos_fps))
     neg_pad = int(neg_pad_s * src_fps)
@@ -103,28 +107,26 @@ def extract_for_video(
         if not ok:
             continue
         kind = wanted[idx]
-        fname = f"{stem}_f{idx}.png"
+        fname = f"{key}_f{idx}.png"
         cv2.imwrite(os.path.join(out_dir, fname), frame)
         if manifest_writer is not None:
-            manifest_writer.writerow([stem, fname, idx, round(idx / src_fps, 3), kind])
+            manifest_writer.writerow([key, fname, idx, round(idx / src_fps, 3), kind])
         if kind == "pos":
             n_pos += 1
         else:
             n_neg += 1
 
     cap.release()
-    print(f"  {stem}: {n_pos} positive + {n_neg} negative frames -> {out_dir}")
+    print(f"  {key}: {n_pos} positive + {n_neg} negative frames -> {out_dir}")
     return (n_pos, n_neg)
 
 
 def discover_mined_videos(raw_dir: str, events_root: str) -> list[str]:
     out: list[str] = []
-    for ext in (".mp4", ".avi", ".mov", ".mkv", ".ts"):
-        for v in glob.glob(os.path.join(raw_dir, "**", f"*{ext}"), recursive=True):
-            stem = os.path.splitext(os.path.basename(v))[0]
-            if os.path.isfile(_events_csv_for(events_root, stem)):
-                out.append(v)
-    return sorted(set(out))
+    for v, meta in iter_videos(raw_dir):
+        if os.path.isfile(_events_csv_for(events_root, meta.key)):
+            out.append(v)
+    return out
 
 
 def parse_args() -> argparse.Namespace:

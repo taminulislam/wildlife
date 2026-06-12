@@ -35,7 +35,7 @@ from collections import defaultdict
 
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mining"))
-from filename_meta import parse_filename  # noqa: E402
+from filename_meta import site_from_key  # noqa: E402
 
 DEFAULT_CLASSES = ["deer", "other_animal"]
 IMG_EXTS = (".png", ".jpg", ".jpeg")
@@ -63,8 +63,11 @@ def label_path_for(img_path: str, labels_root: str, images_root: str) -> str:
     return os.path.join(labels_root, rel_txt)
 
 
-def video_stem_of(img_path: str) -> str:
-    """Recover the source video stem from a frame filename like <stem>_f<frame>.png."""
+def video_key_of(img_path: str) -> str:
+    """Recover the video key from a frame filename like <key>_f<frame>.png.
+
+    The key is ``SITE__transect[_vN][_SIDE]`` so the site is recoverable from it.
+    """
     base = os.path.splitext(os.path.basename(img_path))[0]
     if "_f" in base:
         return base.rsplit("_f", 1)[0]
@@ -74,27 +77,26 @@ def video_stem_of(img_path: str) -> str:
 def assign_splits(images: list[str], labels_root: str, images_root: str,
                   test_sites: set[str], val_frac: float) -> dict[str, str]:
     """Return img_path -> split in {train,val,test}."""
-    # Group images by video, and videos by site.
+    # Group images by video key, and keys by site.
     site_of_video: dict[str, str] = {}
     videos_with_labels: dict[str, list[str]] = defaultdict(list)
     for img in images:
         lp = label_path_for(img, labels_root, images_root)
         if not os.path.isfile(lp):
             continue  # un-annotated; skip
-        stem = video_stem_of(img)
-        meta = parse_filename(stem + ".mp4")
-        site_of_video[stem] = meta.site
-        videos_with_labels[stem].append(img)
+        key = video_key_of(img)
+        site_of_video[key] = site_from_key(key)
+        videos_with_labels[key].append(img)
 
     split: dict[str, str] = {}
-    for stem, imgs in videos_with_labels.items():
-        site = site_of_video[stem]
+    for key, imgs in videos_with_labels.items():
+        site = site_of_video[key]
         if site in test_sites:
             for im in imgs:
                 split[im] = "test"
             continue
         # train/val by VIDEO: deterministic per-video assignment to val_frac.
-        in_val = (_stable_hash(stem) % 1000) < int(val_frac * 1000)
+        in_val = (_stable_hash(key) % 1000) < int(val_frac * 1000)
         for im in imgs:
             split[im] = "val" if in_val else "train"
     return split
