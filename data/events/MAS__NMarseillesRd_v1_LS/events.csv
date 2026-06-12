@@ -1,0 +1,6 @@
+video,event_id,start_frame,end_frame,start_s,end_s,duration_s,n_hits,peak_frame,peak_score,x0,y0,x1,y1
+NMarseillesRd_MAS_12.22.25_LS.mp4,0,0,12690,0.0,211.5,211.5,1921,4302,44.8,0,0,640,512
+NMarseillesRd_MAS_12.22.25_LS.mp4,1,12804,14148,213.4,235.8,22.4,128,13032,43.6,0,0,640,512
+NMarseillesRd_MAS_12.22.25_LS.mp4,2,14364,15132,239.4,252.2,12.8,63,14748,25.3,0,66,640,512
+NMarseillesRd_MAS_12.22.25_LS.mp4,3,15348,15360,255.8,256.0,0.2,2,15348,20.1,0,142,347,408
+NMarseillesRd_MAS_12.22.25_LS.mp4,4,15516,16182,258.6,269.7,11.1,86,16182,28.1,0,0,640,512

@@ -14,12 +14,16 @@ pip install -r requirements.txt
 
 ## 1. Drop videos in place
 
-Put all raw videos under `data/raw/` (subfolders by site are fine). Filenames should keep
-the `<Site>_<Observer>_<Date>_<LS|RS>.mp4` pattern so metadata parses correctly.
+Put all raw videos under `data/raw/`. The archive layout is
+`<SITE>_Videos_LS/visit<N>/[<SITE>_<date>/]<Transect>_<SITE>_<Date>_<Side>.mp4`.
+The **site code is the 2nd filename token / parent folder** (MAS, SHB, SHW, TON, ...);
+the first token is the transect/road name. Visits are combined into their site (we do
+not split by visit), but each file gets a collision-proof key so same-named transects
+across visits don't clash.
 
 ```powershell
-# sanity-check how filenames parse into site/visit/side:
-python src/mining/filename_meta.py (Get-ChildItem data/raw -Recurse -Filter *.mp4 | % Name)
+# sanity-check parsing + per-site counts over the whole archive:
+python src/mining/filename_meta.py
 ```
 
 ## 2. Mine warm-body events across the whole archive
@@ -83,9 +87,10 @@ python src/dataset/extract_frames.py --all --pos-fps 3 --neg-per-video 30
 Hold out 1–2 entire sites for test so accuracy reflects new-location generalization.
 
 ```powershell
+# Site codes are MAS, SHB, SHW, TON (first half). Hold out 1-2 entire sites for test:
 python src/dataset/build_yolo_dataset.py `
   --images data/frames --labels data/annotations_yolo `
-  --test-sites <SiteA> <SiteB> --val-frac 0.15
+  --test-sites TON --val-frac 0.15
 # -> data/dataset/yolo/{images,labels}/{train,val,test} + data.yaml
 ```
 

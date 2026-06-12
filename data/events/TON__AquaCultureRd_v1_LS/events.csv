@@ -1,0 +1,5 @@
+video,event_id,start_frame,end_frame,start_s,end_s,duration_s,n_hits,peak_frame,peak_score,x0,y0,x1,y1
+AquaCultureRd_TON_12.03.25_LS.mp4,0,0,4614,0.0,76.96,76.96,732,4146,64.2,0,0,640,512
+AquaCultureRd_TON_12.03.25_LS.mp4,1,4698,6774,78.36,112.99,34.63,306,5394,57.9,0,0,640,512
+AquaCultureRd_TON_12.03.25_LS.mp4,2,6864,8850,114.49,147.62,33.13,324,8232,66.1,0,0,640,512
+AquaCultureRd_TON_12.03.25_LS.mp4,3,8922,19668,148.82,328.06,179.24,1792,19296,68.3,0,0,640,512
