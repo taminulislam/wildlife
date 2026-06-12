@@ -24,6 +24,12 @@ data/annotations_raw/
 # Generated review contact sheets reference local (git-ignored) thumbnails
 data/events/review/
 
+# Annotation workspace: keep the corrected LABELS + index (precious, small), but not
+# the extracted frame PNGs (regenerable, large — already excluded by *.png).
+# Run logs:
+data/**/_*_log.txt
+data/_*_log.txt
+
 # ── Model artifacts ──
 *.pt
 *.onnx

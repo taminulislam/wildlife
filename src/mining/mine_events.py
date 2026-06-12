@@ -87,6 +87,7 @@ def find_blobs(
     max_area_frac: float = 0.08,
     max_aspect: float = 6.0,
     min_extent: float = 0.20,
+    merge_gap: int = 10,
 ) -> list[Blob]:
     """Find locally bright blobs via white top-hat + adaptive thresholding.
 
@@ -130,7 +131,54 @@ def find_blobs(
         comp = tophat[y : y + h, x : x + w][labels[y : y + h, x : x + w] == i]
         score = float(comp.mean()) if comp.size else 0.0
         blobs.append(Blob(x, y, w, h, area, score))
-    return blobs
+
+    # Merge fragmented pieces of one animal (e.g. a deer split by a twig into head +
+    # body + leg) into a single box, so we don't emit 3 boxes for 1 deer.
+    return merge_blobs(blobs, merge_gap)
+
+
+def merge_blobs(blobs: list[Blob], gap: int) -> list[Blob]:
+    """Union blobs whose boxes overlap when each is expanded by `gap` pixels."""
+    if gap <= 0 or len(blobs) < 2:
+        return blobs
+
+    def near(a: Blob, b: Blob) -> bool:
+        return not (
+            a.x + a.w + gap < b.x or b.x + b.w + gap < a.x
+            or a.y + a.h + gap < b.y or b.y + b.h + gap < a.y
+        )
+
+    # Union-find over blobs that are near each other.
+    parent = list(range(len(blobs)))
+
+    def find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i in range(len(blobs)):
+        for j in range(i + 1, len(blobs)):
+            if near(blobs[i], blobs[j]):
+                parent[find(i)] = find(j)
+
+    groups: dict[int, list[Blob]] = {}
+    for i, b in enumerate(blobs):
+        groups.setdefault(find(i), []).append(b)
+
+    merged: list[Blob] = []
+    for grp in groups.values():
+        if len(grp) == 1:
+            merged.append(grp[0])
+            continue
+        x0 = min(b.x for b in grp)
+        y0 = min(b.y for b in grp)
+        x1 = max(b.x + b.w for b in grp)
+        y1 = max(b.y + b.h for b in grp)
+        area = sum(b.area for b in grp)
+        score = max(b.score for b in grp)
+        merged.append(Blob(x0, y0, x1 - x0, y1 - y0, area, score))
+    return merged
 
 
 def mine(
