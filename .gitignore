@@ -62,3 +62,6 @@ Thumbs.db
 deploy_key*
 id_*
 .env
+
+# build/run logs
+*.log
