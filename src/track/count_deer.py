@@ -36,6 +36,21 @@ except Exception:                              # pragma: no cover
     def site_from_key(k):                      # fallback: SITE__...
         return k.split("__")[0] if "__" in k else ""
 
+KNOWN_SITES = {"MAS", "SHB", "SHW", "TON"}
+
+
+def site_of(stem: str) -> str:
+    """Site from either an annotate-key (SITE__transect_vN_side) or a raw video
+    filename (<transect>_<SITE>_<date>_<side>, e.g. N2379Rd_MAS_12.22.25_LS)."""
+    if "__" in stem:
+        s = site_from_key(stem.rsplit("_f", 1)[0])
+        if s:
+            return s
+    for tok in stem.split("_"):
+        if tok in KNOWN_SITES:
+            return tok
+    return ""
+
 
 def list_videos(source: str) -> list[str]:
     if os.path.isfile(source):
@@ -95,7 +110,7 @@ def count_video(model, path: str, args) -> tuple[list[dict], dict]:
         confirmed = (n >= args.min_hits and span_s >= args.min_span_s
                      and topk >= args.conf_track)
         rows.append({
-            "video": stem, "site": site_from_key(stem.rsplit("_f", 1)[0]),
+            "video": stem, "site": site_of(stem),
             "track_id": tid, "first_frame": min(frames), "last_frame": max(frames),
             "first_s": round(min(frames) / fps, 2), "last_s": round(max(frames) / fps, 2),
             "n_frames": n, "span_s": round(span_s, 2),
@@ -107,7 +122,7 @@ def count_video(model, path: str, args) -> tuple[list[dict], dict]:
 
     conf_rows = [r for r in rows if r["confirmed"]]
     summary = {
-        "video": stem, "site": site_from_key(stem.rsplit("_f", 1)[0]),
+        "video": stem, "site": site_of(stem),
         "count": len(conf_rows),
         "count_high": sum(1 for r in conf_rows if r["topk_conf"] >= 0.90),
         "count_mid": sum(1 for r in conf_rows if 0.50 <= r["topk_conf"] < 0.90),
