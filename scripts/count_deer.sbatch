@@ -25,7 +25,7 @@ nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null || true
 
 # Override on submit:
 #   sbatch --export=ALL,WEIGHTS=...,SOURCE=...,OUT=...,IMGSZ=1280 scripts/count_deer.sbatch
-WEIGHTS=${WEIGHTS:-/work/hdd/bgte/tislam6/wildlife_outputs/runs/yolo11s_640_SHWtest/weights/best.pt}
+WEIGHTS=${WEIGHTS:-/work/hdd/bgte/tislam6/wildlife_outputs/runs/yolo11m_640_SHWtest/weights/best.pt}
 SOURCE=${SOURCE:-data/raw}
 OUT=${OUT:-/work/hdd/bgte/tislam6/wildlife_outputs/counts/run}
 IMGSZ=${IMGSZ:-640}
