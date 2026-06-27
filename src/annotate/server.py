@@ -33,10 +33,20 @@ ROOT = "data/annotate"
 FRAMES_DIR = os.path.join(ROOT, "frames")
 LABELS_DIR = os.path.join(ROOT, "labels")
 STATUS_PATH = os.path.join(ROOT, "status.json")
+INDEX_NAME = "frames.csv"
+
+
+def _set_root(root: str) -> None:
+    """Point the app at any annotate-style dir (frames/, labels/, <index>.csv)."""
+    global ROOT, FRAMES_DIR, LABELS_DIR, STATUS_PATH
+    ROOT = root
+    FRAMES_DIR = os.path.join(ROOT, "frames")
+    LABELS_DIR = os.path.join(ROOT, "labels")
+    STATUS_PATH = os.path.join(ROOT, "status.json")
 
 
 def _load_index() -> list[dict]:
-    path = os.path.join(ROOT, "frames.csv")
+    path = os.path.join(ROOT, INDEX_NAME)
     if not os.path.isfile(path):
         return []
     with open(path, newline="") as f:
@@ -267,9 +277,18 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--port", type=int, default=8000)
+    p.add_argument("--root", default="data/annotate",
+                   help="annotate-style dir with frames/, labels/, and an index csv "
+                        "(e.g. data/annotate/harvest to verify harvested pre-labels)")
+    p.add_argument("--index", default="frames.csv",
+                   help="index csv filename inside --root")
     a = p.parse_args()
+    global INDEX_NAME
+    INDEX_NAME = a.index
+    _set_root(a.root)
     if not _load_index():
-        raise SystemExit("No data/annotate/frames.csv — run prepare_frames.py first.")
+        raise SystemExit(f"No {os.path.join(a.root, a.index)} — "
+                         "run the harvest/prepare step first.")
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     print(f"Box-correction app at http://localhost:{a.port}  (Ctrl+C to stop)")
     print(f"{len(_load_index())} frames, {len(_load_status())} marked done.")
