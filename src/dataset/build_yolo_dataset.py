@@ -75,8 +75,16 @@ def video_key_of(img_path: str) -> str:
 
 
 def assign_splits(images: list[str], labels_root: str, images_root: str,
-                  test_sites: set[str], val_frac: float) -> dict[str, str]:
-    """Return img_path -> split in {train,val,test}."""
+                  test_sites: set[str], val_frac: float,
+                  val_keys: set[str] | None = None) -> dict[str, str]:
+    """Return img_path -> split in {train,val,test}.
+
+    Test = whole held-out sites. For the remaining videos, val is chosen either by
+    an explicit ``val_keys`` list (preferred when deer are clumped, so val gets a
+    deliberate, deer-diverse sample) or, if none given, by a deterministic per-video
+    hash to ``val_frac``.
+    """
+    val_keys = val_keys or set()
     # Group images by video key, and keys by site.
     site_of_video: dict[str, str] = {}
     videos_with_labels: dict[str, list[str]] = defaultdict(list)
@@ -88,6 +96,10 @@ def assign_splits(images: list[str], labels_root: str, images_root: str,
         site_of_video[key] = site_from_key(key)
         videos_with_labels[key].append(img)
 
+    unknown = val_keys - set(videos_with_labels)
+    if unknown:
+        raise SystemExit(f"--val-keys not found among labelled videos: {sorted(unknown)}")
+
     split: dict[str, str] = {}
     for key, imgs in videos_with_labels.items():
         site = site_of_video[key]
@@ -95,8 +107,11 @@ def assign_splits(images: list[str], labels_root: str, images_root: str,
             for im in imgs:
                 split[im] = "test"
             continue
-        # train/val by VIDEO: deterministic per-video assignment to val_frac.
-        in_val = (_stable_hash(key) % 1000) < int(val_frac * 1000)
+        # train/val by VIDEO: explicit list if given, else deterministic hash.
+        if val_keys:
+            in_val = key in val_keys
+        else:
+            in_val = (_stable_hash(key) % 1000) < int(val_frac * 1000)
         for im in imgs:
             split[im] = "val" if in_val else "train"
     return split
@@ -159,7 +174,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--test-sites", nargs="*", default=[],
                    help="Site names to hold out entirely for test")
     p.add_argument("--val-frac", type=float, default=0.15,
-                   help="Fraction of non-test VIDEOS used for validation")
+                   help="Fraction of non-test VIDEOS used for validation (ignored if "
+                        "--val-keys is given)")
+    p.add_argument("--val-keys", nargs="*", default=[],
+                   help="Explicit video keys for the val split (overrides --val-frac). "
+                        "Use when deer are clumped so val gets a deer-diverse sample.")
     p.add_argument("--classes", nargs="*", default=DEFAULT_CLASSES)
     p.add_argument("--copy", action="store_true",
                    help="Copy files instead of hardlinking")
@@ -171,7 +190,8 @@ def main() -> None:
     images = find_images(a.images)
     if not images:
         raise SystemExit(f"No images found under {a.images}")
-    split = assign_splits(images, a.labels, a.images, set(a.test_sites), a.val_frac)
+    split = assign_splits(images, a.labels, a.images, set(a.test_sites), a.val_frac,
+                          set(a.val_keys))
     if not split:
         raise SystemExit(
             "No annotated images found (no matching .txt labels). "
