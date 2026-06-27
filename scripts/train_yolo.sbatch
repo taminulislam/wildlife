@@ -24,14 +24,17 @@ cd /work/nvme/bgte/tislam6/wildlife_project
 echo "=== job $SLURM_JOB_ID on $SLURM_NODELIST ==="
 nvidia-smi --query-gpu=name,memory.total --format=csv 2>/dev/null || true
 
-# Override on submit:  sbatch --export=ALL,MODEL=yolo11m,NAME=yolo11m_SHWtest scripts/train_yolo.sbatch
+# Override on submit, e.g.:
+#   sbatch --export=ALL,MODEL=yolo11m,IMGSZ=1280,BATCH=16 scripts/train_yolo.sbatch
 MODEL=${MODEL:-yolo11s}
-NAME=${NAME:-${MODEL}_SHWtest}
+IMGSZ=${IMGSZ:-640}
+BATCH=${BATCH:-32}
+NAME=${NAME:-${MODEL}_${IMGSZ}_SHWtest}
 
 python -u src/detect/train.py \
     --model weights/${MODEL}.pt \
     --data data/dataset/yolo/data.yaml \
-    --imgsz 640 --epochs 150 --batch 32 --patience 40 \
+    --imgsz "$IMGSZ" --epochs 150 --batch "$BATCH" --patience 40 \
     --project /work/hdd/bgte/tislam6/wildlife_outputs/runs \
     --name "$NAME"
 
