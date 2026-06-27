@@ -10,16 +10,16 @@ In the browser you correct each frame:
   * fix a partial box so it covers the WHOLE deer,
   * merge 3 fragment-boxes on one deer into a single box (delete two, resize one),
   * draw any deer the detector missed,
-  * a frame with no deer: press C (or click "No deer") to save it empty + advance
-    in one press (valid negative example).
+  * a frame with no deer: press C (or click "No deer") to clear all boxes, then
+    press S to save it empty + advance (valid negative example).
 
 Boxes are saved as YOLO labels in data/annotate/labels/ (class 0 = deer), so they plug
 straight into src/dataset/build_yolo_dataset.py. Progress (which frames you finished) is
 tracked in data/annotate/status.json.
 
 Controls: drag empty area = draw box; drag box = move; drag corner = resize; click box
-then Delete = remove; ← / → = prev/next (auto-saves); C = no-deer (save empty + next);
-S = save (use for frames that have deer boxes).
+then Delete = remove; ← / → = prev/next (auto-saves); C = clear all boxes (no save);
+S = save + next.
 """
 from __future__ import annotations
 
@@ -191,7 +191,7 @@ button.primary { background:#2b5fa8; border-color:#3b7fd8; }
     <button onclick="go(-1)">← Prev</button>
     <button onclick="go(1)">Next →</button>
     <button class="primary" onclick="save(true)">Save ✓ (S)</button>
-    <button onclick="noDeer()">No deer (C)</button>
+    <button onclick="clearBoxes()">No deer (C)</button>
     <button onclick="zoom(-0.25)">−</button><button onclick="zoom(0.25)">+</button>
     <span class="pill" id="meta"></span>
     <span id="hint">drag empty=draw · drag box=move · corner=resize · click+Delete=remove</span>
@@ -257,8 +257,7 @@ stage.addEventListener('pointermove',e=>{ if(!mode)return; const rect=stage.getB
 stage.addEventListener('pointerup',e=>{ if(mode==='draw'){ const b=boxes[oi];
     if(b.w<5||b.h<5) boxes.splice(oi,1); } mode=null; oi=-1; draw(); });
 
-function clearBoxes(){ boxes=[]; sel=-1; dirty=true; draw(); }
-function noDeer(){ boxes=[]; sel=-1; draw(); save(true); }  // clear + save empty + advance
+function clearBoxes(){ boxes=[]; sel=-1; dirty=true; draw(); }  // clear only; press S to save+next
 async function save(done){ if(cur<0)return; const f=frames[cur];
   const payload={name:f.name, boxes:boxes.map(px2norm), done:!!done};
   const r=await fetch('/api/label',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -269,7 +268,7 @@ function go(step){ if(dirty)save(false); open(cur+step); }
 document.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT')return;
   if(e.key==='ArrowRight')go(1); else if(e.key==='ArrowLeft')go(-1);
   else if(e.key==='s'||e.key==='S')save(true);
-  else if(e.key==='c'||e.key==='C')noDeer();
+  else if(e.key==='c'||e.key==='C')clearBoxes();
   else if(e.key==='Delete'||e.key==='Backspace'){ if(sel>=0){ boxes.splice(sel,1);
     sel=-1; dirty=true; draw(); e.preventDefault(); } } });
 load();
