@@ -65,3 +65,6 @@ id_*
 
 # build/run logs
 *.log
+
+# unverified harvest staging (pre-labels) — merge into labels/ after verifying
+data/annotate/harvest/
