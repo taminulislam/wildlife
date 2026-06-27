@@ -17,7 +17,7 @@ straight into src/dataset/build_yolo_dataset.py. Progress (which frames you fini
 tracked in data/annotate/status.json.
 
 Controls: drag empty area = draw box; drag box = move; drag corner = resize; click box
-then Delete = remove; ← / → = prev/next (auto-saves); N = no-deer clear; S = save.
+then Delete = remove; ← / → = prev/next (auto-saves); C = no-deer clear; S = save.
 """
 from __future__ import annotations
 
@@ -179,7 +179,7 @@ button.primary { background:#2b5fa8; border-color:#3b7fd8; }
     <button onclick="go(-1)">← Prev</button>
     <button onclick="go(1)">Next →</button>
     <button class="primary" onclick="save(true)">Save ✓ (S)</button>
-    <button onclick="clearBoxes()">No deer (N)</button>
+    <button onclick="clearBoxes()">No deer (C)</button>
     <button onclick="zoom(-0.25)">−</button><button onclick="zoom(0.25)">+</button>
     <span class="pill" id="meta"></span>
     <span id="hint">drag empty=draw · drag box=move · corner=resize · click+Delete=remove</span>
@@ -256,7 +256,7 @@ function go(step){ if(dirty)save(false); open(cur+step); }
 document.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT')return;
   if(e.key==='ArrowRight')go(1); else if(e.key==='ArrowLeft')go(-1);
   else if(e.key==='s'||e.key==='S')save(true);
-  else if(e.key==='n'||e.key==='N')clearBoxes();
+  else if(e.key==='c'||e.key==='C')clearBoxes();
   else if(e.key==='Delete'||e.key==='Backspace'){ if(sel>=0){ boxes.splice(sel,1);
     sel=-1; dirty=true; draw(); e.preventDefault(); } } });
 load();
