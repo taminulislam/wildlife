@@ -118,6 +118,13 @@ def main() -> None:
     for o in obs:
         by_track[(o["video"], o["track_id"])].append(o)
 
+    # per-track aggregate confidence / stats from counts.csv (the decision values)
+    counts_path = os.path.join(args.counts_dir, "counts.csv")
+    meta: dict[tuple, dict] = {}
+    if os.path.exists(counts_path):
+        for c in read_csv(counts_path):
+            meta[(c["video"], c["track_id"])] = c
+
     os.makedirs(args.out, exist_ok=True)
     index_rows = []
     site_gallery: dict[str, list] = defaultdict(list)
@@ -139,6 +146,9 @@ def main() -> None:
         cap = vcache.get(vpath) or cv2.VideoCapture(vpath)
         vcache[vpath] = cap
 
+        m = meta.get((video, tid), {})
+        agg = float(m.get("topk_conf", 0) or 0)  # aggregate decision confidence
+        nfr = m.get("n_frames", len(rows))
         rows_sorted = sorted(rows, key=lambda r: float(r["conf"]), reverse=True)
         picks = rows_sorted[:args.topk]
         tiles, best_full = [], None
@@ -158,8 +168,9 @@ def main() -> None:
             if j == 0:  # best detection -> full-frame context image
                 full = frame.copy()
                 cv2.rectangle(full, (x1, y1), (x2, y2), GREEN, 2)
-                label(full, f"{video}  trk{tid}  t={t_s:.1f}s  conf={cf:.2f}",
-                      (10, 28), color=YELLOW, scale=0.7)
+                label(full, f"{video}  trk{tid}", (10, 28), color=YELLOW, scale=0.7)
+                label(full, f"deer confidence={agg:.2f}  ({nfr} frames)  best frame "
+                            f"c={cf:.2f}", (10, 56), color=YELLOW, scale=0.6)
                 best_full = full
 
         if not tiles:
@@ -173,15 +184,15 @@ def main() -> None:
         best_p = os.path.join(vdir, f"trk{tid}_best.jpg")
         if best_full is not None:
             cv2.imwrite(best_p, best_full)
-        # caption tile for the site gallery
+        # caption tile for the site gallery (short so confidence always fits)
         g = tiles[0].copy()
-        label(g, f"{video[:18]} trk{tid} c={float(picks[0]['conf']):.2f}",
-              (4, 18), color=YELLOW, scale=0.45)
+        label(g, f"trk{tid}  conf={agg:.2f}", (4, 20), color=YELLOW, scale=0.6)
         site_gallery[site].append(g)
         for r in picks:
             index_rows.append({
                 "site": site, "video": video, "track_id": tid,
-                "frame": r["frame"], "t_s": r["t_s"], "conf": r["conf"],
+                "deer_conf": round(agg, 4), "n_frames": nfr,
+                "frame": r["frame"], "t_s": r["t_s"], "frame_conf": r["conf"],
                 "confirmed": r["confirmed"], "sheet": sheet_p,
             })
         print(f"  [{site}] {video} trk{tid}: {len(tiles)} frames -> {sheet_p}")
