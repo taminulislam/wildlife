@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus-per-node=1
 #SBATCH --mem=32G
-#SBATCH --time=01:00:00
+#SBATCH --time=06:00:00
 #SBATCH --output=/work/hdd/bgte/tislam6/wildlife_outputs/logs/wild_count_%j.out
 #SBATCH --error=/work/hdd/bgte/tislam6/wildlife_outputs/logs/wild_count_%j.err
 
