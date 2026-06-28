@@ -96,9 +96,11 @@ def count_video(model, path: str, args) -> tuple[list[dict], dict]:
         confs = b.conf.tolist()
         whs = b.xywh.tolist()  # [x_c, y_c, w, h]
         for tid, cf, (xc, yc, w, h) in zip(ids, confs, whs):
-            tracks[tid].append((fi, float(cf), float(w * h), float(w), float(h)))
+            tracks[tid].append((fi, float(cf), float(w * h),
+                                float(xc), float(yc), float(w), float(h)))
 
     rows = []
+    track_rows = []  # per-frame box dump for evidence rendering / GT review
     for tid, obs in tracks.items():
         frames = [o[0] for o in obs]
         confs = [o[1] for o in obs]
@@ -118,6 +120,17 @@ def count_video(model, path: str, args) -> tuple[list[dict], dict]:
             "mean_box_px": round(sum(areas) / n, 1),
             "confirmed": int(confirmed),
         })
+        # dump per-frame boxes (skip 1-2 frame noise) so evidence images can be
+        # rendered later without a second GPU pass; keep candidates for review.
+        if n >= 3:
+            for (fi2, cf2, _ar, xc2, yc2, w2, h2) in obs:
+                track_rows.append({
+                    "video": stem, "site": site_of(stem), "track_id": tid,
+                    "frame": fi2, "t_s": round(fi2 / fps, 2),
+                    "xc": round(xc2, 1), "yc": round(yc2, 1),
+                    "w": round(w2, 1), "h": round(h2, 1),
+                    "conf": round(cf2, 4), "confirmed": int(confirmed),
+                })
     rows.sort(key=lambda r: (-r["confirmed"], -r["topk_conf"]))
 
     conf_rows = [r for r in rows if r["confirmed"]]
@@ -128,7 +141,7 @@ def count_video(model, path: str, args) -> tuple[list[dict], dict]:
         "count_mid": sum(1 for r in conf_rows if 0.50 <= r["topk_conf"] < 0.90),
         "candidate_tracks": len(rows), "fps": round(fps, 1),
     }
-    return rows, summary
+    return rows, summary, track_rows
 
 
 def main() -> None:
@@ -163,12 +176,13 @@ def main() -> None:
     os.makedirs(args.out, exist_ok=True)
     print(f"counting deer in {len(vids)} video(s) -> {args.out}")
 
-    all_rows, summaries = [], []
+    all_rows, summaries, all_track_rows = [], [], []
     for i, v in enumerate(vids, 1):
         print(f"[{i}/{len(vids)}] {os.path.basename(v)}")
-        rows, summary = count_video(model, v, args)
+        rows, summary, track_rows = count_video(model, v, args)
         all_rows += rows
         summaries.append(summary)
+        all_track_rows += track_rows
         print(f"    -> count={summary['count']} "
               f"(high={summary['count_high']}, mid={summary['count_mid']}) "
               f"from {summary['candidate_tracks']} candidate tracks")
@@ -185,8 +199,17 @@ def main() -> None:
         w.writeheader()
         w.writerows(summaries)
 
+    tracks_csv = os.path.join(args.out, "tracks.csv")
+    with open(tracks_csv, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(all_track_rows[0].keys())
+                           if all_track_rows else
+                           ["video", "site", "track_id", "frame", "t_s",
+                            "xc", "yc", "w", "h", "conf", "confirmed"])
+        w.writeheader()
+        w.writerows(all_track_rows)
+
     total = sum(s["count"] for s in summaries)
-    print(f"\nwrote {counts_csv} and {summ_csv}")
+    print(f"\nwrote {counts_csv}, {summ_csv} and {tracks_csv}")
     print(f"TOTAL confirmed deer across {len(vids)} video(s): {total}")
 
 
