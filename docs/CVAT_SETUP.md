@@ -48,7 +48,8 @@ scp -r tislam6@login.delta.ncsa.illinois.edu:/work/hdd/bgte/tislam6/wildlife_out
 CVAT → **Tasks → +** → Create new task:
 
 - **Name**: the video stem, e.g. `GiantCityRd_TON_12.03.25_LS`
-- **Labels**: add one label named exactly **`deer`** (rectangle)
+- **Labels** → switch to **Raw** and paste (the `attributes` array is required):
+  `[{"name": "deer", "type": "rectangle", "attributes": []}]`
 - **Select files**: upload the `.mp4`
 - Create. Wait for CVAT to finish chunking the video.
 
