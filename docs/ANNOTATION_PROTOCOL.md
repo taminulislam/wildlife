@@ -17,8 +17,11 @@ done the same way.
    Re-key whenever the deer changes direction/speed or the box drifts off it.
 4. **Box tightness (thermal):** the box hugs the warm deer blob — include legs/head,
    exclude the cold background. Consistent tightness matters more than pixel perfection.
-5. **End the track** when the deer leaves frame or is fully occluded (set the track
-   `outside`/stop keyframing). Don't let a box sit on empty background.
+5. **End the track** when the deer leaves frame or is fully occluded. In CVAT: go to
+   the last frame it's visible, step forward one frame, select the object and press
+   **`O`** (Outside) — the box stops rendering/interpolating from there. Re-entry after a
+   brief gap: press `O` again on the return frame to resume the SAME track. Don't let a
+   box sit on empty background.
 
 ## What IS a deer
 
