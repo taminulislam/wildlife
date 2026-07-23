@@ -41,8 +41,18 @@ GREEN = (0, 255, 0)
 
 
 def find_video(source: str, stem: str) -> str | None:
+    # MAS Visit1/Visit2 share identical mp4 names; the CVAT task name carries a
+    # _V1/_V2 suffix the raw file lacks. Strip it and constrain the search to the
+    # matching visit folder so we extract from the correct video.
+    visit, base = None, stem
+    if base.endswith("_V1"):
+        visit, base = "visit1", base[:-3]
+    elif base.endswith("_V2"):
+        visit, base = "visit2", base[:-3]
     for ext in ("mp4", "MP4", "avi", "mov"):
-        hits = glob.glob(os.path.join(source, "**", f"{stem}.{ext}"), recursive=True)
+        hits = glob.glob(os.path.join(source, "**", f"{base}.{ext}"), recursive=True)
+        if visit:
+            hits = [h for h in hits if visit in h.lower()]
         if hits:
             return sorted(hits)[0]
     return None
