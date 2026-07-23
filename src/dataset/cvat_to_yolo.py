@@ -202,9 +202,13 @@ def main() -> None:
         prev_pos = [prev_pos[int(i * step)] for i in range(15)]
     prev_tiles = prev_pos + prev_neg
 
-    # count GT row
-    with open(os.path.join(args.out, "count_gt.csv"), "w", newline="") as f:
-        w = csv.writer(f); w.writerow(["video", "site", "unique_deer"])
+    # count GT row (append so a batch of videos accumulates into one table)
+    cg = os.path.join(args.out, "count_gt.csv")
+    new = not os.path.exists(cg)
+    with open(cg, "a", newline="") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["video", "site", "unique_deer"])
         w.writerow([stem, meta.site, n_tracks])
 
     if args.preview and prev_tiles:
