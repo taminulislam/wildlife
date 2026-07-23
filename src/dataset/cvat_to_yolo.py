@@ -59,14 +59,20 @@ def find_video(source: str, stem: str) -> str | None:
 
 
 def parse_cvat(xml_path: str):
-    """-> (n_tracks, {frame: [(x1,y1,x2,y2), ...]}, set(keyframe_frames))."""
+    """-> (n_tracks, {frame:[boxes]}, set(keyframes), per_track[(frames, keyframes)]).
+
+    per_track keeps each animal's own frame list so we can cap frames PER deer (a
+    deer standing still for 800 frames shouldn't flood the set) while fully keeping
+    briefly-seen deer.
+    """
     root = ET.parse(xml_path).getroot()
-    tracks = root.findall("track")
+    tracks = [t for t in root.findall("track") if t.get("label") == "deer"]
     by_frame: dict[int, list[tuple]] = defaultdict(list)
     keyframes: set[int] = set()
+    per_track: list[tuple[list, set]] = []
     for tr in tracks:
-        if tr.get("label") != "deer":
-            continue
+        tframes: list[int] = []
+        tkeys: set[int] = set()
         for b in tr.findall("box"):
             if b.get("outside") == "1":
                 continue
@@ -74,17 +80,26 @@ def parse_cvat(xml_path: str):
             x1, y1 = float(b.get("xtl")), float(b.get("ytl"))
             x2, y2 = float(b.get("xbr")), float(b.get("ybr"))
             by_frame[fi].append((x1, y1, x2, y2))
+            tframes.append(fi)
             if b.get("keyframe") == "1":
-                keyframes.add(fi)
-    deer_tracks = [t for t in tracks if t.get("label") == "deer"]
-    return len(deer_tracks), by_frame, keyframes
+                tkeys.add(fi); keyframes.add(fi)
+        if tframes:
+            per_track.append((sorted(set(tframes)), tkeys))
+    return len(tracks), by_frame, keyframes, per_track
 
 
-def pick_positives(by_frame, keyframes, stride):
-    """All keyframes + every `stride`-th deer frame (dedup)."""
-    deer_frames = sorted(by_frame)
-    sel = set(f for f in deer_frames if f in keyframes)
-    sel |= set(deer_frames[::max(1, stride)])
+def pick_positives(per_track, stride, cap):
+    """Per track: every `stride`-th frame + all human keyframes; then cap frames per
+    track to `cap` (evenly), but never drop a keyframe. Union across tracks."""
+    sel: set[int] = set()
+    for tframes, tkeys in per_track:
+        sub = sorted(set(tframes[::max(1, stride)]) | tkeys)
+        if cap and len(sub) > cap:
+            step = len(sub) / cap
+            capped = {sub[int(i * step)] for i in range(cap)}
+            capped |= tkeys  # human anchors always survive the cap
+            sub = sorted(capped)
+        sel |= set(sub)
     return sorted(sel)
 
 
@@ -128,13 +143,15 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--model-tracks", default="")
     ap.add_argument("--pos-stride", type=int, default=6)
+    ap.add_argument("--pos-cap", type=int, default=150,
+                    help="max sampled frames per deer track (0 = unlimited)")
     ap.add_argument("--neg-per-pos", type=float, default=1.5)
     ap.add_argument("--neg-gap", type=int, default=15)
     ap.add_argument("--preview", action="store_true",
                     help="also write a contact sheet of sampled pos/neg for approval")
     args = ap.parse_args()
 
-    n_tracks, by_frame, keyframes = parse_cvat(args.xml)
+    n_tracks, by_frame, keyframes, per_track = parse_cvat(args.xml)
     # video stem: CVAT export filename minus _annotations
     stem = os.path.splitext(os.path.basename(args.xml))[0].replace("_annotations", "")
     vpath = find_video(args.source, stem)
@@ -143,7 +160,7 @@ def main() -> None:
     meta = parse_path(vpath)
     key = meta.key  # e.g. TON__GiantCityRd_v1_LS
 
-    pos = pick_positives(by_frame, keyframes, args.pos_stride)
+    pos = pick_positives(per_track, args.pos_stride, args.pos_cap)
     n_neg = round(args.neg_per_pos * len(pos))
     cap = cv2.VideoCapture(vpath)
     nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -220,7 +237,9 @@ def main() -> None:
         for i, t in enumerate(prev_tiles):
             r, c = divmod(i, cols)
             sheet[r * h:r * h + t.shape[0], c * w_:c * w_ + t.shape[1]] = t
-        cv2.imwrite(os.path.join(args.out, "_preview.jpg"), sheet)
+        prev_dir = os.path.join(args.out, "previews")
+        os.makedirs(prev_dir, exist_ok=True)
+        cv2.imwrite(os.path.join(prev_dir, f"{stem}.jpg"), sheet)
 
     print(f"video {stem}  site {meta.site}  key {key}  ({W}x{H}, {nframes} frames)")
     print(f"  unique deer (tracks): {n_tracks}")
@@ -228,7 +247,7 @@ def main() -> None:
     print(f"  negatives: {len(neg)} frames (hard-neg pool from model FPs: {hard_pool})")
     print(f"  wrote {n_written} images+labels -> {args.out}")
     if args.preview:
-        print(f"  preview -> {os.path.join(args.out, '_preview.jpg')}")
+        print(f"  preview -> {os.path.join(args.out, 'previews', stem + '.jpg')}")
 
 
 if __name__ == "__main__":

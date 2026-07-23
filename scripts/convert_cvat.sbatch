@@ -23,10 +23,11 @@ cd /work/nvme/bgte/tislam6/wildlife_project
 
 # Fresh staging set built purely from the 32 CVAT exports (no old loose positives).
 OUT=${OUT:-data/annotate_v2}
-STRIDE=${STRIDE:-6}
+STRIDE=${STRIDE:-2}
+CAP=${CAP:-150}
 NEGPP=${NEGPP:-1.5}
 
-echo "=== job $SLURM_JOB_ID: CVAT -> YOLO, stride=$STRIDE neg/pos=$NEGPP -> $OUT ==="
+echo "=== job $SLURM_JOB_ID: CVAT -> YOLO, stride=$STRIDE cap=$CAP neg/pos=$NEGPP -> $OUT ==="
 rm -rf "$OUT"; mkdir -p "$OUT"
 
 n=0
@@ -35,7 +36,7 @@ for xml in data/cvat_export/*.xml; do
     echo "--- [$n] $(basename "$xml")"
     python -u src/dataset/cvat_to_yolo.py \
         --xml "$xml" --source data/raw --out "$OUT" \
-        --pos-stride "$STRIDE" --neg-per-pos "$NEGPP"
+        --pos-stride "$STRIDE" --pos-cap "$CAP" --neg-per-pos "$NEGPP" --preview
 done
 
 echo "=== done: $(ls "$OUT/frames" | wc -l) images, $(ls "$OUT/labels" | wc -l) labels ==="
