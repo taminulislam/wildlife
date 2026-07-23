@@ -146,6 +146,8 @@ def main() -> None:
     ap.add_argument("--pos-cap", type=int, default=150,
                     help="max sampled frames per deer track (0 = unlimited)")
     ap.add_argument("--neg-per-pos", type=float, default=1.5)
+    ap.add_argument("--neg-floor", type=int, default=80,
+                    help="negatives to harvest when a video has 0 deer (pure-background)")
     ap.add_argument("--neg-gap", type=int, default=15)
     ap.add_argument("--preview", action="store_true",
                     help="also write a contact sheet of sampled pos/neg for approval")
@@ -162,6 +164,8 @@ def main() -> None:
 
     pos = pick_positives(per_track, args.pos_stride, args.pos_cap)
     n_neg = round(args.neg_per_pos * len(pos))
+    if not pos:  # zero-deer video: still harvest pure-background hard negatives
+        n_neg = args.neg_floor
     cap = cv2.VideoCapture(vpath)
     nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     neg, hard_pool = pick_negatives(n_neg, set(by_frame), nframes,
