@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <task>
+      <id>26</id>
+      <name>N25thRdBlue_MAS_12.22.25_LS_V1</name>
+      <size>15389</size>
+      <mode>interpolation</mode>
+      <overlap>0</overlap>
+      <bugtracker></bugtracker>
+      <created>2026-07-22 10:22:06.070747+00:00</created>
+      <updated>2026-07-22 10:22:28.306604+00:00</updated>
+      <subset>default</subset>
+      <start_frame>0</start_frame>
+      <stop_frame>15388</stop_frame>
+      <frame_filter></frame_filter>
+      <segments>
+        <segment>
+          <id>26</id>
+          <start>0</start>
+          <stop>15388</stop>
+          <url>http://localhost:8088/api/tasks/26/dataset/export/api/jobs/26</url>
+        </segment>
+      </segments>
+      <owner>
+        <username>tislamrafi</username>
+        <email>islamtaminul@gmail.com</email>
+      </owner>
+      <assignee></assignee>
+      <labels>
+        <label>
+          <name>deer</name>
+          <color>#4020c0</color>
+          <type>rectangle</type>
+          <attributes>
+          </attributes>
+        </label>
+      </labels>
+      <original_size>
+        <width>640</width>
+        <height>512</height>
+      </original_size>
+      <source>N25thRdBlue_MAS_12.22.25_LS.mp4</source>
+    </task>
+    <dumped>2026-07-22 10:33:35.670538+00:00</dumped>
+  </meta>
+</annotations>

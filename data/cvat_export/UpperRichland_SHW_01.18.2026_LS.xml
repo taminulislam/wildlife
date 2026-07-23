@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <task>
+      <id>23</id>
+      <name>UpperRichland_SHW_01.18.2026_LS</name>
+      <size>9220</size>
+      <mode>interpolation</mode>
+      <overlap>0</overlap>
+      <bugtracker></bugtracker>
+      <created>2026-07-22 09:04:45.931414+00:00</created>
+      <updated>2026-07-22 09:04:56.940118+00:00</updated>
+      <subset>default</subset>
+      <start_frame>0</start_frame>
+      <stop_frame>9219</stop_frame>
+      <frame_filter></frame_filter>
+      <segments>
+        <segment>
+          <id>23</id>
+          <start>0</start>
+          <stop>9219</stop>
+          <url>http://localhost:8088/api/tasks/23/dataset/export/api/jobs/23</url>
+        </segment>
+      </segments>
+      <owner>
+        <username>tislamrafi</username>
+        <email>islamtaminul@gmail.com</email>
+      </owner>
+      <assignee></assignee>
+      <labels>
+        <label>
+          <name>deer</name>
+          <color>#4020c0</color>
+          <type>rectangle</type>
+          <attributes>
+          </attributes>
+        </label>
+      </labels>
+      <original_size>
+        <width>640</width>
+        <height>512</height>
+      </original_size>
+      <source>UpperRichland_SHW_01.18.2026_LS.mp4</source>
+    </task>
+    <dumped>2026-07-22 09:20:15.001832+00:00</dumped>
+  </meta>
+</annotations>

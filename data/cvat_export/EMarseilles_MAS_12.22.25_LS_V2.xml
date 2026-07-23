@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <task>
+      <id>29</id>
+      <name>EMarseilles_MAS_12.22.25_LS_V2</name>
+      <size>11817</size>
+      <mode>interpolation</mode>
+      <overlap>0</overlap>
+      <bugtracker></bugtracker>
+      <created>2026-07-23 07:02:24.835244+00:00</created>
+      <updated>2026-07-23 07:02:44.221794+00:00</updated>
+      <subset>default</subset>
+      <start_frame>0</start_frame>
+      <stop_frame>11816</stop_frame>
+      <frame_filter></frame_filter>
+      <segments>
+        <segment>
+          <id>29</id>
+          <start>0</start>
+          <stop>11816</stop>
+          <url>http://localhost:8088/api/tasks/29/dataset/export/api/jobs/29</url>
+        </segment>
+      </segments>
+      <owner>
+        <username>tislamrafi</username>
+        <email>islamtaminul@gmail.com</email>
+      </owner>
+      <assignee></assignee>
+      <labels>
+        <label>
+          <name>deer</name>
+          <color>#4020c0</color>
+          <type>rectangle</type>
+          <attributes>
+          </attributes>
+        </label>
+      </labels>
+      <original_size>
+        <width>640</width>
+        <height>512</height>
+      </original_size>
+      <source>EMarseilles_MAS_12.22.25_LS.mp4</source>
+    </task>
+    <dumped>2026-07-23 08:12:37.505892+00:00</dumped>
+  </meta>
+</annotations>
