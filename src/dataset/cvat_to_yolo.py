@@ -36,6 +36,8 @@ import cv2
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mining"))
 from filename_meta import parse_path  # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "common"))
+from thermal import enhance_contrast  # noqa: E402
 
 GREEN = (0, 255, 0)
 
@@ -151,6 +153,9 @@ def main() -> None:
     ap.add_argument("--neg-gap", type=int, default=15)
     ap.add_argument("--preview", action="store_true",
                     help="also write a contact sheet of sampled pos/neg for approval")
+    ap.add_argument("--contrast", default="clahe", choices=["clahe", "stretch", "none"],
+                    help="thermal contrast normalization baked into extracted frames "
+                         "(raw frames are near-flat gray; deer are invisible without it)")
     args = ap.parse_args()
 
     n_tracks, by_frame, keyframes, per_track = parse_cvat(args.xml)
@@ -193,6 +198,7 @@ def main() -> None:
         if is_pos is None:
             continue
         H, W = frame.shape[:2]
+        frame = enhance_contrast(frame, method=args.contrast)  # thermal contrast fix
         name = f"{key}_f{fi}"
         cv2.imwrite(os.path.join(img_dir, f"{name}.png"), frame)
         lines = []

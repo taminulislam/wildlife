@@ -36,7 +36,8 @@ for xml in data/cvat_export/*.xml; do
     echo "--- [$n] $(basename "$xml")"
     python -u src/dataset/cvat_to_yolo.py \
         --xml "$xml" --source data/raw --out "$OUT" \
-        --pos-stride "$STRIDE" --pos-cap "$CAP" --neg-per-pos "$NEGPP" --preview
+        --pos-stride "$STRIDE" --pos-cap "$CAP" --neg-per-pos "$NEGPP" \
+        --contrast "${CONTRAST:-clahe}" --preview
 done
 
 echo "=== done: $(ls "$OUT/frames" | wc -l) images, $(ls "$OUT/labels" | wc -l) labels ==="
