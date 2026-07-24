@@ -42,11 +42,20 @@ echo "=== train $MODEL @ $IMGSZ  batch=$BATCH  epochs=$EPOCHS  data=$DATA  resum
 # picks MuSGD@0.01, which overshoots the pretrained basin and collapses mAP to 0.
 OPT=${OPT:-SGD}
 LR0=${LR0:-0.01}
+# strategy-B augmentation/warmup knobs (defaults = strategy-A baseline)
+MOSAIC=${MOSAIC:-1.0}
+COPYPASTE=${COPYPASTE:-0.0}
+MIXUP=${MIXUP:-0.0}
+SCALE=${SCALE:-0.5}
+WARMUPBIAS=${WARMUPBIAS:-0.1}
+WARMUPEP=${WARMUPEP:-3.0}
 python -u src/detect/train.py \
     --model weights/${MODEL}.pt --arch yolo \
     --data "$DATA" \
     --imgsz "$IMGSZ" --epochs "$EPOCHS" --batch "$BATCH" --patience 40 \
     --optimizer "$OPT" --lr0 "$LR0" \
+    --mosaic "$MOSAIC" --copy-paste "$COPYPASTE" --mixup "$MIXUP" --scale "$SCALE" \
+    --warmup-bias-lr "$WARMUPBIAS" --warmup-epochs "$WARMUPEP" \
     --save-period 10 $RESUME_FLAG \
     --project /work/hdd/bgte/tislam6/wildlife_outputs/runs \
     --name "$NAME"

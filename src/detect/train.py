@@ -79,6 +79,18 @@ def main() -> None:
                          "picks MuSGD@0.01 and collapses fine-tunes / diverges DETRs.")
     ap.add_argument("--lr0", type=float, default=0.0,
                     help="initial LR (0 = use Ultralytics default for the optimizer)")
+    # --- augmentation / warmup knobs (strategy-B: grow positives, tame warmup) ---
+    ap.add_argument("--mosaic", type=float, default=1.0)
+    ap.add_argument("--close-mosaic", type=int, default=15)
+    ap.add_argument("--copy-paste", type=float, default=0.0,
+                    help="paste deer from other imgs to boost positive instances")
+    ap.add_argument("--mixup", type=float, default=0.0)
+    ap.add_argument("--scale", type=float, default=0.5)
+    ap.add_argument("--translate", type=float, default=0.1)
+    ap.add_argument("--degrees", type=float, default=0.0)
+    ap.add_argument("--warmup-epochs", type=float, default=3.0)
+    ap.add_argument("--warmup-bias-lr", type=float, default=0.1,
+                    help="0.0 removes the warmup bias-LR spike that collapses mAP")
     ap.add_argument("--resume", action="store_true",
                     help="resume from <project>/<name>/weights/last.pt if present")
     ap.add_argument("--eval-conf", type=float, default=0.5,
@@ -108,9 +120,12 @@ def main() -> None:
             # tiny thermal blobs: keep mosaic but close it early so the model sees
             # native-scale deer before the final epochs; deer are pale-on-dark so
             # geometric aug helps more than colour aug.
-            close_mosaic=15, hsv_h=0.0, hsv_s=0.0, hsv_v=0.3,
-            fliplr=0.5, flipud=0.0, plots=True, exist_ok=True, verbose=True,
-            optimizer=args.optimizer,
+            hsv_h=0.0, hsv_s=0.0, hsv_v=0.3, fliplr=0.5, flipud=0.0,
+            plots=True, exist_ok=True, verbose=True, optimizer=args.optimizer,
+            mosaic=args.mosaic, close_mosaic=args.close_mosaic,
+            copy_paste=args.copy_paste, mixup=args.mixup, scale=args.scale,
+            translate=args.translate, degrees=args.degrees,
+            warmup_epochs=args.warmup_epochs, warmup_bias_lr=args.warmup_bias_lr,
         )
         if args.lr0 > 0:
             train_kwargs["lr0"] = args.lr0
