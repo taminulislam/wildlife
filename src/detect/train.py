@@ -74,6 +74,11 @@ def main() -> None:
     ap.add_argument("--project", default="/work/hdd/bgte/tislam6/wildlife_outputs/runs")
     ap.add_argument("--name", default="yolo_deer")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--optimizer", default="auto",
+                    help="SGD/AdamW/auto. Explicit beats Ultralytics 8.4 'auto', which "
+                         "picks MuSGD@0.01 and collapses fine-tunes / diverges DETRs.")
+    ap.add_argument("--lr0", type=float, default=0.0,
+                    help="initial LR (0 = use Ultralytics default for the optimizer)")
     ap.add_argument("--resume", action="store_true",
                     help="resume from <project>/<name>/weights/last.pt if present")
     ap.add_argument("--eval-conf", type=float, default=0.5,
@@ -105,7 +110,10 @@ def main() -> None:
             # geometric aug helps more than colour aug.
             close_mosaic=15, hsv_h=0.0, hsv_s=0.0, hsv_v=0.3,
             fliplr=0.5, flipud=0.0, plots=True, exist_ok=True, verbose=True,
+            optimizer=args.optimizer,
         )
+        if args.lr0 > 0:
+            train_kwargs["lr0"] = args.lr0
 
     model.add_callback("on_fit_epoch_end", _make_eta_logger())
     model.train(**train_kwargs)

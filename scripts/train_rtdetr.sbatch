@@ -38,10 +38,15 @@ RESUME_FLAG=""
 [ "$RESUME" = "1" ] && RESUME_FLAG="--resume"
 
 echo "=== train $MODEL @ $IMGSZ  batch=$BATCH  epochs=$EPOCHS  data=$DATA  resume=$RESUME ==="
+# DETRs need AdamW@~1e-4; Ultralytics optimizer=auto picks MuSGD@0.01 which will
+# NOT converge a transformer detector. Pin the standard RT-DETR recipe.
+OPT=${OPT:-AdamW}
+LR0=${LR0:-0.0001}
 python -u src/detect/train.py \
     --model weights/${MODEL}.pt --arch rtdetr \
     --data "$DATA" \
     --imgsz "$IMGSZ" --epochs "$EPOCHS" --batch "$BATCH" --patience 40 \
+    --optimizer "$OPT" --lr0 "$LR0" \
     --save-period 10 $RESUME_FLAG \
     --project /work/hdd/bgte/tislam6/wildlife_outputs/runs \
     --name "$NAME"

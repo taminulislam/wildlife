@@ -38,10 +38,15 @@ RESUME_FLAG=""
 [ "$RESUME" = "1" ] && RESUME_FLAG="--resume"
 
 echo "=== train $MODEL @ $IMGSZ  batch=$BATCH  epochs=$EPOCHS  data=$DATA  resume=$RESUME ==="
+# Explicit SGD (the recipe behind the old 0.611). Ultralytics 8.4 optimizer=auto
+# picks MuSGD@0.01, which overshoots the pretrained basin and collapses mAP to 0.
+OPT=${OPT:-SGD}
+LR0=${LR0:-0.01}
 python -u src/detect/train.py \
     --model weights/${MODEL}.pt --arch yolo \
     --data "$DATA" \
     --imgsz "$IMGSZ" --epochs "$EPOCHS" --batch "$BATCH" --patience 40 \
+    --optimizer "$OPT" --lr0 "$LR0" \
     --save-period 10 $RESUME_FLAG \
     --project /work/hdd/bgte/tislam6/wildlife_outputs/runs \
     --name "$NAME"
