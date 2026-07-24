@@ -112,8 +112,10 @@ def run_coco_eval(model, img_dir, lbl_dir, imgsz, device, conf_deploy):
     for a in gt["annotations"]:
         gt_by_img[a["image_id"]] = gt_by_img.get(a["image_id"], 0) + 1
 
+    # batch MUST be explicit: with a list source Ultralytics can build one giant
+    # batch of the whole split and OOM (observed: 43 GiB alloc on 2234 test imgs).
     results = model.predict(source=imgs, imgsz=imgsz, conf=0.001, iou=0.7,
-                            device=device, stream=True, verbose=False)
+                            device=device, stream=True, verbose=False, batch=16)
     for ip, r in zip(imgs, results):
         img_id = id_by_name[os.path.basename(ip)]
         n_gt = gt_by_img.get(img_id, 0)

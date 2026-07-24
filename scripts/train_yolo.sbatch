@@ -33,6 +33,7 @@ EPOCHS=${EPOCHS:-150}
 DATA=${DATA:-data/dataset/yolo_v2/data.yaml}
 NAME=${NAME:-${MODEL}_${IMGSZ}_v2_SHWtest}
 RESUME=${RESUME:-1}   # 1 = auto-continue from last.pt on re-submit; 0 = force fresh
+PATIENCE=${PATIENCE:-50}
 
 RESUME_FLAG=""
 [ "$RESUME" = "1" ] && RESUME_FLAG="--resume"
@@ -52,7 +53,7 @@ WARMUPEP=${WARMUPEP:-3.0}
 python -u src/detect/train.py \
     --model weights/${MODEL}.pt --arch yolo \
     --data "$DATA" \
-    --imgsz "$IMGSZ" --epochs "$EPOCHS" --batch "$BATCH" --patience 40 \
+    --imgsz "$IMGSZ" --epochs "$EPOCHS" --batch "$BATCH" --patience "$PATIENCE" \
     --optimizer "$OPT" --lr0 "$LR0" \
     --mosaic "$MOSAIC" --copy-paste "$COPYPASTE" --mixup "$MIXUP" --scale "$SCALE" \
     --warmup-bias-lr "$WARMUPBIAS" --warmup-epochs "$WARMUPEP" \
