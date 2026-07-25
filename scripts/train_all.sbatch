@@ -55,10 +55,13 @@ run_one() {
   local name=${m}_${IMGSZ}_${TAG}
   local log=$LOGS/wild_all_${m}_${SLURM_JOB_ID}.out
   echo "[gpu $gpu] START $m  batch=$batch $opt@$lr  -> $name  (log: $log)"
-  CUDA_VISIBLE_DEVICES=$gpu python -u src/detect/train.py \
+  # Pass the GPU via --device, NOT CUDA_VISIBLE_DEVICES: Ultralytics select_device()
+  # rewrites CUDA_VISIBLE_DEVICES from --device, so `CVD=$gpu ... --device 0` lands
+  # every model on physical GPU 0 (observed: 4 trainings sharing one A100, 3 idle).
+  python -u src/detect/train.py \
       --model weights/${m}.pt --arch "$arch" --data "$DATA" \
       --imgsz "$IMGSZ" --epochs "$EPOCHS" --batch "$batch" --patience 50 \
-      --optimizer "$opt" --lr0 "$lr" --device 0 \
+      --optimizer "$opt" --lr0 "$lr" --device "$gpu" \
       --save-period 10 --resume \
       --project "$RUNS" --name "$name" > "$log" 2>&1
   echo "[gpu $gpu] DONE  $m  (exit $?)"
