@@ -29,6 +29,9 @@ from collections import defaultdict
 
 import cv2
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "common"))
+from thermal import enhance_contrast  # noqa: E402
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mining"))
 try:
     from filename_meta import site_from_key  # noqa: E402
@@ -82,13 +85,23 @@ def count_video(model, path: str, args) -> tuple[list[dict], dict]:
     # per track-id: list of (frame_idx, conf, area_px, w, h)
     tracks: dict[int, list[tuple]] = defaultdict(list)
 
-    save_dir = os.path.join(args.out, "review")
-    results = model.track(
-        source=path, tracker=args.tracker, persist=True, stream=True,
-        conf=args.conf, iou=args.iou, imgsz=args.imgsz, device=args.device,
-        verbose=False, save=args.save_video, project=save_dir, name=stem, exist_ok=True,
-    )
-    for fi, r in enumerate(results):
+    # Frames are decoded HERE (not handed to Ultralytics as a path) so the SAME
+    # thermal contrast normalization used to build the training set is applied at
+    # inference. Raw FLIR frames are near-flat gray; a CLAHE-trained model scored on
+    # raw frames sees a different distribution and silently under-detects.
+    cap = cv2.VideoCapture(path)
+    fi = -1
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        fi += 1
+        frame = enhance_contrast(frame, method=args.contrast)
+        r = model.track(
+            source=frame, tracker=args.tracker, persist=True,
+            conf=args.conf, iou=args.iou, imgsz=args.imgsz, device=args.device,
+            verbose=False,
+        )[0]
         b = r.boxes
         if b is None or b.id is None:
             continue
@@ -98,6 +111,7 @@ def count_video(model, path: str, args) -> tuple[list[dict], dict]:
         for tid, cf, (xc, yc, w, h) in zip(ids, confs, whs):
             tracks[tid].append((fi, float(cf), float(w * h),
                                 float(xc), float(yc), float(w), float(h)))
+    cap.release()
 
     rows = []
     track_rows = []  # per-frame box dump for evidence rendering / GT review
@@ -152,6 +166,10 @@ def main() -> None:
     ap.add_argument("--tracker",
                     default=os.path.join(os.path.dirname(__file__), "botsort_deer.yaml"))
     ap.add_argument("--imgsz", type=int, default=640)
+    ap.add_argument("--contrast", default="clahe", choices=["clahe", "stretch", "none"],
+                    help="MUST match the setting used to build the training frames "
+                         "(cvat_to_yolo.py --contrast), or the model sees a different "
+                         "image distribution than it trained on")
     ap.add_argument("--device", default="0")
     # detection: low conf to feed weak detections into the tracker (recall-first)
     ap.add_argument("--conf", type=float, default=0.15)
