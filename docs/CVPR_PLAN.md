@@ -69,8 +69,10 @@ Ablation-friendly: each of the three heads can be toggled to isolate its gain.
 
 Moving-camera thermal wildlife counting benchmark: videos, unique-individual **track GT**,
 site/season splits, annotation protocol, code, weights. **Scale is the main risk** — 236 deer
-/ 42 videos is thin. Mitigate: fold in the RS footage, label the remaining 10 videos + more,
-add season/site diversity. Target a defensible size before submission.
+/ **32 videos** (8 per site x MAS/SHB/SHW/TON; per-site deer: SHB 132, TON 51, SHW 38, MAS 15)
+is thin. These 32 CVAT-labelled videos are the *entire* dataset — earlier drafts said 42,
+which was wrong. Mitigate: fold in the RS footage, label additional videos, add season/site
+diversity. Target a defensible size before submission.
 
 ## 7. Execution phases (layered on the current pipeline)
 
