@@ -4,7 +4,7 @@
 command/config that produced it, so the paper can be written from this file alone.
 Numbers here are *measured*, never estimated; anything unmeasured is marked TODO.
 
-Last updated: **2026-07-25** (see [Changelog](#changelog))
+Last updated: **2026-07-26** (see [Changelog](#changelog))
 
 ## Headline numbers (as of 2026-07-26)
 
