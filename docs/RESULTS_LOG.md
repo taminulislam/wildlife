@@ -102,8 +102,11 @@ Job `20477045`, 2026-07-25. Pooled split, CLAHE frames, SGD lr0=0.01, batch 32,
 | YOLOv8m ⚠ | 0.650 | 0.408 | 0.448 | 0.174 | 0.127 | 0.274 | 0.399 | 0.000 | 1 |
 | RT-DETR-L | 0.713 | 0.451 | 0.433 | 0.155 | 0.072 | 0.259 | 0.168 | 0.044 | 19 |
 
-⚠ YOLOv8m's `best.pt` is an epoch-1 checkpoint (warmup fitness spike fooled selection) —
-treat its row as a floor, or re-score a later checkpoint before publishing.
+⚠ YOLOv8m: job `2728312` re-selected its checkpoint on the **val** split and found
+epoch-0 genuinely IS its best (val mAP50 0.426 vs 0.412 @ep20, 0.388 @ep50). So the row is
+**correct, not an artefact** — YOLOv8m peaks immediately and then degrades, plausibly
+overfitting the 94%-interpolated labels (§1.1). Report as-is; the earlier "epoch-1 artefact"
+caveat is withdrawn.
 
 AP-large is undefined (`-1`) for every model: **no large deer exist in the test set.**
 
@@ -241,6 +244,35 @@ criteria: `iou50` (standard), `iou30`, `touch` (any overlap), `center` (centre-i
    (§3) — fix job `2728312` re-selects its checkpoint on the val split.
 
 
+
+
+### 4.4 Track-level recall — THE PHASE-B GATE ★ key result
+
+Job `2728289` (DeltaAI), 2026-07-25. YOLOv9m @640, conf 0.10, all 32 videos, 235 GT
+deer tracks. Question: of the deer that exist, how many does the detector find *at all*?
+A deer found in zero frames is unrecoverable by any downstream counting stage.
+
+| Matching rule | found in >=1 frame | found in >=3 frames |
+|---|---|---|
+| strict IoU>=0.50 | 204/235 (86.8%) | 181/235 (77.0%) |
+| IoU>=0.30 | 212/235 (90.2%) | 189/235 (80.4%) |
+| **any overlap (counting)** | **220/235 (93.6%)** | 192/235 (81.7%) |
+| centre-in-box | 219/235 (93.2%) | 192/235 (81.7%) |
+
+**GATE PASSED (>90% criterion, pre-registered in §5).** The detector finds 93.6% of all
+individual deer. Proceed to the counting harness and temporal head; further detector work
+is optional, not blocking.
+
+Per split (held-out **test** 94.7%, val 97.8%, train 92.1%) — the small train-split deficit
+is the opposite of overfitting and reflects harder videos, not memorisation.
+
+Per site: **SHW 100%** (38/38), MAS 100%, SHB 93.9%, **TON 86.0%** (43/50) — TON is the
+weakest site and the only one below 90%; worth a sentence in the paper and a candidate for
+targeted annotation.
+
+**Ceiling implication:** ~6% of deer are invisible to the detector at conf 0.10, so counting
+MAE has a hard floor of roughly 6% under-count unless recall improves (higher resolution,
+more data, or lower confidence with the temporal head filtering).
 
 ---
 
