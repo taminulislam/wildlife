@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+rtdetr-l_640_KEYFRAME,test,0.1,iou50,235,478,126,0.3296,0.651,0.4376
+rtdetr-l_640_KEYFRAME,test,0.1,iou30,283,430,78,0.3969,0.7839,0.527
+rtdetr-l_640_KEYFRAME,test,0.1,touch,286,427,75,0.4011,0.7922,0.5326
+rtdetr-l_640_KEYFRAME,test,0.1,center,287,426,74,0.4025,0.795,0.5345

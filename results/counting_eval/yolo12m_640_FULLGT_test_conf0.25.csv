@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+yolo12m_640_FULLGT,test,0.25,iou50,1051,307,1741,0.7739,0.3764,0.5065
+yolo12m_640_FULLGT,test,0.25,iou30,1209,149,1583,0.8903,0.433,0.5827
+yolo12m_640_FULLGT,test,0.25,touch,1262,96,1530,0.9293,0.452,0.6082
+yolo12m_640_FULLGT,test,0.25,center,1234,124,1558,0.9087,0.442,0.5947

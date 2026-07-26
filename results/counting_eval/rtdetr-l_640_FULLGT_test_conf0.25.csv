@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+rtdetr-l_640_FULLGT,test,0.25,iou50,1347,1281,1445,0.5126,0.4824,0.497
+rtdetr-l_640_FULLGT,test,0.25,iou30,1611,1017,1181,0.613,0.577,0.5945
+rtdetr-l_640_FULLGT,test,0.25,touch,1689,939,1103,0.6427,0.6049,0.6232
+rtdetr-l_640_FULLGT,test,0.25,center,1653,975,1139,0.629,0.592,0.61

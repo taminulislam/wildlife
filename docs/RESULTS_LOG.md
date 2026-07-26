@@ -191,10 +191,56 @@ criteria: `iou50` (standard), `iou30`, `touch` (any overlap), `center` (centre-i
 > "presence/counting recall" — **never** relabelled as mAP. mAP quoted at IoU>0 reads as
 > metric gaming and will sink a review.
 
-Results: **TODO** — job `20490065` pending. It runs the full 2×2 grid of §4.0:
-{`iou50`, `iou30`, `touch`, `center`} × {full interpolated GT, human-keyframe GT} ×
-{conf 0.25, 0.10}, for YOLOv9m / YOLOv10m / YOLO11m. The single number closest to "how
-well can we actually find deer for counting" is **`touch` recall on keyframe GT**.
+**RESULTS — jobs `20490065` (Delta) + `2728218` (DeltaAI GH200), 2026-07-25.** Full grid:
+6 models × 4 criteria × {full GT, keyframe GT} × {conf 0.25, 0.10}. Paper-ready table:
+`results/counting_eval/counting_eval_TABLE.md`; tidy CSV `counting_eval_ALL.csv`.
+
+#### Headline cell — human-keyframe GT, any-overlap matching (the counting-relevant number)
+
+| Model | conf 0.25 P / R / F1 | conf 0.10 P / R / F1 |
+|---|---|---|
+| **YOLO11m** | **0.942 / 0.634 / 0.758** | **0.861 / 0.720 / 0.784** |
+| YOLOv12m | 0.937 / 0.535 / 0.681 | 0.773 / 0.737 / 0.755 |
+| YOLOv9m | 0.936 / 0.565 / 0.705 | 0.787 / 0.684 / 0.732 |
+| YOLOv10m | 0.901 / 0.557 / 0.688 | 0.684 / 0.737 / 0.709 |
+| YOLOv8m ⚠ | 0.836 / 0.648 / 0.730 | 0.428 / 0.875 / 0.575 |
+| RT-DETR-L | 0.818 / 0.720 / 0.766 | 0.401 / 0.792 / 0.533 |
+
+#### Strict IoU≥0.50 on the same keyframe GT (for the standard detection table)
+
+| Model | conf 0.25 P / R / F1 | conf 0.10 P / R / F1 |
+|---|---|---|
+| YOLO11m | 0.811 / 0.546 / 0.652 | 0.715 / 0.598 / 0.652 |
+| YOLOv10m | 0.839 / 0.518 / 0.640 | 0.625 / 0.673 / 0.648 |
+| YOLOv9m | 0.830 / 0.501 / 0.625 | 0.694 / 0.604 / 0.646 |
+| YOLOv12m | 0.840 / 0.479 / 0.610 | 0.651 / 0.621 / 0.635 |
+| RT-DETR-L | 0.704 / 0.621 / 0.660 | 0.330 / 0.651 / 0.438 |
+| YOLOv8m ⚠ | 0.718 / 0.557 / 0.627 | 0.333 / 0.681 / 0.447 |
+
+#### Findings
+
+1. **Precision under the counting criterion is very high: 0.90–0.94** for the four good
+   YOLO models at conf 0.25 on human GT. At operating confidence, ~19 of every 20 boxes
+   the detector emits is genuinely on a deer.
+2. **Loosening IoU 0.5 → any-overlap gains ~+0.10 precision at nearly constant recall**
+   (YOLO11m 0.811 → 0.942, recall 0.546 → 0.634). So a large share of nominal "false
+   positives" are boxes sitting on real deer that merely failed the tightness test —
+   direct evidence that strict IoU is the wrong yardstick for this task.
+3. **Both axes of §4.0 stack.** YOLO11m F1 rises 0.535 (full GT, IoU50, conf .25) →
+   0.652 (keyframe GT, IoU50) → **0.758** (keyframe GT, any-overlap). GT quality and
+   matching strictness contribute roughly equally.
+4. **Confidence trades P for R as expected**; conf 0.10 is the better counting operating
+   point (YOLO11m R 0.634 → 0.720 for −0.08 precision), consistent with the
+   recall-limited regime of §3.
+5. **YOLO11m is the best counting detector** despite ranking 4th on mAP50 in §3 — a
+   reminder that the mAP ranking does not determine the counting ranking. **Use YOLO11m
+   (or the 1280 winner) for the counting pipeline.**
+6. ⚠ **RT-DETR-L and YOLOv8m degrade badly at conf 0.10** (precision 0.40 / 0.43 vs 0.79+
+   for the rest). RT-DETR emits a fixed 300 queries with no NMS, so low-confidence
+   detections proliferate; YOLOv8m's row is contaminated by the epoch-1 checkpoint
+   (§3) — fix job `2728312` re-selects its checkpoint on the val split.
+
+
 
 ---
 
@@ -202,9 +248,17 @@ well can we actually find deer for counting" is **`touch` recall on keyframe GT*
 
 | Job | Purpose | Status |
 |---|---|---|
-| `20490065` | counting-criterion detection eval (any-overlap), conf 0.25 & 0.10 | pending |
-| `20487340` | **track-level recall gate** — of 236 GT deer, how many found in ≥1 / ≥3 frames, all 4 criteria, by split & site | pending |
-| `20487321` | **1280 px ablation** — YOLOv10m + YOLOv9m, 70 epochs | pending (2×A100, 22 h) |
+| `2728218` | full counting-criterion detection table (6 models) | ✅ done — §4.3 |
+| `2728289` | **track-level recall gate** — of 236 GT deer, how many found in ≥1 / ≥3 frames, all 4 criteria, by split & site | running (DeltaAI) |
+| `2728187` | **1280 px ablation** — YOLOv10m + YOLOv9m, 70 epochs, batch 32 | running (DeltaAI GH200) |
+| `2728312` | yolov8m checkpoint fix (re-select on val, re-score) | running (DeltaAI) |
+
+**Compute note:** training now runs on **DeltaAI** (GH200, account `bgte-dtai-gh`,
+partition `ghx4`) whenever it has capacity — Delta's A100 partitions are saturated.
+`/work/nvme`, `/work/hdd` and `$HOME` are the SAME filesystems on both clusters, so no
+data movement is needed and results appear on Delta automatically. DeltaAI is aarch64:
+use `module load python/anaconda3/2.12.0` + venv `envs/wildlife_gh_venv`, not the x86
+conda env. Equivalence verified: identical weights scored 0.6696 (GH200) vs 0.670 (A100).
 
 ### Phase-B gate criterion (decided in advance)
 
@@ -266,6 +320,8 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-07-25** — Full counting-criterion detection table for all 6 models (§4.3): YOLO11m best for counting at 0.942 P / 0.634 R (keyframe GT, any-overlap, conf 0.25); moved compute to DeltaAI GH200.
 
 - **2026-07-25** — Added §4.0 clarifying that matching strictness and GT correctness are independent axes (permissive matching cannot rescue drifted GT); counting eval extended to the full 2x2 grid.
 - **2026-07-25** — Created. Roster @640 results (§3); size-stratified + domain metrics;
