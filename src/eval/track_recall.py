@@ -64,6 +64,37 @@ def iou_xyxy(a, b) -> float:
     return inter / ua if ua > 0 else 0.0
 
 
+def center_inside(gt, det) -> bool:
+    """Detection centre falls inside the GT box (or vice versa) — the counting-relevant
+    question: did the detector point AT this animal, regardless of box tightness."""
+    for a, b in ((gt, det), (det, gt)):
+        cx, cy = (b[0] + b[2]) / 2, (b[1] + b[3]) / 2
+        if a[0] <= cx <= a[2] and a[1] <= cy <= a[3]:
+            return True
+    return False
+
+
+# Matching criteria, strict -> permissive. For COUNTING, `touch` and `center` are the
+# operationally meaningful ones (a box overlapping the deer is enough to count it);
+# iou50 is kept because the detection table must report the standard definition.
+CRITERIA = ("iou50", "iou30", "touch", "center")
+
+
+def match_kind(gt, det) -> set:
+    """Which criteria this (gt, det) pair satisfies."""
+    v = iou_xyxy(gt, det)
+    out = set()
+    if v >= 0.5:
+        out.add("iou50")
+    if v >= 0.3:
+        out.add("iou30")
+    if v > 0:
+        out.add("touch")          # ANY overlap at all
+    if center_inside(gt, det):
+        out.add("center")
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weights", required=True)
@@ -123,7 +154,7 @@ def main() -> None:
             for f in sub:
                 want[f].append(ti)
 
-        hits = [0] * len(per_track)
+        hits = {c: [0] * len(per_track) for c in CRITERIA}
         best_iou = [0.0] * len(per_track)
         best_conf = [0.0] * len(per_track)
 
@@ -147,37 +178,41 @@ def main() -> None:
             dconf = r.boxes.conf.cpu().numpy()
             gtb = by_frame.get(fi, [])
             for ti in tidx:
-                # GT boxes of THIS track on THIS frame: match by picking the GT box
-                # belonging to the track's own frame list (boxes are per-frame lists,
-                # so use the best-IoU GT box on the frame as this track's proxy)
+                # GT boxes of THIS track on THIS frame (boxes are stored per-frame, so
+                # the best-matching GT box on the frame stands in for this track).
                 bi, bc = 0.0, 0.0
+                got: set = set()
                 for g in gtb:
                     for d, c in zip(dets, dconf):
+                        got |= match_kind(g, d)
                         v = iou_xyxy(g, d)
                         if v > bi:
                             bi, bc = v, float(c)
-                if bi >= args.iou_match:
-                    hits[ti] += 1
+                for crit in got:
+                    hits[crit][ti] += 1
                 best_iou[ti] = max(best_iou[ti], bi)
                 best_conf[ti] = max(best_conf[ti], bc)
         cap.release()
 
         for ti in range(len(per_track)):
-            rows.append({
+            row = {
                 "video": stem, "key": key, "site": site, "split": split,
                 "track_idx": ti,
                 "gt_frames": len(per_track[ti][0]),
                 "checked": checked_per_track[ti],
-                "hits": hits[ti],
                 "best_iou": round(best_iou[ti], 3),
                 "best_conf": round(best_conf[ti], 3),
-                "recovered_1": int(hits[ti] >= 1),
-                "recovered_3": int(hits[ti] >= 3),
-            })
-        rec1 = sum(h >= 1 for h in hits)
-        print(f"[{xi}/{len(xmls)}] {stem} ({site},{split}): "
-              f"{rec1}/{len(per_track)} deer found "
-              f"({100*rec1/len(per_track):.0f}%)", flush=True)
+            }
+            for c in CRITERIA:
+                row[f"hits_{c}"] = hits[c][ti]
+                row[f"found_{c}"] = int(hits[c][ti] >= 1)
+            rows.append(row)
+        r_strict = sum(h >= 1 for h in hits["iou50"])
+        r_count = sum(h >= 1 for h in hits["touch"])
+        nt = len(per_track)
+        print(f"[{xi}/{len(xmls)}] {stem} ({site},{split}): deer found — "
+              f"counting(any-overlap) {r_count}/{nt} ({100*r_count/nt:.0f}%) | "
+              f"strict(IoU>=.5) {r_strict}/{nt} ({100*r_strict/nt:.0f}%)", flush=True)
 
     # ---- write per-track rows ----
     fcsv = os.path.join(args.out, "track_recall.csv")
@@ -186,19 +221,11 @@ def main() -> None:
         w.writeheader(); w.writerows(rows)
 
     # ---- summaries ----
-    def agg(rows_):
-        n = len(rows_)
-        if not n:
-            return None
-        return (n,
-                sum(r["recovered_1"] for r in rows_),
-                sum(r["recovered_3"] for r in rows_))
-
     scsv = os.path.join(args.out, "track_recall_summary.csv")
     with open(scsv, "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["group", "value", "gt_deer", "found@1frame", "recall@1",
-                    "found@3frames", "recall@3"])
+        w.writerow(["group", "value", "gt_deer"] +
+                   [f"recall_{c}" for c in CRITERIA])
         for gname, keyf in (("ALL", lambda r: "all"),
                             ("split", lambda r: r["split"]),
                             ("site", lambda r: r["site"])):
@@ -206,17 +233,24 @@ def main() -> None:
             for r in rows:
                 groups[keyf(r)].append(r)
             for gv, rs in sorted(groups.items()):
-                n, r1, r3 = agg(rs)
-                w.writerow([gname, gv, n, r1, round(r1 / n, 4), r3, round(r3 / n, 4)])
+                n = len(rs)
+                w.writerow([gname, gv, n] +
+                           [round(sum(r[f"found_{c}"] for r in rs) / n, 4)
+                            for c in CRITERIA])
 
     n = len(rows)
-    r1 = sum(r["recovered_1"] for r in rows)
-    r3 = sum(r["recovered_3"] for r in rows)
     print("\n=== TRACK-LEVEL RECALL (the Phase-B gate) ===")
-    print(f"  GT deer (tracks): {n}")
-    print(f"  found in >=1 frame: {r1}  ({100*r1/n:.1f}%)")
-    print(f"  found in >=3 frames: {r3}  ({100*r3/n:.1f}%)")
-    print(f"  per-track: {fcsv}\n  summary : {scsv}")
+    print(f"  GT deer (tracks): {n}\n")
+    label = {"iou50": "strict IoU>=0.50 (detection-paper standard)",
+             "iou30": "IoU>=0.30",
+             "touch": "ANY overlap  <- the counting criterion",
+             "center": "centre inside box"}
+    for c in CRITERIA:
+        f1 = sum(r[f"found_{c}"] for r in rows)
+        f3 = sum(int(r[f"hits_{c}"] >= 3) for r in rows)
+        print(f"  {label[c]:<44} found>=1frame {f1:3d}/{n} ({100*f1/n:5.1f}%)"
+              f"   >=3frames {f3:3d}/{n} ({100*f3/n:5.1f}%)")
+    print(f"\n  per-track: {fcsv}\n  summary : {scsv}")
 
 
 if __name__ == "__main__":
