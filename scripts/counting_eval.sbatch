@@ -19,13 +19,21 @@ conda activate /work/nvme/bgte/tislam6/envs/wildlife
 cd /work/nvme/bgte/tislam6/wildlife_project
 R=/work/hdd/bgte/tislam6/wildlife_outputs/runs
 
+# Full 2x2 grid: {matching strictness} x {GT quality}. These are INDEPENDENT axes —
+# a permissive matching rule cannot rescue a GT box that drifted off the animal
+# entirely (median drift is 2.28 box-widths, so zero overlap is common).
+#   FULL GT  = all 2792 test boxes, 94% CVAT-interpolated
+#   KEYFRAME = 361 boxes a human actually placed
 for m in yolov9m yolov10m yolo11m; do
   b=$R/${m}_640_v3pooled/weights/best.pt
   [ -f "$b" ] || continue
   for cf in 0.25 0.10; do
     python -u src/eval/counting_detection_eval.py --weights "$b" \
         --data data/dataset/yolo_v3/data.yaml --split test \
-        --conf $cf --tag ${m}_640 || echo "[warn] $m conf$cf failed"
+        --conf $cf --tag ${m}_640_FULLGT || echo "[warn] $m conf$cf fullgt failed"
+    python -u src/eval/counting_detection_eval.py --weights "$b" \
+        --data data/dataset/yolo_v3_kf/data.yaml --split test \
+        --conf $cf --tag ${m}_640_KEYFRAME || echo "[warn] $m conf$cf kf failed"
   done
 done
 

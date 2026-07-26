@@ -131,6 +131,30 @@ achievable nor *needed* — counting requires knowing an animal is present, not 
 outline. **Report mAP50 + counting MAE/RMSE; report mAP50-95 for completeness only.**
 75% mAP50 is a plausible target; 75% mAP50-95 is not realistic for objects this small.
 
+### 4.0 Two INDEPENDENT axes — read this before §4.2/§4.3
+
+A detection is scored wrong for two unrelated reasons, and they need different fixes:
+
+| Axis | Question | Fix | Needs retraining? |
+|---|---|---|---|
+| **A. Matching strictness** | GT box is on the deer, but is the prediction "close enough"? IoU≥0.5 says a loose box fails. | permissive matching (`touch` = any overlap) — §4.3 | **No.** Post-hoc metric only. |
+| **B. GT correctness** | Is the GT box on the deer *at all*? 94% are interpolated; median drift 2.28 box-widths. | score against human keyframes — §4.2 | **No** for evaluation. Optional for training (see below). |
+
+**Crucially, axis A cannot rescue axis B.** If an interpolated GT box has drifted a full
+box-width or more off the animal (79% of segments), then a prediction sitting correctly
+*on the deer* has **zero overlap with that GT box** — so it is scored as both a miss and a
+false positive even under the most permissive "any overlap" rule. Loosening the matching
+rule only helps where the GT box is still on the animal.
+
+That is why §4.2 (keyframe GT) is reported at standard IoU≥0.5: it isolates axis B alone.
+§4.3 isolates axis A. The full 2×2 grid (both axes, both GT sets) is job `20490065`.
+
+**Does any of this require retraining? No.** All of it is measurement over already-saved
+weights. Retraining is only worth considering for a *different* reason: the 94%
+interpolated boxes are also noisy **training** labels, so training on cleaner/denser
+labels could improve the model itself. That is an optional future experiment, not a
+prerequisite for any number in this document.
+
 ### 4.2 Ground-truth quality: keyframe-only evaluation ★ key result
 
 Job `20490007`, 2026-07-25. Identical weights/images/code — only the GT changed. Scored on
@@ -167,7 +191,10 @@ criteria: `iou50` (standard), `iou30`, `touch` (any overlap), `center` (centre-i
 > "presence/counting recall" — **never** relabelled as mAP. mAP quoted at IoU>0 reads as
 > metric gaming and will sink a review.
 
-Results: **TODO** — job `20490065` pending.
+Results: **TODO** — job `20490065` pending. It runs the full 2×2 grid of §4.0:
+{`iou50`, `iou30`, `touch`, `center`} × {full interpolated GT, human-keyframe GT} ×
+{conf 0.25, 0.10}, for YOLOv9m / YOLOv10m / YOLO11m. The single number closest to "how
+well can we actually find deer for counting" is **`touch` recall on keyframe GT**.
 
 ---
 
@@ -240,6 +267,7 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 
 ## Changelog
 
+- **2026-07-25** — Added §4.0 clarifying that matching strictness and GT correctness are independent axes (permissive matching cannot rescue drifted GT); counting eval extended to the full 2x2 grid.
 - **2026-07-25** — Created. Roster @640 results (§3); size-stratified + domain metrics;
   annotation-quality analysis (§1.1) and keyframe-only evaluation (§4.2, key result);
   counting-criterion framework (§4.3); pipeline fixes (§2); dataset corrected to 32 videos.
