@@ -1,0 +1,50 @@
+{
+  "tag": "yolov10m_1280_v3pooled",
+  "weights": "/work/hdd/bgte/tislam6/wildlife_outputs/runs/yolov10m_1280_v3pooled/weights/best.pt",
+  "arch": "yolo",
+  "split": "test",
+  "imgsz": 1280,
+  "native": {
+    "precision": 0.6701407607437315,
+    "recall": 0.4322235717846015,
+    "mAP50": 0.4583302915125097,
+    "mAP75": 0.056923175203379694,
+    "mAP50-95": 0.163090412252711,
+    "f1": 0.525507991614308,
+    "fitness": 0.163090412252711,
+    "speed_ms": {
+      "preprocess": 0.2334620411064001,
+      "inference": 3.8139620904604463,
+      "loss": 0.00027240572759769106,
+      "postprocess": 0.08863692703163065
+    },
+    "confusion": {
+      "tp": 1928.0,
+      "fp": 0.0,
+      "fn": 0.0,
+      "precision_cm": 1.0,
+      "recall_cm": 1.0
+    }
+  },
+  "coco": {
+    "AP": 0.17083670921466748,
+    "AP50": 0.4685277110891833,
+    "AP75": 0.06282744432295483,
+    "AP_small": 0.09295171975061065,
+    "AP_medium": 0.2623230979316143,
+    "AP_large": -1.0,
+    "AR1": 0.1262893982808023,
+    "AR10": 0.29638252148997135,
+    "AR100": 0.31883954154727795,
+    "AR_small": 0.2541910331384015,
+    "AR_medium": 0.4023942537909019,
+    "AR_large": -1.0
+  },
+  "unique": {
+    "background_frames": 2235,
+    "fp_per_background_frame": 0.0044742729306487695,
+    "small_gt": 1539,
+    "small_deer_recall_proxy": 0.12735542560103963,
+    "deploy_conf": 0.5
+  }
+}

@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+yolov9m_1280_KEYFRAME,test,0.25,iou50,214,33,147,0.8664,0.5928,0.7039
+yolov9m_1280_KEYFRAME,test,0.25,iou30,230,17,131,0.9312,0.6371,0.7566
+yolov9m_1280_KEYFRAME,test,0.25,touch,232,15,129,0.9393,0.6427,0.7632
+yolov9m_1280_KEYFRAME,test,0.25,center,231,16,130,0.9352,0.6399,0.7599

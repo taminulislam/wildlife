@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+yolov10m_1280_FULLGT,test,0.25,iou50,1093,386,1699,0.739,0.3915,0.5118
+yolov10m_1280_FULLGT,test,0.25,iou30,1216,263,1576,0.8222,0.4355,0.5694
+yolov10m_1280_FULLGT,test,0.25,touch,1262,217,1530,0.8533,0.452,0.591
+yolov10m_1280_FULLGT,test,0.25,center,1236,243,1556,0.8357,0.4427,0.5788

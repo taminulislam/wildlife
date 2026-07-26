@@ -274,6 +274,57 @@ targeted annotation.
 MAE has a hard floor of roughly 6% under-count unless recall improves (higher resolution,
 more data, or lower confidence with the temporal head filtering).
 
+
+### 4.5 Resolution ablation: 640 vs 1280 ★ key result
+
+Jobs `2728654` (train, DeltaAI GH200) + `2729221` (eval), 2026-07-26. 70 epochs,
+batch 32, same pooled split. **Every metric below is computed at the model's own
+training resolution** — scoring a 1280 model at 640 would understate it.
+
+| Model | res | P | R | mAP50 | mAP50-95 | AP-small |
+|---|---|---|---|---|---|---|
+| YOLOv9m | 640 | 0.704 | 0.448 | 0.498 | 0.184 | 0.128 |
+| **YOLOv9m** | **1280** | **0.757** | **0.491** | **0.523** | **0.199** | 0.119 |
+| YOLOv10m | 640 | 0.674 | 0.455 | 0.498 | 0.197 | 0.117 |
+| YOLOv10m | 1280 | 0.670 | 0.432 | 0.458 | 0.163 | 0.093 |
+
+**The ablation is architecture-dependent — that is the finding.** 1280 helps YOLOv9m
+(+0.025 mAP50, +0.043 recall, +0.053 precision) and *hurts* YOLOv10m (−0.040 mAP50).
+At 640 the two were tied at 0.498; at 1280 they diverge by 0.065. Do not report
+"higher resolution helps" as a general claim.
+
+Note AP-small does **not** improve for either model even where overall mAP50 does
+(YOLOv9m 0.128 → 0.119), so the 640 AP-small/AP-medium gap of §3 was **not** primarily
+a resolution deficit. The gain at 1280 comes from better recall and precision overall,
+not from rescuing the smallest deer.
+
+#### Track-level recall at 1280 — the counting-relevant gain
+
+| Matching rule | 640 | **1280** | Δ |
+|---|---|---|---|
+| strict IoU>=0.50 | 86.8% | **95.7%** | +8.9 |
+| **any overlap (counting)** | 93.6% | **97.0%** | **+3.4** |
+| any overlap, >=3 frames | 81.7% | **91.1%** | +9.4 |
+
+**Deer never detected at all: 15/235 (6.4%) → 7/235 (3.0%) — halved.** The hard floor on
+counting under-count drops from ~6% to ~3%. The >=3-frame figure (81.7% → 91.1%) matters
+even more for the temporal head, which needs several observations per animal to confirm
+a track.
+
+#### Counting-criterion detection, YOLOv9m @1280 (human-keyframe GT)
+
+| conf | IoU>=0.50 P/R/F1 | any-overlap P/R/F1 |
+|---|---|---|
+| 0.25 | 0.866 / 0.593 / 0.704 | **0.939 / 0.643 / 0.763** |
+| 0.10 | 0.792 / 0.673 / 0.728 | — |
+
+vs the best 640 model (YOLO11m): 0.942 / 0.634 / 0.758. Essentially tied on precision,
+slightly better recall — but YOLOv9m@1280 wins decisively on the metric that governs
+counting, track-level recall (97.0% vs 93.6%).
+
+**Decision: use YOLOv9m @1280 as the counting detector.** 640 remains the cheaper option
+if inference cost matters (1280 is ~4x the pixels, ~1.6x the epoch time measured here).
+
 ---
 
 ## 5. Pending / queued
@@ -352,6 +403,8 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-07-26** — Resolution ablation (§4.5): YOLOv9m@1280 is the new best (test mAP50 0.523, track-level recall 97.0%, deer-never-seen halved to 3.0%); 1280 HURTS YOLOv10m (0.458). Phase B counting harness built and running.
 
 - **2026-07-25** — Full counting-criterion detection table for all 6 models (§4.3): YOLO11m best for counting at 0.942 P / 0.634 R (keyframe GT, any-overlap, conf 0.25); moved compute to DeltaAI GH200.
 

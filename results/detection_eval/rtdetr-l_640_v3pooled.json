@@ -1,0 +1,50 @@
+{
+  "tag": "rtdetr-l_640_v3pooled",
+  "weights": "/work/hdd/bgte/tislam6/wildlife_outputs/runs/rtdetr-l_640_v3pooled/weights/best.pt",
+  "arch": "rtdetr",
+  "split": "test",
+  "imgsz": 640,
+  "native": {
+    "precision": 0.7125019687199564,
+    "recall": 0.4512893982808023,
+    "mAP50": 0.432951934200426,
+    "mAP75": 0.05544014582687724,
+    "mAP50-95": 0.15475056791966085,
+    "f1": 0.5525811478842264,
+    "fitness": 0.15475056791966085,
+    "speed_ms": {
+      "preprocess": 0.4117330660357534,
+      "inference": 4.607850248037037,
+      "loss": 0.00044166496814222343,
+      "postprocess": 0.13182450550367691
+    },
+    "confusion": {
+      "tp": 1451.0,
+      "fp": 0.0,
+      "fn": 0.0,
+      "precision_cm": 1.0,
+      "recall_cm": 1.0
+    }
+  },
+  "coco": {
+    "AP": 0.15609686704485526,
+    "AP50": 0.43409658800332157,
+    "AP75": 0.05731772257291233,
+    "AP_small": 0.07225723094214768,
+    "AP_medium": 0.2592896339135222,
+    "AP_large": -1.0,
+    "AR1": 0.11568767908309455,
+    "AR10": 0.22457020057306587,
+    "AR100": 0.24767191977077366,
+    "AR_small": 0.16764132553606237,
+    "AR_medium": 0.3501995211492418,
+    "AR_large": -1.0
+  },
+  "unique": {
+    "background_frames": 2235,
+    "fp_per_background_frame": 0.04384787472035794,
+    "small_gt": 1539,
+    "small_deer_recall_proxy": 0.30994152046783624,
+    "deploy_conf": 0.5
+  }
+}
