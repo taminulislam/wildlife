@@ -15,7 +15,7 @@ Last updated: **2026-07-26** (see [Changelog](#changelog))
 | Best counting-criterion P/R (keyframe GT) | **0.939 / 0.643** (YOLOv9m@1280, conf .25) | §4.5 |
 | **Track-level recall (deer found at all)** | **97.0%** — 228/235 | §4.4 ★ |
 | Deer never detected (counting floor) | 7/235 = 3.0% | §4.4 |
-| Counting MAE/RMSE | **TODO** — job running | §4.6 |
+| **Counting MAE / RMSE (baseline)** | **2.28 / 3.74** — 215 of 236 deer (91.1%) | §4.7 ★ |
 
 ---
 
@@ -367,7 +367,50 @@ Detector for counting: **YOLOv9m @1280** (§4.5), chosen on track-level recall (
 not mAP. Detection runs at conf 0.10 — the regime is recall-limited (§3), so candidates
 are over-generated and confirmation happens downstream.
 
-Results: **TODO** — job `2730226` / `20493649`.
+Results: see §4.7.
+
+### 4.7 Counting results — the baseline to beat ★ HEADLINE
+
+Job `2730226` (DeltaAI, 1 h 17 m), 2026-07-26. YOLOv9m@1280, conf 0.10, BoT-SORT with
+camera-motion compensation, all 32 videos / 521,930 frames. **First trustworthy counts
+in the project** — everything before the CLAHE-at-inference fix (§2 #5) was measured on
+the wrong image distribution.
+
+Best hand-tuned rule (swept over 288 configs, tuned on this data to make the baseline
+as strong as possible): `span_s >= 0.3`, `topk_conf >= 0.65`, `min_hits` irrelevant.
+
+| Scope | Videos | MAE | RMSE | Bias | Over | Under |
+|---|---|---|---|---|---|---|
+| **ALL** | 32 | **2.28** | **3.74** | −0.66 | 26 | 47 |
+| MAS | 8 | 0.25 | 0.50 | −0.25 | 0 | 2 |
+| TON | 8 | 2.50 | 4.50 | −2.50 | 0 | 20 |
+| SHB | 8 | 2.88 | 3.59 | −0.38 | 10 | 13 |
+| SHW | 8 | 3.50 | 4.74 | +0.50 | 16 | 12 |
+
+**Total: 215 predicted vs 236 true (91.1%).**
+
+#### Findings
+
+1. **MAE 2.28 deer/video is the number the temporal head must beat.** RMSE 3.74 >> MAE
+   means the error is concentrated in a few bad videos, not spread evenly — see (4).
+2. **`min_hits` has NO effect** (MAE identical for 1..30). Confidence and duration do all
+   the filtering work. This is direct evidence that the hand-tuned rule is a blunt
+   instrument: one of its three knobs is inert, and the other two are shared thresholds
+   applied identically to a 27-px distant deer and a large near one. Good motivation for
+   the learned head.
+3. **Errors are bidirectional and site-dependent** — TON under-counts badly (−2.5/video,
+   20 missed, 0 over), SHW over-counts (+0.5, 16 spurious). A single global rule cannot
+   fix both directions at once; a learned per-track decision can.
+4. **Worst videos:** NatureTrail_TON 15 GT → 4 predicted (−11), GiantCityRd_TON 8 → 2
+   (−6); over-count side SBassett_SHW 11 → 22 (+11), EagleCreek_SHB 44 → 50 (+6).
+   Note TON was also the weakest site in the detection gate (§4.4, 86% track recall),
+   so its under-count is partly a detector deficit; SHW's over-count is fragmentation
+   (SHW had 100% track recall), i.e. exactly the re-ID head's job.
+5. Under-counting (47) exceeds over-counting (26): the pipeline is conservative overall.
+
+**These four mechanisms — inert knobs, bidirectional site-dependent error, fragmentation
+over-count, merged/missed under-count — are the specific failures the temporal head is
+designed to fix, and they are now measured rather than assumed.**
 
 ---
 
@@ -390,8 +433,9 @@ Results: **TODO** — job `2730226` / `20493649`.
 
 | Job | Cluster | Purpose |
 |---|---|---|
-| `2730226` | DeltaAI | **Phase B counting run** — YOLOv9m@1280, conf 0.10, 32 videos |
-| `20493649` | Delta | same job, hedged on the other allocation (first to start wins) |
+| `2730226` | DeltaAI | **Phase B counting run** — ✅ done in 1 h 17 m, §4.7 |
+| `20493649` | Delta | hedge twin — both started before either could be cancelled; the
+Delta copy was killed once the DeltaAI results landed (~1.5 GPU-h duplicated) |
 
 Both are 4-GPU / 3-hour requests. Queue note (2026-07-26): DeltaAI had **zero idle
 nodes** and the job's priority was 1,228 vs 11,265 at the queue head — fairshare
@@ -478,6 +522,9 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-07-26** — ★ Phase B complete (§4.7): counting baseline MAE 2.28 / RMSE 3.74,
+  215/236 deer. `min_hits` proven inert; errors bidirectional and site-dependent.
 
 - **2026-07-26** — Phase B counting harness built (§4.6) and Phase C track-labelling
   verified; corpus scale measured (§1.2b, 521,930 frames); run-status section rewritten.
