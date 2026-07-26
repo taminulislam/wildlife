@@ -124,13 +124,6 @@ AP-large is undefined (`-1`) for every model: **no large deer exist in the test 
 
 ## 4. Evaluation-methodology results
 
-### 4.1 Why mAP50-95 is the wrong headline for this paper
-
-Deer are ~27 px. AP@0.75 requires box agreement within a few pixels, which is neither
-achievable nor *needed* — counting requires knowing an animal is present, not its exact
-outline. **Report mAP50 + counting MAE/RMSE; report mAP50-95 for completeness only.**
-75% mAP50 is a plausible target; 75% mAP50-95 is not realistic for objects this small.
-
 ### 4.0 Two INDEPENDENT axes — read this before §4.2/§4.3
 
 A detection is scored wrong for two unrelated reasons, and they need different fixes:
@@ -154,6 +147,13 @@ weights. Retraining is only worth considering for a *different* reason: the 94%
 interpolated boxes are also noisy **training** labels, so training on cleaner/denser
 labels could improve the model itself. That is an optional future experiment, not a
 prerequisite for any number in this document.
+
+### 4.1 Why mAP50-95 is the wrong headline for this paper
+
+Deer are ~27 px. AP@0.75 requires box agreement within a few pixels, which is neither
+achievable nor *needed* — counting requires knowing an animal is present, not its exact
+outline. **Report mAP50 + counting MAE/RMSE; report mAP50-95 for completeness only.**
+75% mAP50 is a plausible target; 75% mAP50-95 is not realistic for objects this small.
 
 ### 4.2 Ground-truth quality: keyframe-only evaluation ★ key result
 
