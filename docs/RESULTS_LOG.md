@@ -6,6 +6,17 @@ Numbers here are *measured*, never estimated; anything unmeasured is marked TODO
 
 Last updated: **2026-07-25** (see [Changelog](#changelog))
 
+## Headline numbers (as of 2026-07-26)
+
+| What | Value | Where |
+|---|---|---|
+| Best detector (mAP50, test) | **YOLOv9m @1280 — 0.523** | §4.5 |
+| Same model, human-verified GT | 0.640 @640 / see §4.5 for 1280 | §4.2 |
+| Best counting-criterion P/R (keyframe GT) | **0.939 / 0.643** (YOLOv9m@1280, conf .25) | §4.5 |
+| **Track-level recall (deer found at all)** | **97.0%** — 228/235 | §4.4 ★ |
+| Deer never detected (counting floor) | 7/235 = 3.0% | §4.4 |
+| Counting MAE/RMSE | **TODO** — job running | §4.6 |
+
 ---
 
 ## 1. Dataset
@@ -66,6 +77,19 @@ Split by **video** (never by frame), allocated by deer count ≈ 65/19/16%.
 A leave-one-site-out split (SHW held out) is retained for the cross-site
 generalization experiment (Phase D). COCO-format copies for mmdetection live in
 `data/dataset/yolo_v3/coco_annotations/`.
+
+### 1.2b Video corpus scale (measured 2026-07-26)
+
+| Quantity | Value |
+|---|---|
+| Videos | 32 |
+| **Total frames** | **521,930** |
+| Mean frames/video | ~16,300 |
+| Largest videos | NWolfCreek(blue) 68k, NIron_SHW 36k, FernRidgeRd 35k, N25thBlue 25k |
+| Frame rate / size | 60 fps, 640x512 grayscale |
+
+Full-corpus inference costs ~2-4 GPU-hours at 1280 px (12-30 ms/frame incl. decode +
+tracking) — cheap enough to re-run counting whenever the detector changes.
 
 ### 1.3 Object scale
 
@@ -325,23 +349,64 @@ counting, track-level recall (97.0% vs 93.6%).
 **Decision: use YOLOv9m @1280 as the counting detector.** 640 remains the cheaper option
 if inference cost matters (1280 is ~4x the pixels, ~1.6x the epoch time measured here).
 
+### 4.6 Counting evaluation protocol (Phase B)
+
+The paper's headline metric, implemented in `src/eval/count_eval.py`:
+**MAE / RMSE / signed bias** between predicted confirmed-track counts and the CVAT
+track count, per video and per site, with an explicit over-count / under-count split.
+
+The comparison baseline is the **best hand-tuned confirmation rule**: `count_deer.py`
+dumps every candidate track's statistics, so any rule
+`n_frames >= min_hits AND span_s >= min_span_s AND topk_conf >= conf_track` can be
+re-applied post-hoc with no GPU re-run. We sweep 288 combinations and report the best.
+**The sweep tunes on the evaluation data deliberately** — it makes the hand-tuned
+baseline as strong as possible, so the learned temporal head beating it is meaningful
+rather than a straw-man comparison.
+
+Detector for counting: **YOLOv9m @1280** (§4.5), chosen on track-level recall (97.0%),
+not mAP. Detection runs at conf 0.10 — the regime is recall-limited (§3), so candidates
+are over-generated and confirmation happens downstream.
+
+Results: **TODO** — job `2730226` / `20493649`.
+
 ---
 
-## 5. Pending / queued
+## 5. Status of runs
 
-| Job | Purpose | Status |
+### Completed
+
+| Job | Cluster | Purpose | Result |
+|---|---|---|---|
+| `20477045` | Delta | 6-model roster @640, 150 ep | §3 |
+| `20486592` | Delta | full metrics incl. COCO size-stratified | §3 |
+| `20490007` | Delta | keyframe-only evaluation | §4.2 ★ |
+| `20490065`+`2728218` | both | counting-criterion table, 6 models | §4.3 ★ |
+| `2728289` | DeltaAI | track-level recall gate | §4.4 ★ |
+| `2728312` | DeltaAI | yolov8m checkpoint re-selection | §3 note |
+| `2728654`+`2729221` | DeltaAI | 1280 ablation + full eval battery | §4.5 ★ |
+| `2728181` | DeltaAI | GH200 environment smoke test | 0.6696 vs 0.670 on A100 |
+
+### Running / queued
+
+| Job | Cluster | Purpose |
 |---|---|---|
-| `2728218` | full counting-criterion detection table (6 models) | ✅ done — §4.3 |
-| `2728289` | **track-level recall gate** — of 236 GT deer, how many found in ≥1 / ≥3 frames, all 4 criteria, by split & site | running (DeltaAI) |
-| `2728187` | **1280 px ablation** — YOLOv10m + YOLOv9m, 70 epochs, batch 32 | running (DeltaAI GH200) |
-| `2728312` | yolov8m checkpoint fix (re-select on val, re-score) | running (DeltaAI) |
+| `2730226` | DeltaAI | **Phase B counting run** — YOLOv9m@1280, conf 0.10, 32 videos |
+| `20493649` | Delta | same job, hedged on the other allocation (first to start wins) |
 
-**Compute note:** training now runs on **DeltaAI** (GH200, account `bgte-dtai-gh`,
-partition `ghx4`) whenever it has capacity — Delta's A100 partitions are saturated.
-`/work/nvme`, `/work/hdd` and `$HOME` are the SAME filesystems on both clusters, so no
-data movement is needed and results appear on Delta automatically. DeltaAI is aarch64:
-use `module load python/anaconda3/2.12.0` + venv `envs/wildlife_gh_venv`, not the x86
-conda env. Equivalence verified: identical weights scored 0.6696 (GH200) vs 0.670 (A100).
+Both are 4-GPU / 3-hour requests. Queue note (2026-07-26): DeltaAI had **zero idle
+nodes** and the job's priority was 1,228 vs 11,265 at the queue head — fairshare
+(1,115 of the 1,228) dominates and falls with recent account usage. Job size was NOT
+the constraint: 1-, 2- and 4-GPU requests all returned identical start estimates.
+
+### Phase C — built, awaiting the counting run
+
+`src/temporal/build_track_labels.py` labels every candidate track against the CVAT GT
+and emits supervision for all three heads: `is_real` (confirmation), `gt_track` +
+`gt_coverage.csv` (re-ID / fragmentation = the over-count mechanism), `multiplicity`
+(merged blobs = the under-count mechanism). Matching uses the counting criterion over
+>=3 co-occurring frames; `--keyframes-only` allows ablating the 94%-interpolation drift
+(§1.1). Verified on synthetic GT (clean track -> real/mult 1; distant noise -> false;
+blob spanning two deer -> real/mult 2).
 
 ### Phase-B gate criterion (decided in advance)
 
@@ -391,10 +456,20 @@ sbatch scripts/eval_all.sbatch
 sbatch scripts/eval_keyframe.sbatch
 # counting-criterion evaluation                -> §4.3
 sbatch scripts/counting_eval.sbatch
-# track-level recall gate                      -> §5
-sbatch scripts/track_recall.sbatch
-# 1280 px ablation                             -> §5
-sbatch scripts/train_res1280.sbatch
+# track-level recall gate                      -> §4.4
+sbatch scripts/dtai_track_recall.sbatch      # DeltaAI variant
+# 1280 px ablation + its full eval battery     -> §4.5
+sbatch scripts/dtai_train_1280.sbatch
+sbatch --dependency=afterany:<trainjob> scripts/dtai_eval_1280.sbatch
+
+# --- Phase B: counting (the headline metric) -> §4.6 ---
+sbatch scripts/dtai_counting.sbatch          # or scripts/delta_counting.sbatch
+python src/eval/count_eval.py --counts results/counts/yolov9m_1280_conf0.10
+
+# --- Phase C: temporal-head training labels ---
+python src/temporal/build_track_labels.py --counts results/counts/yolov9m_1280_conf0.10
+python src/temporal/build_track_labels.py --counts <same> --keyframes-only \
+    --out <dir>/labels_kf                    # ablation vs interpolation drift
 ```
 
 Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
@@ -403,6 +478,9 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-07-26** — Phase B counting harness built (§4.6) and Phase C track-labelling
+  verified; corpus scale measured (§1.2b, 521,930 frames); run-status section rewritten.
 
 - **2026-07-26** — Resolution ablation (§4.5): YOLOv9m@1280 is the new best (test mAP50 0.523, track-level recall 97.0%, deer-never-seen halved to 3.0%); 1280 HURTS YOLOv10m (0.458). Phase B counting harness built and running.
 
