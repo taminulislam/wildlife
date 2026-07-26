@@ -1,0 +1,8 @@
+path: /work/nvme/bgte/tislam6/wildlife_project/data/dataset/yolo_v3_kf
+train: images/test
+val: images/test
+test: images/test
+
+nc: 1
+names:
+  0: deer
