@@ -67,6 +67,10 @@ def main() -> None:
     ap.add_argument("--imgsz", type=int, default=640)
     ap.add_argument("--epochs", type=int, default=150)
     ap.add_argument("--batch", type=int, default=32)
+    ap.add_argument("--workers", type=int, default=8,
+                    help="dataloader workers PER training process. At 1280px each "
+                         "worker buffers large decoded images; 2 concurrent trainings "
+                         "x 8 workers exceeded 200GB host RAM (job 2728187 OOM-killed).")
     ap.add_argument("--patience", type=int, default=40)
     ap.add_argument("--save-period", type=int, default=10,
                     help="checkpoint every N epochs (for mid-run resume)")
@@ -117,6 +121,7 @@ def main() -> None:
             data=args.data, imgsz=args.imgsz, epochs=args.epochs, batch=args.batch,
             patience=args.patience, device=args.device, project=args.project,
             name=args.name, seed=args.seed, save_period=args.save_period,
+            workers=args.workers,
             # tiny thermal blobs: keep mosaic but close it early so the model sees
             # native-scale deer before the final epochs; deer are pale-on-dark so
             # geometric aug helps more than colour aug.

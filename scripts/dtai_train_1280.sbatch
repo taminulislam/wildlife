@@ -5,8 +5,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus-per-node=2
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=200G
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=440G
 #SBATCH --time=12:00:00
 #SBATCH --requeue
 #SBATCH --mail-user=islamtaminul@gmail.com
@@ -64,7 +64,7 @@ for i in 0 1; do
       --model weights/${m}.pt --arch yolo --data "$DATA" \
       --imgsz 1280 --epochs "$EPOCHS" --batch "$BATCH" --patience 50 \
       --optimizer SGD --lr0 0.01 --device "$i" \
-      --save-period 10 --resume \
+      --save-period 10 --workers 4 --resume \
       --project "$RUNS" --name "$name" > "$log" 2>&1 &
   pids+=($!)
 done
