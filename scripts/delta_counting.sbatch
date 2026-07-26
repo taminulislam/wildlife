@@ -4,7 +4,7 @@
 #SBATCH --partition=gpuA100x4-preempt,gpuA100x4
 #SBATCH --qos=bgte-delta-gpu
 #SBATCH --nodes=1 --ntasks=1 --gpus-per-node=4 --cpus-per-task=32 --mem=200G
-#SBATCH --time=10:00:00
+#SBATCH --time=03:00:00
 #SBATCH --requeue
 #SBATCH --mail-user=islamtaminul@gmail.com
 #SBATCH --mail-type=FAIL

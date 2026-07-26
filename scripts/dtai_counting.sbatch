@@ -3,7 +3,7 @@
 #SBATCH --account=bgte-dtai-gh
 #SBATCH --partition=ghx4
 #SBATCH --nodes=1 --ntasks=1 --gpus-per-node=4 --cpus-per-task=64 --mem=400G
-#SBATCH --time=10:00:00
+#SBATCH --time=03:00:00
 #SBATCH --requeue
 #SBATCH --mail-user=islamtaminul@gmail.com
 #SBATCH --mail-type=FAIL
