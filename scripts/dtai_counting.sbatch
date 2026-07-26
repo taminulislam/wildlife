@@ -14,24 +14,24 @@
 # the 236-deer ground truth. This produces the paper's HEADLINE metric and the
 # hand-tuned baseline the learned temporal head must beat.
 #
-# Detector: YOLO11m — best COUNTING detector per docs/RESULTS_LOG.md §4.3
-# (keyframe GT, any-overlap, conf .25: P 0.942 / R 0.634), even though it ranks 4th
-# on mAP50. Detection conf 0.10: recall-first, confirmation applied post-hoc.
+# Detector: YOLOv9m @1280 — best per RESULTS_LOG 4.5 (track-level recall 97.0% vs
+# 93.6% at 640; deer never detected halved to 3.0%). Counting cares about track
+# recall, not mAP. Detection conf 0.10: recall-first, confirm post-hoc.
 # CLAHE is applied at inference (pipeline fix #5) — earlier counts were invalid.
 set -e
 module load python/anaconda3/2.12.0
 source /work/nvme/bgte/tislam6/envs/wildlife_gh_venv/bin/activate
 cd /work/nvme/bgte/tislam6/wildlife_project
 
-W=${W:-/work/hdd/bgte/tislam6/wildlife_outputs/runs/yolo11m_640_v3pooled/weights/best.pt}
-OUT=${OUT:-results/counts/yolo11m_640_conf0.10}
+W=${W:-/work/hdd/bgte/tislam6/wildlife_outputs/runs/yolov9m_1280_v3pooled/weights/best.pt}
+OUT=${OUT:-results/counts/yolov9m_1280_conf0.10}
 N=4
 
 echo "=== counting run $(date) — $W -> $OUT ==="
 pids=()
 for s in 0 1 2 3; do
   python -u src/track/run_counting.py --weights "$W" --out "$OUT" \
-      --conf 0.10 --imgsz 640 --device $s --shard $s --nshards $N \
+      --conf 0.10 --imgsz 1280 --device $s --shard $s --nshards $N \
       > /work/hdd/bgte/tislam6/wildlife_outputs/logs/gh_count_shard${s}_${SLURM_JOB_ID}.out 2>&1 &
   pids+=($!)
 done
