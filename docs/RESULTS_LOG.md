@@ -523,6 +523,11 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 
 ## Changelog
 
+- **2026-07-26** — Phase-B gate PASSED: 93.6% track-level recall under the counting
+  criterion (§4.4) -> detector is not the counting bottleneck, proceed to the temporal
+  head. YOLOv8m epoch-1 checkpoint verified as genuine (§4.5). 1280 ablation OOM-killed
+  (host RAM) and resubmitted with 440 GB / 4 workers.
+
 - **2026-07-26** — ★ Phase B complete (§4.7): counting baseline MAE 2.28 / RMSE 3.74,
   215/236 deer. `min_hits` proven inert; errors bidirectional and site-dependent.
 
