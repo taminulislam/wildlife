@@ -79,9 +79,11 @@ def aggregate_conf(confs: list[float], k: int = 5) -> float:
     return sum(top) / len(top)
 
 
-def count_video(model, path: str, args) -> tuple[list[dict], dict]:
+def count_video(model, path: str, args, name: str | None = None) -> tuple[list[dict], dict]:
     fps = video_fps(path)
-    stem = os.path.splitext(os.path.basename(path))[0]
+    # `name` overrides the basename so the row key can match the GT/CVAT key
+    # (MAS Visit1/Visit2 share an mp4 filename; basenames would collide).
+    stem = name or os.path.splitext(os.path.basename(path))[0]
     # per track-id: list of (frame_idx, conf, area_px, w, h)
     tracks: dict[int, list[tuple]] = defaultdict(list)
 
@@ -166,6 +168,12 @@ def main() -> None:
     ap.add_argument("--tracker",
                     default=os.path.join(os.path.dirname(__file__), "botsort_deer.yaml"))
     ap.add_argument("--imgsz", type=int, default=640)
+    ap.add_argument("--cvat-dir", default="",
+                    help="drive the video list from CVAT exports so reported video "
+                         "names match count_gt.csv exactly and MAS V1/V2 stay distinct")
+    ap.add_argument("--shards", type=int, default=1,
+                    help="split the video list across N parallel jobs/GPUs")
+    ap.add_argument("--shard", type=int, default=0, help="which shard (0-based)")
     ap.add_argument("--contrast", default="clahe", choices=["clahe", "stretch", "none"],
                     help="MUST match the setting used to build the training frames "
                          "(cvat_to_yolo.py --contrast), or the model sees a different "
@@ -188,16 +196,37 @@ def main() -> None:
     from ultralytics import YOLO
     model = YOLO(args.weights)
 
-    vids = list_videos(args.source)
-    if not vids:
-        raise SystemExit(f"no videos under {args.source}")
+    # Video list. Driving it from --cvat-dir is STRONGLY preferred for evaluation:
+    #   * it guarantees the reported video name equals the count_gt.csv key, so
+    #     predictions align 1:1 with GT;
+    #   * it disambiguates MAS Visit1/Visit2, which share identical mp4 filenames —
+    #     counting them by basename silently merges two videos into one row.
+    if args.cvat_dir:
+        import glob as _glob
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "dataset"))
+        from cvat_to_yolo import find_video as _find_video
+        pairs = []
+        for x in sorted(_glob.glob(os.path.join(args.cvat_dir, "*.xml"))):
+            name = os.path.splitext(os.path.basename(x))[0].replace("_annotations", "")
+            vp = _find_video(args.source, name)
+            if vp is None:
+                print(f"[warn] no video for CVAT export {name}; skipped")
+                continue
+            pairs.append((name, vp))
+    else:
+        pairs = [(os.path.splitext(os.path.basename(v))[0], v)
+                 for v in list_videos(args.source)]
+    if args.shards > 1:
+        pairs = [p for i, p in enumerate(pairs) if i % args.shards == args.shard]
+    if not pairs:
+        raise SystemExit(f"no videos selected from {args.source}")
     os.makedirs(args.out, exist_ok=True)
-    print(f"counting deer in {len(vids)} video(s) -> {args.out}")
+    print(f"counting deer in {len(pairs)} video(s) -> {args.out}")
 
     all_rows, summaries, all_track_rows = [], [], []
-    for i, v in enumerate(vids, 1):
-        print(f"[{i}/{len(vids)}] {os.path.basename(v)}")
-        rows, summary, track_rows = count_video(model, v, args)
+    for i, (name, v) in enumerate(pairs, 1):
+        print(f"[{i}/{len(pairs)}] {name}", flush=True)
+        rows, summary, track_rows = count_video(model, v, args, name=name)
         all_rows += rows
         summaries.append(summary)
         all_track_rows += track_rows
