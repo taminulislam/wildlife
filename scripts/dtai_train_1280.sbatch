@@ -67,6 +67,10 @@ for i in 0 1; do
       --save-period 10 --workers 4 --resume \
       --project "$RUNS" --name "$name" > "$log" 2>&1 &
   pids+=($!)
+  # Stagger: Ultralytics' AMP check downloads+unzips coco8 into ./datasets on first
+  # run. Two processes starting together race on the unzip and one dies with
+  # FileExistsError (job 2739410). 90s lets the first finish any such setup. STAGGER
+  [ $i -eq 0 ] && sleep 90
 done
 fail=0
 for p in "${pids[@]}"; do wait "$p" || fail=1; done

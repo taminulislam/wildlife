@@ -136,9 +136,11 @@ def count_video(model, path: str, args, name: str | None = None) -> tuple[list[d
             "mean_box_px": round(sum(areas) / n, 1),
             "confirmed": int(confirmed),
         })
-        # dump per-frame boxes (skip 1-2 frame noise) so evidence images can be
-        # rendered later without a second GPU pass; keep candidates for review.
-        if n >= 3:
+        # Dump per-frame boxes for EVERY candidate track. Previously this skipped
+        # n<3 tracks as "noise", but that discarded 273 of 984 candidates (113 with
+        # topk_conf>=0.5) — some of them the only trace of a real deer, which capped
+        # the achievable count before the temporal head ever saw them.
+        if n >= args.dump_min_frames:
             for (fi2, cf2, _ar, xc2, yc2, w2, h2) in obs:
                 track_rows.append({
                     "video": stem, "site": site_of(stem), "track_id": tid,
@@ -174,6 +176,9 @@ def main() -> None:
     ap.add_argument("--shards", type=int, default=1,
                     help="split the video list across N parallel jobs/GPUs")
     ap.add_argument("--shard", type=int, default=0, help="which shard (0-based)")
+    ap.add_argument("--dump-min-frames", type=int, default=1,
+                    help="min frames for a track to appear in tracks.csv (1 = keep all; "
+                         "the learned head needs the short ones too)")
     ap.add_argument("--contrast", default="clahe", choices=["clahe", "stretch", "none"],
                     help="MUST match the setting used to build the training frames "
                          "(cvat_to_yolo.py --contrast), or the model sees a different "

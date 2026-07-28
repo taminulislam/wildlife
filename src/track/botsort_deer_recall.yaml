@@ -1,0 +1,30 @@
+# BoT-SORT tuned for FLIR thermal deer counting from a MOVING vehicle.
+# RECALL-FIRST variant: thresholds lowered so faint/brief deer actually START a
+# track. Deliberately over-generates candidates (more false tracks) because the LEARNED
+# temporal head filters them - unlike the hand-tuned rule, precision is not lost by this.
+# Motivation: 93.6% of deer are detected, but only 81% formed a usable track.
+# Counting unit = one confirmed track = one unique deer (see src/track/count_deer.py).
+#
+# Why these values (60 fps, 640x512 thermal, camera panning past stationary deer):
+#  - gmc_method ON: the vehicle moves at 15-55 mph, so the whole frame translates.
+#    Global motion compensation lets the Kalman model see *deer* motion, not ego-motion
+#    — without it, static deer look like they're flying across the frame and IDs swap.
+#  - track_buffer raised: deer flicker behind vegetation as the truck passes; keep lost
+#    tracks alive ~1 s so they re-associate on reappearance instead of spawning a new ID
+#    (which would double-count).
+#  - low track_low_thresh: feed weak detections into 2nd-stage matching (detector recall
+#    on tiny deer is the bottleneck); track-level confirmation downstream removes flicker.
+tracker_type: botsort
+track_high_thresh: 0.15
+track_low_thresh: 0.05
+new_track_thresh: 0.15
+track_buffer: 60          # ~1 s at 60 fps — bridge vegetation occlusion
+match_thresh: 0.80
+fuse_score: True
+
+gmc_method: sparseOptFlow # CRITICAL for moving-camera ego-motion compensation
+
+proximity_thresh: 0.5
+appearance_thresh: 0.8
+with_reid: False
+model: auto
