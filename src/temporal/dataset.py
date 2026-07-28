@@ -102,7 +102,11 @@ def featurise(seq: list, max_len: int = 64) -> np.ndarray:
 
 def build(counts_dir: str, labels_csv: str, max_len: int = 64,
           splits: dict | None = None):
-    """-> dict split -> (X[N,max_len,F], mask[N,max_len], y[N], meta[N])"""
+    """-> dict split -> (X[N,max_len,F], mask[N,max_len], y[N], meta[N], C[N,N_CTX])
+
+    C = cross-track context (see context.py): what a track looks like RELATIVE to the
+    other candidates competing for the same animal. Without it a per-track model cannot
+    tell a primary from a duplicate fragment and over-counts (TTC v1)."""
     splits = splits or video_splits()
     seqs = load_sequences(counts_dir)
     data = {s: {"X": [], "M": [], "y": [], "meta": []} for s in ("train", "val", "test")}
@@ -123,12 +127,14 @@ def build(counts_dir: str, labels_csv: str, max_len: int = 64,
                                      "topk_conf": float(r["topk_conf"] or 0),
                                      "n_frames": int(r["n_frames"] or len(seq)),
                                      "span_s": float(r["span_s"] or 0)})
+    from context import compute as ctx_compute
     out = {}
     for s, d in data.items():
         if not d["X"]:
             out[s] = None; continue
         out[s] = (np.stack(d["X"]), np.stack(d["M"]),
-                  np.array(d["y"], dtype=np.float32), d["meta"])
+                  np.array(d["y"], dtype=np.float32), d["meta"],
+                  ctx_compute(d["meta"], seqs))
     return out
 
 
@@ -142,7 +148,7 @@ if __name__ == "__main__":
     for s, v in d.items():
         if v is None:
             print(f"{s}: EMPTY"); continue
-        X, M, y, meta = v
+        X, M, y, meta = v[0], v[1], v[2], v[3]
         vids = len({m['video'] for m in meta})
         print(f"{s:<6} tracks={len(y):>4}  positives={int(y.sum()):>3} "
               f"({100*y.mean():.0f}%)  videos={vids}  X={X.shape}")

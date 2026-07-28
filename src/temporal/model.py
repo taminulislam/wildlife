@@ -53,8 +53,12 @@ class AttnPool(nn.Module):
 
 class TemporalTrackNet(nn.Module):
     def __init__(self, n_feat: int = 10, d_model: int = 64, nhead: int = 4,
-                 layers: int = 2, dropout: float = 0.2):
+                 layers: int = 2, dropout: float = 0.2, n_ctx: int = 8):
         super().__init__()
+        # cross-track context is fused AFTER pooling: it describes the track's relation
+        # to its competitors, not any single timestep.
+        self.ctx = nn.Sequential(nn.Linear(n_ctx, d_model // 2), nn.GELU(),
+                                 nn.LayerNorm(d_model // 2)) if n_ctx else None
         self.inp = nn.Sequential(nn.Linear(n_feat, d_model), nn.GELU(),
                                  nn.LayerNorm(d_model))
         self.pos = PositionalEncoding(d_model)
@@ -62,13 +66,16 @@ class TemporalTrackNet(nn.Module):
                                          batch_first=True, norm_first=True)
         self.enc = nn.TransformerEncoder(enc, layers)
         self.pool = AttnPool(d_model)
-        self.head = nn.Sequential(nn.Dropout(dropout), nn.Linear(d_model, d_model // 2),
+        fuse = d_model + (d_model // 2 if n_ctx else 0)
+        self.head = nn.Sequential(nn.Dropout(dropout), nn.Linear(fuse, d_model // 2),
                                   nn.GELU(), nn.Linear(d_model // 2, 1))
 
-    def forward(self, x, mask, return_attn: bool = False):
+    def forward(self, x, mask, ctx=None, return_attn: bool = False):
         h = self.pos(self.inp(x))
         h = self.enc(h, src_key_padding_mask=(mask < 0.5))
         pooled, attn = self.pool(h, mask)
+        if self.ctx is not None and ctx is not None:
+            pooled = torch.cat([pooled, self.ctx(ctx)], dim=-1)
         logit = self.head(pooled).squeeze(-1)
         return (logit, attn) if return_attn else logit
 
