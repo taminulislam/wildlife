@@ -56,7 +56,9 @@ def load_all(counts_dir: str, labels_csv: str, max_len: int):
             meta.append({"video": r["video"], "track_id": k[1], "kind": r["kind"],
                          "topk_conf": float(r["topk_conf"] or 0),
                          "n_frames": int(r["n_frames"] or len(seq)),
-                         "span_s": float(r["span_s"] or 0)})
+                         "span_s": float(r["span_s"] or 0),
+                         "mean_conf": float(r["mean_conf"] or 0),
+                         "mean_box_px": float(r["mean_box_px"] or 0)})
     return (np.stack(X), np.stack(M), np.array(y, dtype=np.float32), meta,
             ctx_compute(meta, seqs))
 
@@ -98,6 +100,38 @@ def sweep_rule(meta, idx, gt, videos):
     return cfg
 
 
+TAB_FEATS = ["n_frames", "span_s", "topk_conf", "mean_conf", "mean_box_px"]
+
+
+def tabular(meta, C, idx) -> np.ndarray:
+    """Track summary stats + cross-track context, for the tabular learners.
+
+    With only ~700 tracks a gradient-boosted tree is a far better-matched model class
+    than a 60k-parameter transformer; including it keeps the paper's claim ("a LEARNED
+    confirmer beats the hand-tuned rule") from depending on one architecture."""
+    rows = []
+    for i in idx:
+        m = meta[i]
+        rows.append([float(m[k]) for k in TAB_FEATS] + list(C[i]))
+    return np.asarray(rows, dtype=np.float32)
+
+
+def fit_tabular(kind, Xtr, ytr):
+    if kind == "gbm":
+        from sklearn.ensemble import HistGradientBoostingClassifier
+        clf = HistGradientBoostingClassifier(max_depth=3, max_iter=200,
+                                             learning_rate=0.06,
+                                             l2_regularization=1.0, random_state=0)
+    else:
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+        clf = make_pipeline(StandardScaler(),
+                            LogisticRegression(max_iter=2000, class_weight="balanced"))
+    clf.fit(Xtr, ytr)
+    return clf
+
+
 def head_counts(probs, meta, idx, thr) -> dict[str, int]:
     out: dict[str, int] = {}
     for p, i in zip(probs, idx):
@@ -106,7 +140,10 @@ def head_counts(probs, meta, idx, thr) -> dict[str, int]:
     return out
 
 
-def train_fold(Xtr, Mtr, Ctr, ytr, Xva, Mva, Cva, args, dev):
+def train_fold(Xtr, Mtr, Ctr, ytr, Xva, Mva, Cva, yva, args, dev):
+    """Trains with VAL-BASED EARLY STOPPING. v2 ran all 150 epochs with no model
+    selection and overfit (~500 tracks, 60k params) -> MAE got WORSE than the rule.
+    We keep the epoch with the best val AP, mirroring v1's best-epoch behaviour."""
     model = TemporalTrackNet(n_feat=N_FEAT, d_model=args.d_model, layers=args.layers,
                              dropout=args.dropout, n_ctx=N_CTX).to(dev)
     t = lambda a: torch.tensor(a, device=dev)  # noqa: E731
@@ -115,7 +152,9 @@ def train_fold(Xtr, Mtr, Ctr, ytr, Xva, Mva, Cva, args, dev):
     lossf = nn.BCEWithLogitsLoss(pos_weight=pos_w)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-2)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, args.epochs)
+    from sklearn.metrics import average_precision_score
     n = len(ytr_)
+    best = {"ap": -1.0, "state": None}
     for _ep in range(args.epochs):
         model.train()
         perm = torch.randperm(n, device=dev)
@@ -127,6 +166,16 @@ def train_fold(Xtr, Mtr, Ctr, ytr, Xva, Mva, Cva, args, dev):
             nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
         sched.step()
+        model.eval()
+        with torch.no_grad():
+            pv = torch.sigmoid(model(t(Xva), t(Mva), t(Cva))).cpu().numpy()
+        if len(set(yva.tolist())) > 1:
+            ap = float(average_precision_score(yva, pv))
+            if ap > best["ap"]:
+                best = {"ap": ap, "state": {k: v.detach().cpu().clone()
+                                            for k, v in model.state_dict().items()}}
+    if best["state"] is not None:
+        model.load_state_dict(best["state"])
     model.eval()
     with torch.no_grad():
         pva = torch.sigmoid(model(t(Xva), t(Mva), t(Cva))).cpu().numpy()
@@ -166,6 +215,7 @@ def main() -> None:
 
     head_pred: dict[str, int] = {}
     rule_pred: dict[str, int] = {}
+    tab_pred: dict[str, dict[str, int]] = {"gbm": {}, "logreg": {}}
     fold_rows = []
     for fi, test_vids in enumerate(folds, 1):
         test_vids = set(test_vids)
@@ -182,7 +232,7 @@ def main() -> None:
             continue
 
         model, pva = train_fold(X[idx_tr], M[idx_tr], C[idx_tr], y[idx_tr],
-                                X[idx_va], M[idx_va], C[idx_va], args, dev)
+                                X[idx_va], M[idx_va], C[idx_va], y[idx_va], args, dev)
         best_thr, best_mae = 0.5, float("inf")
         for thr in np.arange(0.05, 0.96, 0.05):
             mm = metrics(head_counts(pva, meta, idx_va, thr), gt, val_vids)
@@ -197,6 +247,18 @@ def main() -> None:
         cfg = sweep_rule(meta, idx_tr + idx_va, gt, tr_vids | val_vids)
         rule_pred.update(rule_counts(meta, idx_te, *cfg))
 
+        # ---- tabular learners, identical protocol ----
+        for kind in ("gbm", "logreg"):
+            clf = fit_tabular(kind, tabular(meta, C, idx_tr), y[idx_tr])
+            pv = clf.predict_proba(tabular(meta, C, idx_va))[:, 1]
+            bt, bm = 0.5, float("inf")
+            for thr in np.arange(0.05, 0.96, 0.05):
+                mm = metrics(head_counts(pv, meta, idx_va, thr), gt, val_vids)
+                if mm["MAE"] < bm:
+                    bm, bt = mm["MAE"], float(thr)
+            pt = clf.predict_proba(tabular(meta, C, idx_te))[:, 1]
+            tab_pred[kind].update(head_counts(pt, meta, idx_te, bt))
+
         h = metrics(head_counts(pte, meta, idx_te, best_thr), gt, test_vids)
         r = metrics(rule_counts(meta, idx_te, *cfg), gt, test_vids)
         fold_rows.append({"fold": fi, "test_videos": len(test_vids),
@@ -208,8 +270,9 @@ def main() -> None:
     allv = set(videos)
     H = metrics(head_pred, gt, allv)
     R = metrics(rule_pred, gt, allv)
+    T = {k: metrics(v, gt, allv) for k, v in tab_pred.items()}
     res = {"folds": args.folds, "per_fold": fold_rows, "head": H, "rule": R,
-           "n_tracks": int(len(y)), "n_positives": int(y.sum())}
+           "tabular": T, "n_tracks": int(len(y)), "n_positives": int(y.sum())}
     with open(os.path.join(args.out, "results.json"), "w") as f:
         json.dump(res, f, indent=2)
     with open(os.path.join(args.out, "per_video.csv"), "w", newline="") as f:
@@ -224,8 +287,16 @@ def main() -> None:
           f"{'under':>6} {'pred':>6}")
     print(f"{'hand-tuned rule (baseline)':<28} {R['MAE']:>7.2f} {R['RMSE']:>7.2f} "
           f"{R['bias']:>+7.2f} {R['over']:>5.0f} {R['under']:>6.0f} {R['pred_total']:>6}")
-    print(f"{'TTC + context (ours)':<28} {H['MAE']:>7.2f} {H['RMSE']:>7.2f} "
+    for k, m in T.items():
+        print(f"{'learned confirmer: ' + k:<28} {m['MAE']:>7.2f} {m['RMSE']:>7.2f} "
+              f"{m['bias']:>+7.2f} {m['over']:>5.0f} {m['under']:>6.0f} "
+              f"{m['pred_total']:>6}")
+    print(f"{'TTC transformer (ours)':<28} {H['MAE']:>7.2f} {H['RMSE']:>7.2f} "
           f"{H['bias']:>+7.2f} {H['over']:>5.0f} {H['under']:>6.0f} {H['pred_total']:>6}")
+    bestk = min(list(T.items()) + [("TTC", H)], key=lambda kv: kv[1]["MAE"])
+    print(f"\n  BEST learned: {bestk[0]} MAE {bestk[1]['MAE']:.2f} vs rule "
+          f"{R['MAE']:.2f}  ({R['MAE']-bestk[1]['MAE']:+.2f}, "
+          f"{100*(R['MAE']-bestk[1]['MAE'])/R['MAE']:+.1f}%)")
     d = R["MAE"] - H["MAE"]
     print(f"\n  MAE {d:+.2f} ({100*d/R['MAE']:+.1f}%) vs baseline"
           if R["MAE"] else "")
