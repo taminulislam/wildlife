@@ -1,0 +1,37 @@
+{
+  "rule": {
+    "videos": 32,
+    "MAE": 1.875,
+    "RMSE": 2.9895651857753496,
+    "bias": -0.8125,
+    "over": 17,
+    "under": 43,
+    "pred_total": 210,
+    "gt_total": 236
+  },
+  "stump": {
+    "videos": 32,
+    "MAE": 1.96875,
+    "RMSE": 2.7782638463616087,
+    "bias": -1.28125,
+    "over": 11,
+    "under": 52,
+    "pred_total": 195,
+    "gt_total": 236
+  },
+  "deep": {
+    "videos": 32,
+    "MAE": 2.65625,
+    "RMSE": 4.065863991822648,
+    "bias": -1.40625,
+    "over": 20,
+    "under": 65,
+    "pred_total": 191,
+    "gt_total": 236
+  },
+  "track_AUC": 0.926,
+  "track_AP": 0.56,
+  "pct_counted_conf_ge_80": 28.2,
+  "mean_conf_counted": 0.641,
+  "flagged_for_review": 10
+}

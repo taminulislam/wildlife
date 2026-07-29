@@ -1,0 +1,22 @@
+{
+  "cluster": {
+    "videos": 32,
+    "MAE": 3.65625,
+    "RMSE": 5.992182407103442,
+    "bias": -0.34375,
+    "over": 53,
+    "under": 64,
+    "pred_total": 225,
+    "gt_total": 236
+  },
+  "rule": {
+    "videos": 32,
+    "MAE": 1.875,
+    "RMSE": 2.9895651857753496,
+    "bias": -0.8125,
+    "over": 17,
+    "under": 43,
+    "pred_total": 210,
+    "gt_total": 236
+  }
+}

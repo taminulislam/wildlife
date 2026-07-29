@@ -1,0 +1,105 @@
+{
+  "folds": 8,
+  "per_fold": [
+    {
+      "fold": 1,
+      "test_videos": 4,
+      "head_MAE": 1.5,
+      "rule_MAE": 0.75,
+      "thr": 0.6500000000000001
+    },
+    {
+      "fold": 2,
+      "test_videos": 4,
+      "head_MAE": 5.0,
+      "rule_MAE": 2.0,
+      "thr": 0.6500000000000001
+    },
+    {
+      "fold": 3,
+      "test_videos": 4,
+      "head_MAE": 3.0,
+      "rule_MAE": 3.0,
+      "thr": 0.7500000000000001
+    },
+    {
+      "fold": 4,
+      "test_videos": 4,
+      "head_MAE": 2.0,
+      "rule_MAE": 0.5,
+      "thr": 0.6000000000000001
+    },
+    {
+      "fold": 5,
+      "test_videos": 4,
+      "head_MAE": 1.75,
+      "rule_MAE": 1.5,
+      "thr": 0.55
+    },
+    {
+      "fold": 6,
+      "test_videos": 4,
+      "head_MAE": 4.5,
+      "rule_MAE": 4.25,
+      "thr": 0.7500000000000001
+    },
+    {
+      "fold": 7,
+      "test_videos": 3,
+      "head_MAE": 2.0,
+      "rule_MAE": 1.6666666666666667,
+      "thr": 0.6500000000000001
+    },
+    {
+      "fold": 8,
+      "test_videos": 3,
+      "head_MAE": 3.3333333333333335,
+      "rule_MAE": 4.666666666666667,
+      "thr": 0.9000000000000001
+    }
+  ],
+  "head": {
+    "videos": 30,
+    "MAE": 2.9,
+    "RMSE": 4.053804797142227,
+    "bias": -1.6333333333333333,
+    "over": 19,
+    "under": 68,
+    "pred_total": 187,
+    "gt_total": 236
+  },
+  "rule": {
+    "videos": 30,
+    "MAE": 2.2333333333333334,
+    "RMSE": 3.230067078766838,
+    "bias": -0.9666666666666667,
+    "over": 19,
+    "under": 48,
+    "pred_total": 207,
+    "gt_total": 236
+  },
+  "tabular": {
+    "gbm": {
+      "videos": 30,
+      "MAE": 2.1666666666666665,
+      "RMSE": 3.449637662132068,
+      "bias": -1.0333333333333334,
+      "over": 17,
+      "under": 48,
+      "pred_total": 205,
+      "gt_total": 236
+    },
+    "logreg": {
+      "videos": 30,
+      "MAE": 2.8333333333333335,
+      "RMSE": 4.102844541697057,
+      "bias": -0.9666666666666667,
+      "over": 28,
+      "under": 57,
+      "pred_total": 207,
+      "gt_total": 236
+    }
+  },
+  "n_tracks": 711,
+  "n_positives": 190
+}

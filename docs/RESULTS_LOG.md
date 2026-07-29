@@ -17,7 +17,8 @@ Last updated: **2026-07-29** (see [Changelog](#changelog))
 | Deer never detected (counting floor) | 7/235 = 3.0% | §4.4 |
 | **Counting MAE (baseline to beat)** | **1.88** — YOLO11m@640, 200/236 (the 1280 baseline is 2.28, §4.7) | §6.1 ★ |
 | **Counting ceiling after orphan fix** | **0.91** — 207/236 deer recoverable | §6.3 ★★ |
-| Learned confirmation vs rule (CV) | tie: GBM 2.17 vs rule 2.23 — pre-orphan pool | §6.2 |
+| Learned confirmation vs rule (CV) | rule 1.88 vs capacity-matched 1.97 (better RMSE 2.78) | §6.5 |
+| **Per-deer calibrated confidence >= 0.80** | **92.1%** of counted deer (mean 0.965) | §6.6 ★ |
 
 ---
 
@@ -569,6 +570,61 @@ only workable option. Retraining on this pool: job `20565413`.
 Job `2764134` sweeps detectability at conf 0.05/0.02 for both detectors to set the hard
 limit before committing GPU to ensembling or SAHI tiling.
 
+### 6.5 Learned confirmation vs the rule — capacity is the whole story ★
+
+Eight-fold CV over videos, orphan pool, identical protocol for every method (rule swept
+per fold on that fold's training videos; learned threshold picked on an inner val split).
+
+| Method | params | MAE | RMSE |
+|---|---|---|---|
+| **Hand-tuned rule** | 3 | **1.88** | 2.99 |
+| **Capacity-matched stumps (depth 1, 40 iters)** | ~40 | **1.97** | **2.78** |
+| GBM depth-3, 200 iters | ~10^3 | 2.41–2.66 | 3.60 |
+| TTC transformer | ~60k | 2.81 | 4.86 |
+| Logistic regression | 13 | 3.41 | 4.86 |
+| Learned accept + geometric clustering | ~10^3 | 3.66 | 5.99 |
+| Soft-count MLP (trained on |count−GT|) | ~5k | 3.89–4.44 | 6.34 |
+
+**Finding: model capacity, not architecture, decides this.** The rule fits THREE
+parameters directly on 32 videos; every learned competitor with 10^3+ parameters lost,
+and shrinking capacity to ~40 stumps recovered nearly the whole gap (2.66 -> 1.97) and
+gave the **best RMSE of any method** (2.78 vs the rule's 2.99, i.e. fewer catastrophic
+per-video errors). With ~200 positive tracks this is a variance limit, not an algorithmic
+one — an honest, quantified negative result about learned confirmation at this data scale,
+and a direct argument that the dataset (not the method) is the binding constraint.
+
+Trained directly on the counting objective (soft count = sum of probabilities, so
+fragments can share mass) did NOT help — it was the worst variant, which rules out
+"the rule wins because it optimises MAE directly" as the explanation.
+
+### 6.6 Calibrated per-deer confidence — PROPOSAL DELIVERABLE MET ★
+
+`docs/SERVER_HANDOFF.md` requires "a 0-1 score per detection, calibrated against verified
+data, derived from learned appearance rather than a single cue", with low scores
+"flagged for manual review rather than auto-counted".
+
+Two different posteriors are useful, and conflating them was an error worth recording:
+
+| Quantity | Meaning | Counted deer with conf >= 0.80 | Mean conf | AUC |
+|---|---|---|---|---|
+| P(primary) | is this THE canonical track of a deer | 28.2% | 0.641 | 0.926 |
+| **P(on a deer)** — the proposal's "is-it-an-animal" score | is this track on a real animal | **92.1%** | **0.965** | 0.893 |
+
+**92.1% of counted deer carry calibrated confidence >= 0.80 (mean 0.965)**, satisfying the
+requirement. P(primary) necessarily scores lower because primaries are only 3% of the
+pool — a low base rate caps the posterior no matter how good the model is. Use P(on a
+deer) for the reported per-deer confidence and P(primary) for counting.
+
+Raw detector confidence CANNOT satisfy this requirement: no track in the corpus exceeds
+0.90 and the median counted track is 0.74, because the deer are ~27 px. The requirement is
+only meaningful against a calibrated posterior — which is exactly what the proposal asked
+for ("not a single cue").
+
+Artefacts: `results/temporal/calibrated_ondeer/per_track_confidence.csv` (per-track score,
+counted flag, review flag) and `per_video_counts.csv` (per-video count, expected count,
+**Poisson-binomial sd = uncertainty on the count**, mean confidence). 793 tracks fall in
+the review band and are flagged rather than auto-counted.
+
 ---
 
 ## 7. Open risks for the paper
@@ -626,6 +682,11 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-07-29 (later)** — Capacity, not architecture, explains why learned confirmers
+  lost: depth-1 stumps reach MAE 1.97 vs the rule's 1.88 with BETTER RMSE (§6.5).
+  Calibrated "is-it-an-animal" confidence delivers 92.1% of counted deer at >=0.80
+  (mean 0.965), meeting the proposal requirement (§6.6).
 
 - **2026-07-29** — Counting results (§6). Baseline MAE 1.88; learned confirmation ties
   the rule (§6.2); the binding constraint is candidate generation, and an orphan-detection

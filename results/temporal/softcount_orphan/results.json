@@ -1,0 +1,288 @@
+{
+  "hard": {
+    "videos": 32,
+    "MAE": 4.4375,
+    "RMSE": 9.714679613862724,
+    "bias": -1.9375,
+    "over": 40,
+    "under": 102,
+    "pred_total": 174,
+    "gt_total": 236
+  },
+  "soft": {
+    "MAE": 3.891246790997684,
+    "RMSE": 6.34270322039828,
+    "pred_total": 211.4
+  },
+  "rule": {
+    "videos": 32,
+    "MAE": 1.875,
+    "RMSE": 2.9895651857753496,
+    "bias": -0.8125,
+    "over": 17,
+    "under": 43,
+    "pred_total": 210,
+    "gt_total": 236
+  },
+  "pct_counted_conf_ge_80": 12.1,
+  "mean_conf_counted": 0.571,
+  "flagged_for_review": 49,
+  "per_video_confidence": {
+    "NWolfCreek(orange)_SHB_12.11.2025_LS": {
+      "expected_count": 3.96,
+      "count_sd": 1.55,
+      "accepted": 7,
+      "mean_conf_accepted": 0.465,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "N25thRdOrange_MAS_12.22.25_LS_V1": {
+      "expected_count": 0.7,
+      "count_sd": 0.66,
+      "accepted": 1,
+      "mean_conf_accepted": 0.467,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "Robinson_SHW_01.18.2026_LS": {
+      "expected_count": 4.89,
+      "count_sd": 1.74,
+      "accepted": 8,
+      "mean_conf_accepted": 0.467,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "N25thBlue_MAS_12.22.25_LS_V2": {
+      "expected_count": 2.05,
+      "count_sd": 1.22,
+      "accepted": 2,
+      "mean_conf_accepted": 0.469,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "ChipsRd_TON_12.03.25_LS": {
+      "expected_count": 0.79,
+      "count_sd": 0.8,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 18
+    },
+    "NIron_SHW_01.18.2026_LS": {
+      "expected_count": 14.45,
+      "count_sd": 2.93,
+      "accepted": 12,
+      "mean_conf_accepted": 0.598,
+      "pct_accepted_conf_ge_0.80": 8.3,
+      "flagged_for_review": 18
+    },
+    "GolfDr_SHB_12.11.2025": {
+      "expected_count": 10.1,
+      "count_sd": 2.31,
+      "accepted": 9,
+      "mean_conf_accepted": 0.638,
+      "pct_accepted_conf_ge_0.80": 11.1,
+      "flagged_for_review": 18
+    },
+    "OikosRd_TON_12.03.25_LS": {
+      "expected_count": 1.29,
+      "count_sd": 1.04,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 18
+    },
+    "TouchofNatureRd_TON_12.03.25_LS": {
+      "expected_count": 1.65,
+      "count_sd": 1.15,
+      "accepted": 1,
+      "mean_conf_accepted": 0.5,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 17
+    },
+    "N25thRdBlue_MAS_12.22.25_LS_V1": {
+      "expected_count": 0.43,
+      "count_sd": 0.63,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 17
+    },
+    "WolfCreekRd_SHB_12.11.2025_LS": {
+      "expected_count": 7.71,
+      "count_sd": 1.98,
+      "accepted": 4,
+      "mean_conf_accepted": 0.647,
+      "pct_accepted_conf_ge_0.80": 25.0,
+      "flagged_for_review": 17
+    },
+    "SBassett_SHW_01.18.2026_LS": {
+      "expected_count": 16.38,
+      "count_sd": 2.62,
+      "accepted": 15,
+      "mean_conf_accepted": 0.682,
+      "pct_accepted_conf_ge_0.80": 33.3,
+      "flagged_for_review": 17
+    },
+    "EMarseilles_MAS_12.22.25_LS_V1": {
+      "expected_count": 0.96,
+      "count_sd": 0.7,
+      "accepted": 1,
+      "mean_conf_accepted": 0.677,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 10
+    },
+    "GiantCityRd_TON_12.03.25_LS": {
+      "expected_count": 2.29,
+      "count_sd": 1.05,
+      "accepted": 3,
+      "mean_conf_accepted": 0.618,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 10
+    },
+    "EMarseilles_MAS_12.22.25_LS_V2": {
+      "expected_count": 0.15,
+      "count_sd": 0.38,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 10
+    },
+    "FernRidgeRd_TON_12.03.25_LS": {
+      "expected_count": 26.22,
+      "count_sd": 3.78,
+      "accepted": 25,
+      "mean_conf_accepted": 0.611,
+      "pct_accepted_conf_ge_0.80": 8.0,
+      "flagged_for_review": 10
+    },
+    "AquaCultureRd_TON_12.03.25_LS": {
+      "expected_count": 1.6,
+      "count_sd": 1.12,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "NShelbyRd(blue)_SHB_12.11.2025_LS": {
+      "expected_count": 8.48,
+      "count_sd": 2.47,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "EagleCreekDrEtc_SHB_12.11.2025_LS": {
+      "expected_count": 23.18,
+      "count_sd": 4.1,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "NShelbyRd(green)_SHB_12.11.2025": {
+      "expected_count": 2.14,
+      "count_sd": 1.24,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "Melvin_SHW_01.18.2026_LS": {
+      "expected_count": 3.13,
+      "count_sd": 1.55,
+      "accepted": 2,
+      "mean_conf_accepted": 0.438,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "NatureTrail_TON_12.03.25_LS": {
+      "expected_count": 9.11,
+      "count_sd": 2.32,
+      "accepted": 13,
+      "mean_conf_accepted": 0.493,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "NShelbyRd(pink)_SHB_12.11.2025_LS": {
+      "expected_count": 5.72,
+      "count_sd": 1.76,
+      "accepted": 8,
+      "mean_conf_accepted": 0.52,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "NMarseillesRd_MAS_12.22.25_LS_V1": {
+      "expected_count": 3.21,
+      "count_sd": 1.44,
+      "accepted": 5,
+      "mean_conf_accepted": 0.438,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    },
+    "Upper40_TON_12.03.25_LS": {
+      "expected_count": 2.58,
+      "count_sd": 1.19,
+      "accepted": 2,
+      "mean_conf_accepted": 0.667,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 4
+    },
+    "WhoopieCatDam_SHW_01.18.2026_LS": {
+      "expected_count": 0.96,
+      "count_sd": 0.69,
+      "accepted": 1,
+      "mean_conf_accepted": 0.667,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 4
+    },
+    "NMarseilles_MAS_12.22.25_LS_V2": {
+      "expected_count": 0.73,
+      "count_sd": 0.71,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 4
+    },
+    "UpperRichland_SHW_01.18.2026_LS": {
+      "expected_count": 0.51,
+      "count_sd": 0.69,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 4
+    },
+    "SHog_SHW_01.18.2026_LS": {
+      "expected_count": 6.35,
+      "count_sd": 1.47,
+      "accepted": 8,
+      "mean_conf_accepted": 0.65,
+      "pct_accepted_conf_ge_0.80": 37.5,
+      "flagged_for_review": 0
+    },
+    "NWolfCreek(blue)_SHB_12.11.2025": {
+      "expected_count": 40.6,
+      "count_sd": 4.88,
+      "accepted": 40,
+      "mean_conf_accepted": 0.518,
+      "pct_accepted_conf_ge_0.80": 10.0,
+      "flagged_for_review": 0
+    },
+    "SIron_SHW_01.18.2026_LS": {
+      "expected_count": 8.31,
+      "count_sd": 1.76,
+      "accepted": 7,
+      "mean_conf_accepted": 0.753,
+      "pct_accepted_conf_ge_0.80": 57.1,
+      "flagged_for_review": 0
+    },
+    "N25thRdOrange_MAS_12.22.25_LS_V2": {
+      "expected_count": 0.75,
+      "count_sd": 0.75,
+      "accepted": 0,
+      "mean_conf_accepted": 0.0,
+      "pct_accepted_conf_ge_0.80": 0.0,
+      "flagged_for_review": 0
+    }
+  }
+}

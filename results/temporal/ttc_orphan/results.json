@@ -1,0 +1,105 @@
+{
+  "folds": 8,
+  "per_fold": [
+    {
+      "fold": 1,
+      "test_videos": 4,
+      "head_MAE": 1.5,
+      "rule_MAE": 1.0,
+      "thr": 0.9500000000000001
+    },
+    {
+      "fold": 2,
+      "test_videos": 4,
+      "head_MAE": 7.25,
+      "rule_MAE": 2.75,
+      "thr": 0.9500000000000001
+    },
+    {
+      "fold": 3,
+      "test_videos": 4,
+      "head_MAE": 0.5,
+      "rule_MAE": 0.5,
+      "thr": 0.8
+    },
+    {
+      "fold": 4,
+      "test_videos": 4,
+      "head_MAE": 4.0,
+      "rule_MAE": 2.0,
+      "thr": 0.9500000000000001
+    },
+    {
+      "fold": 5,
+      "test_videos": 4,
+      "head_MAE": 4.0,
+      "rule_MAE": 2.5,
+      "thr": 0.9500000000000001
+    },
+    {
+      "fold": 6,
+      "test_videos": 4,
+      "head_MAE": 2.75,
+      "rule_MAE": 3.75,
+      "thr": 0.9500000000000001
+    },
+    {
+      "fold": 7,
+      "test_videos": 4,
+      "head_MAE": 1.25,
+      "rule_MAE": 1.0,
+      "thr": 0.9500000000000001
+    },
+    {
+      "fold": 8,
+      "test_videos": 4,
+      "head_MAE": 1.25,
+      "rule_MAE": 1.5,
+      "thr": 0.9500000000000001
+    }
+  ],
+  "head": {
+    "videos": 32,
+    "MAE": 2.8125,
+    "RMSE": 4.860555523805895,
+    "bias": 0.1875,
+    "over": 48,
+    "under": 42,
+    "pred_total": 242,
+    "gt_total": 236
+  },
+  "rule": {
+    "videos": 32,
+    "MAE": 1.875,
+    "RMSE": 2.9895651857753496,
+    "bias": -0.8125,
+    "over": 17,
+    "under": 43,
+    "pred_total": 210,
+    "gt_total": 236
+  },
+  "tabular": {
+    "gbm": {
+      "videos": 32,
+      "MAE": 2.40625,
+      "RMSE": 3.6012150727219834,
+      "bias": -1.15625,
+      "over": 20,
+      "under": 57,
+      "pred_total": 199,
+      "gt_total": 236
+    },
+    "logreg": {
+      "videos": 32,
+      "MAE": 3.40625,
+      "RMSE": 4.86376911458593,
+      "bias": -0.15625,
+      "over": 52,
+      "under": 57,
+      "pred_total": 231,
+      "gt_total": 236
+    }
+  },
+  "n_tracks": 7008,
+  "n_positives": 207
+}

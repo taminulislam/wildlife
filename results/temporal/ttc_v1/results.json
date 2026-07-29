@@ -1,0 +1,42 @@
+{
+  "test_videos": [
+    "AquaCultureRd_TON_12.03.25_LS",
+    "ChipsRd_TON_12.03.25_LS",
+    "GolfDr_SHB_12.11.2025",
+    "Melvin_SHW_01.18.2026_LS",
+    "NMarseilles_MAS_12.22.25_LS_V2",
+    "NWolfCreek(orange)_SHB_12.11.2025_LS",
+    "OikosRd_TON_12.03.25_LS",
+    "SIron_SHW_01.18.2026_LS",
+    "TouchofNatureRd_TON_12.03.25_LS"
+  ],
+  "head": {
+    "videos": 9,
+    "MAE": 2.0,
+    "RMSE": 3.2998316455372216,
+    "bias": 1.1111111111111112,
+    "over": 14,
+    "under": 4,
+    "pred_total": 48,
+    "gt_total": 38
+  },
+  "head_threshold": 0.2,
+  "head_best_epoch": 25,
+  "head_track_accuracy": 0.7272727272727273,
+  "rule": {
+    "videos": 9,
+    "MAE": 2.0,
+    "RMSE": 2.449489742783178,
+    "bias": -1.7777777777777777,
+    "over": 1,
+    "under": 17,
+    "pred_total": 22,
+    "gt_total": 38
+  },
+  "rule_cfg": {
+    "min_hits": 20,
+    "min_span_s": 0.0,
+    "conf_track": 0.65
+  },
+  "params": 102978
+}
