@@ -4,9 +4,9 @@
 command/config that produced it, so the paper can be written from this file alone.
 Numbers here are *measured*, never estimated; anything unmeasured is marked TODO.
 
-Last updated: **2026-07-26** (see [Changelog](#changelog))
+Last updated: **2026-07-29** (see [Changelog](#changelog))
 
-## Headline numbers (as of 2026-07-26)
+## Headline numbers (as of 2026-07-29)
 
 | What | Value | Where |
 |---|---|---|
@@ -15,7 +15,9 @@ Last updated: **2026-07-26** (see [Changelog](#changelog))
 | Best counting-criterion P/R (keyframe GT) | **0.939 / 0.643** (YOLOv9m@1280, conf .25) | §4.5 |
 | **Track-level recall (deer found at all)** | **97.0%** — 228/235 | §4.4 ★ |
 | Deer never detected (counting floor) | 7/235 = 3.0% | §4.4 |
-| **Counting MAE / RMSE (baseline)** | **2.28 / 3.74** — 215 of 236 deer (91.1%) | §4.7 ★ |
+| **Counting MAE (baseline to beat)** | **1.88** — YOLO11m@640, 200/236 (the 1280 baseline is 2.28, §4.7) | §6.1 ★ |
+| **Counting ceiling after orphan fix** | **0.91** — 207/236 deer recoverable | §6.3 ★★ |
+| Learned confirmation vs rule (CV) | tie: GBM 2.17 vs rule 2.23 — pre-orphan pool | §6.2 |
 
 ---
 
@@ -467,12 +469,19 @@ baseline table is needed. Deferred 2026-07-25 to prioritise the counting contrib
 
 ---
 
-## 6. Counting (Phase B/C) — the paper's headline metric
+## 6. Phase C — candidate generation is the binding constraint
 
-Pipeline: detector -> BoT-SORT (+camera-motion compensation) -> confirmation rule/head.
-Scored as MAE/RMSE between predicted and CVAT unique-deer counts, per video.
+> **Reconciliation with §4.7.** Two hand-tuned baselines exist because they use different
+> detectors, and the difference IS a finding:
+> * §4.7 — **YOLOv9m@1280**, MAE **2.28**, 215/236 (job `2730226`)
+> * §6.1 — **YOLO11m@640**, MAE **1.88**, 200/236 (job `2739440`)
+>
+> The 640 detector counts BETTER despite being the weaker detector (§3, §4.5). See §6.3:
+> higher resolution increases fragmentation, so detection quality and counting quality
+> diverge. Quote **1.88** as the baseline to beat (it is the stronger baseline, i.e. the
+> more honest bar for the contribution), and report 2.28 as the 1280 comparison point.
 
-### 6.1 Baseline: tracking-by-detection + best hand-tuned rule
+### 6.1 Baseline: tracking-by-detection + best hand-tuned rule (YOLO11m@640)
 
 Job `2739440` (DeltaAI), YOLO11m@640, detector conf 0.10, rule swept on the same data
 (deliberately optimistic for the baseline).
