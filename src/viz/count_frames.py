@@ -69,9 +69,12 @@ def draw_frame(img, dets, caption):
         x2 = int(d["xc"] + d["w"] / 2); y2 = int(d["yc"] + d["h"] / 2)
         thick = 2 if d.get("counted", d["confirmed"]) else 1
         cv2.rectangle(vis, (x1, y1), (x2, y2), c, thick)
+        # Only the ID score is shown. Detector confidence answers "is there a deer?"
+        # and belongs to the DETECTION figure; here the question is "is this ID a
+        # distinct deer worth counting?", which is the calibrated track score.
         idsc = d.get("id_score")
-        label = (f"ID {d['track_id']}  det {d['conf']:.2f}  ID {idsc:.2f}"
-                 if idsc is not None else f"ID {d['track_id']}  {d['conf']:.2f}")
+        label = (f"ID {d['track_id']}  {idsc:.2f}" if idsc is not None
+                 else f"ID {d['track_id']}")
         (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
         ty = y1 - 3 if y1 - th - 6 > 0 else y2 + th + 5      # flip below if near top
         cv2.rectangle(vis, (x1, ty - th - 4), (x1 + tw + 6, ty + 3), (0, 0, 0), -1)
@@ -102,6 +105,12 @@ def main() -> None:
     ap.add_argument("--out", default="results/viz/count_frames")
     ap.add_argument("--per-video", type=int, default=3,
                     help="how many multi-deer frames to render per video")
+    ap.add_argument("--showcase-per-video", type=int, default=2,
+                    help="additionally render the CLEAREST frames per video: largest "
+                         "deer with the highest ID score. Single-deer frames allowed — "
+                         "these are the figure-quality examples.")
+    ap.add_argument("--showcase-min-score", type=float, default=0.80,
+                    help="minimum calibrated ID score for a showcase frame")
     ap.add_argument("--only-confirmed", action="store_true",
                     help="draw only tracks the counter accepted (default: all tracks, "
                          "so misses and rejected candidates are visible too)")
@@ -140,7 +149,32 @@ def main() -> None:
             if conf_flag:
                 confirmed_per_video[r["video"]].add(int(r["track_id"]))
 
-    index, all_tiles = [], []
+    def showcase_picks(frames):
+        """Clearest frames: biggest box x highest ID score, among COUNTED tracks.
+        Single-deer frames are fine here — the point is legibility, not density."""
+        best_per_track: dict[int, tuple] = {}
+        for fi, dets in frames.items():
+            for d in dets:
+                sc = d.get("id_score")
+                if sc is None or sc < args.showcase_min_score:
+                    continue
+                if not d.get("counted", d["confirmed"]):
+                    continue
+                quality = math.sqrt(max(d["w"] * d["h"], 1.0)) * sc
+                cur = best_per_track.get(d["track_id"])
+                if cur is None or quality > cur[0]:
+                    best_per_track[d["track_id"]] = (quality, fi, dets)
+        ranked = sorted(best_per_track.values(), key=lambda t: -t[0])
+        out, used = [], set()
+        for _q, fi, dets in ranked:
+            if fi in used:
+                continue
+            used.add(fi); out.append((fi, dets))
+            if len(out) >= args.showcase_per_video:
+                break
+        return out
+
+    index, all_tiles, show_tiles = [], [], []
     for video, frames in sorted(per_video.items()):
         # frames with the MOST simultaneous distinct tracks
         ranked = sorted(frames.items(),
@@ -155,6 +189,11 @@ def main() -> None:
             seen_sets.append(ids); picks.append((fi, dets))
             if len(picks) >= args.per_video:
                 break
+        shows = showcase_picks(frames)
+        show_frames = {fi for fi, _ in shows}
+        for fi, dets in shows:                       # add, avoiding duplicates
+            if fi not in {f for f, _ in picks}:
+                picks.append((fi, dets))
         if not picks:
             continue
         vpath = find_video(args.source, video)
@@ -180,19 +219,24 @@ def main() -> None:
             cap_txt = (f"{video[:40]}  f{fi}  t={fi/fps:.1f}s  |  {n_ids} tracked "
                        f"({n_conf} counted)  |  video total {len(confirmed_per_video[video])}")
             vis = draw_frame(frame, dets, cap_txt)
-            out_p = os.path.join(vdir, f"f{fi}_{n_ids}deer.jpg")
+            tag = "showcase_" if fi in show_frames else ""
+            out_p = os.path.join(vdir, f"{tag}f{fi}_{n_ids}deer.jpg")
             cv2.imwrite(out_p, vis)
-            all_tiles.append(vis)
+            (show_tiles if fi in show_frames else all_tiles).append(vis)
             index.append((video, fi, round(fi / fps, 1), n_ids, n_conf, out_p))
         cap.release()
         print(f"{video[:44]:<44} {len(picks)} frames, "
               f"{len(confirmed_per_video[video])} deer counted", flush=True)
 
     if all_tiles:
-        top = sorted(zip(index, all_tiles), key=lambda t: -t[0][3])[:8]
-        sh = sheet([t for _, t in top])
+        sh = sheet(all_tiles[:8])
         if sh is not None:
             cv2.imwrite(os.path.join(args.out, "_sheet_multideer.jpg"), sh)
+    if show_tiles:
+        sh = sheet(show_tiles[:8])
+        if sh is not None:
+            cv2.imwrite(os.path.join(args.out, "_sheet_showcase.jpg"), sh)
+        print(f"showcase frames: {len(show_tiles)}")
     with open(os.path.join(args.out, "index.csv"), "w") as f:
         f.write("video,frame,t_s,n_tracked,n_counted,path\n")
         for row in index:
