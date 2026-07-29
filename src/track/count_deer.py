@@ -86,6 +86,7 @@ def count_video(model, path: str, args, name: str | None = None) -> tuple[list[d
     stem = name or os.path.splitext(os.path.basename(path))[0]
     # per track-id: list of (frame_idx, conf, area_px, w, h)
     tracks: dict[int, list[tuple]] = defaultdict(list)
+    orphans: list[tuple] = []          # detections the tracker never gave an ID
 
     # Frames are decoded HERE (not handed to Ultralytics as a path) so the SAME
     # thermal contrast normalization used to build the training set is applied at
@@ -105,15 +106,45 @@ def count_video(model, path: str, args, name: str | None = None) -> tuple[list[d
             verbose=False,
         )[0]
         b = r.boxes
-        if b is None or b.id is None:
+        if b is None or not len(b):
             continue
-        ids = b.id.int().tolist()
         confs = b.conf.tolist()
-        whs = b.xywh.tolist()  # [x_c, y_c, w, h]
+        whs = b.xywh.tolist()                      # [x_c, y_c, w, h]
+        ids = b.id.int().tolist() if b.id is not None else [None] * len(confs)
         for tid, cf, (xc, yc, w, h) in zip(ids, confs, whs):
-            tracks[tid].append((fi, float(cf), float(w * h),
+            if tid is not None:
+                tracks[tid].append((fi, float(cf), float(w * h),
+                                    float(xc), float(yc), float(w), float(h)))
+            elif args.keep_orphans:
+                # ORPHAN detection: the tracker emitted no ID for it. BoT-SORT only
+                # activates a track after association across >=2 frames, so a deer seen
+                # in a single isolated frame is dropped entirely — this is the gap
+                # between 93.6% of deer being DETECTED and only ~80% forming a track.
+                # Keep them as pseudo-tracks so the confirmation head can judge them.
+                orphans.append((fi, float(cf), float(w * h),
                                 float(xc), float(yc), float(w), float(h)))
     cap.release()
+
+    # link orphans into pseudo-tracks: same neighbourhood within a short time window
+    if orphans:
+        used = [False] * len(orphans)
+        next_id = (max(tracks) if tracks else 0) + 1000
+        for i, o in enumerate(orphans):
+            if used[i]:
+                continue
+            used[i] = True
+            group = [o]
+            for j in range(i + 1, len(orphans)):
+                if used[j]:
+                    continue
+                p_ = group[-1]; q = orphans[j]
+                if (q[0] - p_[0]) > args.orphan_gap:
+                    break
+                scale = max(p_[5], p_[6], 1.0)
+                if (abs(q[3] - p_[3]) < 2.5 * scale and abs(q[4] - p_[4]) < 2.5 * scale):
+                    used[j] = True; group.append(q)
+            tracks[next_id] = group
+            next_id += 1
 
     rows = []
     track_rows = []  # per-frame box dump for evidence rendering / GT review
@@ -176,6 +207,11 @@ def main() -> None:
     ap.add_argument("--shards", type=int, default=1,
                     help="split the video list across N parallel jobs/GPUs")
     ap.add_argument("--shard", type=int, default=0, help="which shard (0-based)")
+    ap.add_argument("--keep-orphans", action="store_true",
+                    help="keep detections the tracker never assigned an ID and link "
+                         "them into pseudo-tracks (recovers single-frame deer)")
+    ap.add_argument("--orphan-gap", type=int, default=30,
+                    help="max frame gap when linking orphan detections (30 = 0.5 s)")
     ap.add_argument("--dump-min-frames", type=int, default=1,
                     help="min frames for a track to appear in tracks.csv (1 = keep all; "
                          "the learned head needs the short ones too)")
