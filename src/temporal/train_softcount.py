@@ -87,9 +87,14 @@ def load_pool(counts_dir: str, labels_csv: str):
 
 
 def video_index(meta, idx):
+    """video -> positions WITHIN `idx` (not global indices).
+
+    The training tensors are the subset X[idx], so the per-video groups used by the
+    count loss must be positions in that subset. Returning global indices here indexed
+    out of bounds on GPU (device-side assert, job 20565576)."""
     by: dict[str, list] = {}
-    for i in idx:
-        by.setdefault(meta[i]["video"], []).append(i)
+    for pos, i in enumerate(idx):
+        by.setdefault(meta[i]["video"], []).append(pos)
     return by
 
 
