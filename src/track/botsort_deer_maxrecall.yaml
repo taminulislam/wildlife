@@ -1,0 +1,35 @@
+# BoT-SORT, MAXIMUM-RECALL variant — removes the TRACK-INITIALISATION gate.
+#
+# Why this file exists (the conf-0.05 experiment result):
+# Dropping the DETECTOR threshold from 0.10 to 0.05 grew the candidate pool from 7008 to
+# 10815 tracks but recovered ZERO extra deer (207/235 both times). So the 28 missing deer
+# were never lost to the detector threshold — the raw detector sees 232/235 of them in at
+# least one frame. They are lost inside the TRACKER.
+#
+# The gate is `new_track_thresh`. BoT-SORT only *starts* a track from a detection scoring
+# above it; anything below can extend an existing track but can never create one. At 0.15
+# a deer whose peak score never reaches 0.15 — the faint, far, 20 px animals that make up
+# most of the residual — is invisible to counting no matter how low `--conf` goes.
+#
+# So here every threshold sits at or below the detector's own conf. Track initialisation
+# is effectively unrestricted: any detection can seed a track. This over-generates
+# heavily (expect >20k candidates for 236 deer), which is the intended trade — candidate
+# generation is the bottleneck, and rejecting false candidates is exactly what the
+# learned confirmation head does, at no cost to the counting rule's precision.
+#
+# Everything else is inherited from botsort_deer_recall.yaml and unchanged: gmc ON for
+# vehicle ego-motion, 1 s track buffer to bridge vegetation occlusion.
+tracker_type: botsort
+track_high_thresh: 0.05   # 1st-stage association; was 0.15
+track_low_thresh: 0.01    # 2nd-stage association floor; was 0.05
+new_track_thresh: 0.05    # THE FIX: was 0.15 — this is what capped the pool at 207
+track_buffer: 60          # ~1 s at 60 fps — bridge vegetation occlusion
+match_thresh: 0.80
+fuse_score: True
+
+gmc_method: sparseOptFlow # CRITICAL for moving-camera ego-motion compensation
+
+proximity_thresh: 0.5
+appearance_thresh: 0.8
+with_reid: False
+model: auto

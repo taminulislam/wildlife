@@ -298,7 +298,7 @@ def main() -> None:
 
     total = sum(s["count"] for s in summaries)
     print(f"\nwrote {counts_csv}, {summ_csv} and {tracks_csv}")
-    print(f"TOTAL confirmed deer across {len(vids)} video(s): {total}")
+    print(f"TOTAL confirmed deer across {len(summaries)} video(s): {total}")
 
 
 if __name__ == "__main__":
