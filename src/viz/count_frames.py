@@ -56,13 +56,22 @@ def colour_for(tid: int):
 
 
 def draw_frame(img, dets, caption):
+    """Two different confidences are drawn, because they answer different questions:
+         det  = the DETECTOR's per-frame score: 'is there a deer in this box?'
+         ID   = the CALIBRATED track score: 'is this ID a distinct deer worth counting?'
+    Detector confidence cannot express ID correctness — a duplicate fragment sitting on
+    an already-counted deer still scores ~0.42 because a deer really is there. Solid
+    thick box = counted; thin box = tracked but rejected."""
     vis = img.copy()
     for d in dets:
         c = colour_for(d["track_id"])
         x1 = int(d["xc"] - d["w"] / 2); y1 = int(d["yc"] - d["h"] / 2)
         x2 = int(d["xc"] + d["w"] / 2); y2 = int(d["yc"] + d["h"] / 2)
-        cv2.rectangle(vis, (x1, y1), (x2, y2), c, 2)
-        label = f"ID {d['track_id']}  {d['conf']:.2f}"
+        thick = 2 if d.get("counted", d["confirmed"]) else 1
+        cv2.rectangle(vis, (x1, y1), (x2, y2), c, thick)
+        idsc = d.get("id_score")
+        label = (f"ID {d['track_id']}  det {d['conf']:.2f}  ID {idsc:.2f}"
+                 if idsc is not None else f"ID {d['track_id']}  {d['conf']:.2f}")
         (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
         ty = y1 - 3 if y1 - th - 6 > 0 else y2 + th + 5      # flip below if near top
         cv2.rectangle(vis, (x1, ty - th - 4), (x1 + tw + 6, ty + 3), (0, 0, 0), -1)
@@ -96,12 +105,24 @@ def main() -> None:
     ap.add_argument("--only-confirmed", action="store_true",
                     help="draw only tracks the counter accepted (default: all tracks, "
                          "so misses and rejected candidates are visible too)")
+    ap.add_argument("--track-scores", default="",
+                    help="per_track_confidence.csv from calibrated_confirmer.py "
+                         "(--target primary): the CALIBRATED probability that this track "
+                         "is a distinct countable deer, i.e. an ID-correctness score")
     ap.add_argument("--contrast", default="clahe")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     import sys
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "common"))
     from thermal import enhance_contrast
+
+    scores: dict[tuple, dict] = {}
+    if args.track_scores and os.path.isfile(args.track_scores):
+        with open(args.track_scores) as f:
+            for r in csv.DictReader(f):
+                scores[(r["video"], int(r["track_id"]))] = {
+                    "id_score": float(r["confidence"]), "counted": r["counted"] == "1"}
+        print(f"loaded {len(scores)} calibrated track scores")
 
     # frame -> detections, per video
     per_video: dict[str, dict[int, list]] = defaultdict(lambda: defaultdict(list))
@@ -114,7 +135,8 @@ def main() -> None:
             per_video[r["video"]][int(r["frame"])].append({
                 "track_id": int(r["track_id"]), "xc": float(r["xc"]),
                 "yc": float(r["yc"]), "w": float(r["w"]), "h": float(r["h"]),
-                "conf": float(r["conf"]), "confirmed": conf_flag})
+                "conf": float(r["conf"]), "confirmed": conf_flag,
+                **scores.get((r["video"], int(r["track_id"])), {})})
             if conf_flag:
                 confirmed_per_video[r["video"]].add(int(r["track_id"]))
 

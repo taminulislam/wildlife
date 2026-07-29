@@ -18,7 +18,8 @@ cd /work/nvme/bgte/tislam6/wildlife_project
 VIZ=/work/hdd/bgte/tislam6/wildlife_outputs/viz
 python -u src/viz/count_frames.py \
     --counts-dir /work/hdd/bgte/tislam6/wildlife_outputs/counts/phaseC_orphan_yolo11m_conf0.10/merged \
-    --source data/raw --out "$VIZ/count_frames" --per-video 3
+    --source data/raw --out "$VIZ/count_frames_ids" --per-video 3 \
+    --track-scores results/temporal/calibrated_orphan/per_track_confidence.csv
 echo "=== images ==="; find "$VIZ/count_frames" -name "*.jpg" | wc -l
 printf '%b\n' "Frame-level counting images ready $(date).\n\n$VIZ/count_frames/ — for each video, the frames where the MOST deer are tracked at once, with EVERY tracked deer boxed and labelled 'ID <track> <conf>' at the box corner. Colour is stable per track id, so one animal keeps one colour across frames.\n\nThis makes both counting failure modes visible: two different IDs on one animal = fragmentation (over-count); a visible deer with no box = miss (under-count).\n\n_sheet_multideer.jpg = the 8 busiest frames." \
   | mail -s "[Delta] Frame-level counting images with track IDs (job $SLURM_JOB_ID)" islamtaminul@gmail.com 2>/dev/null || true
