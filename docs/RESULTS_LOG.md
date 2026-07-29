@@ -15,7 +15,8 @@ Last updated: **2026-07-29** (see [Changelog](#changelog))
 | Best counting-criterion P/R (keyframe GT) | **0.939 / 0.643** (YOLOv9m@1280, conf .25) | §4.5 |
 | **Track-level recall (deer found at all)** | **97.0%** — 228/235 | §4.4 ★ |
 | Deer never detected (counting floor) | 7/235 = 3.0% | §4.4 |
-| **Counting MAE (baseline to beat)** | **1.88** — YOLO11m@640, 200/236 (the 1280 baseline is 2.28, §4.7) | §6.1 ★ |
+| **Counting (UNSEEN videos — publish this)** | **69.9%** coverage, MAE **2.38** (13 videos, 58/83 deer) | §6.7 ★★ |
+| Counting over all 32 videos (optimistic) | 89.0%, MAE 1.88 — includes 19 detector-training videos | §6.1, §6.7 |
 | **Counting ceiling after orphan fix** | **0.91** — 207/236 deer recoverable | §6.3 ★★ |
 | Learned confirmation vs rule (CV) | rule 1.88 vs capacity-matched 1.97 (better RMSE 2.78) | §6.5 |
 | **Per-deer calibrated confidence >= 0.80** | **92.1%** of counted deer (mean 0.965) | §6.6 ★ |
@@ -625,6 +626,39 @@ counted flag, review flag) and `per_video_counts.csv` (per-video count, expected
 **Poisson-binomial sd = uncertainty on the count**, mean confidence). 793 tracks fall in
 the review band and are flagged rather than auto-counted.
 
+### 6.7 ⚠ CRITICAL: counting numbers over all 32 videos are OPTIMISTIC
+
+The counting runs process **all 32 videos**, but the detector was trained on **19 of
+them**. Splitting the best counting result by the DETECTOR's split:
+
+| Detector split | Videos | GT | Counted | Coverage | MAE |
+|---|---|---|---|---|---|
+| train (detector SAW these) | 19 | 153 | 152 | **99.3%** | 1.53 |
+| val (unseen) | 4 | 45 | 33 | 73.3% | 3.00 |
+| test (unseen) | 9 | 38 | 25 | 65.8% | 2.11 |
+| ALL (what §6.1/§6.3 report) | 32 | 236 | 210 | 89.0% | 1.88 |
+
+**99.3% on seen videos vs 69.9% on unseen is memorisation, not generalisation.**
+
+**PUBLISH THIS NUMBER:** on the 13 unseen videos — 58/83 deer = **69.9% coverage,
+MAE 2.38**. Do NOT publish 89% / MAE 1.88 as a generalisation result; it is an upper
+bound measured partly on training data.
+
+Consequences for everything above:
+* §6.1, §6.3, §6.5, §6.6 MAE/coverage figures are all all-32-video numbers and inherit
+  this bias. The *relative* comparisons (rule vs learned confirmers) remain valid because
+  every method used the identical candidate pool, but the absolute values are optimistic.
+* The confirmer CV folds are over videos, yet the candidate tracks they consume came from
+  a detector that had seen 19 of those videos — so even the CV numbers are not fully
+  clean. A fully honest pipeline evaluation needs the detector and the counter trained on
+  the same train videos and both evaluated only on the held-out ones.
+* Per-site counting breakdowns mix seen and unseen videos and should not be quoted
+  without this caveat.
+
+**Evidence images:** `viz/detect_yolov9m1280/` is drawn only from TEST videos and is
+clean. `viz/counting_evidence/` covers all 32 videos and therefore includes
+detector-training videos — label them as such in any figure.
+
 ---
 
 ## 7. Open risks for the paper
@@ -682,6 +716,11 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-07-29 (III)** — ⚠ Found that all counting numbers were computed over all 32
+  videos while the detector trained on 19 of them: 99.3% coverage on seen vs 69.9% on
+  unseen. Honest generalisation result is 58/83 deer = 69.9%, MAE 2.38 (§6.7). Detection
+  gallery is clean (test videos only); counting evidence images are not.
 
 - **2026-07-29 (later)** — Capacity, not architecture, explains why learned confirmers
   lost: depth-1 stumps reach MAE 1.97 vs the rule's 1.88 with BETTER RMSE (§6.5).
