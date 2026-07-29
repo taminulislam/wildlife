@@ -467,7 +467,102 @@ baseline table is needed. Deferred 2026-07-25 to prioritise the counting contrib
 
 ---
 
-## 6. Open risks for the paper
+## 6. Counting (Phase B/C) — the paper's headline metric
+
+Pipeline: detector -> BoT-SORT (+camera-motion compensation) -> confirmation rule/head.
+Scored as MAE/RMSE between predicted and CVAT unique-deer counts, per video.
+
+### 6.1 Baseline: tracking-by-detection + best hand-tuned rule
+
+Job `2739440` (DeltaAI), YOLO11m@640, detector conf 0.10, rule swept on the same data
+(deliberately optimistic for the baseline).
+
+| Scope | Videos | MAE | RMSE | Bias | Over | Under |
+|---|---|---|---|---|---|---|
+| **ALL** | 32 | **1.88** | 3.04 | -1.12 | 12 | 48 |
+| MAS | 8 | 0.50 | 1.00 | -0.50 | 0 | 4 |
+| SHB | 8 | 2.00 | 3.00 | -1.50 | 2 | 14 |
+| SHW | 8 | 2.38 | 3.52 | +0.12 | 10 | 9 |
+| TON | 8 | 2.62 | 3.82 | -2.62 | 0 | 21 |
+
+200/236 deer (84.7%). Mean 7.4 deer/video, so MAE 1.88 ~ 25% relative error; 41% of
+videos exact, 59% within +-1, 75% within +-2. Error is **systematic under-counting**
+(48 under vs 12 over) — the learnable failure mode the temporal head targets.
+
+**Confidence note:** conf 0.10 is the *candidate-generation* threshold, not the
+counting threshold. 984 candidates were generated, 784 (80%) discarded; the 200 counted
+tracks had min 0.65 / median 0.74 top-k confidence. No track exceeded 0.90 — expected
+for 27 px objects.
+
+### 6.2 Learned confirmation does NOT beat the rule (cross-validated) ★
+
+Job `20551694`. 8-fold CV over videos, all 30 videos with tracks / 236 deer. Rule swept
+per fold on that fold's training videos; head threshold picked on an inner val split.
+Identical protocol for every method.
+
+| Method | MAE | RMSE | Bias | Under |
+|---|---|---|---|---|
+| Hand-tuned rule | 2.23 | 3.23 | -0.97 | 48 |
+| **Gradient boosting** | **2.17** | 3.45 | -1.03 | 48 |
+| Logistic regression | 2.83 | 4.10 | -0.97 | 57 |
+| TTC transformer | 2.90 | 4.05 | -1.63 | 68 |
+
+GBM ties (+3%, within noise). **Diagnosis:** rule and GBM under-count by *exactly* 48
+because ~45 deer had no candidate track at all — you cannot select your way to a deer
+that is not in the candidate set. Confirmation was never the binding constraint.
+
+Two fixes were needed to reach even this: val-based **early stopping** (an earlier
+version trained all 150 epochs and overfit ~500 tracks, scoring *worse* than the rule)
+and **cross-track context** features (a per-track model cannot tell a `primary` from a
+`duplicate` fragment — they are identical in isolation — so v1 accepted both and
+over-counted, +1.11 bias).
+
+### 6.3 The binding constraint is CANDIDATE GENERATION ★★ key result
+
+Ceiling = MAE achievable by a *perfect* confirmer on a given candidate pool.
+
+| Candidate pool | Tracks | Deer with a track | Ceiling MAE | Rule MAE |
+|---|---|---|---|---|
+| YOLO11m@640, conservative tracker | 711 | 190/236 | 1.44 | 1.88 |
+| + recall-first tracker, keep n<3 | 1194 | 194/236 | 1.31 | 1.97 |
+| YOLOv9m@1280 (best *detector*) | 1496 | 188/236 | 1.35 | 2.38 |
+| **+ orphan-detection recovery** | **7008** | **207/236 (88%)** | **0.91** | 1.88 |
+
+1. **The best detector produced the worst counts.** YOLOv9m@1280 wins on detection
+   (keyframe mAP50 0.735 vs 0.640) yet counts worst. Cause is fragmentation, not
+   detection: duplicates per deer rose 0.78 -> 1.08 -> **1.28** because association
+   thresholds tuned at 640 mis-associate at 2x pixel scale. **Frame-level detection
+   quality does not translate into counting accuracy** — a reportable finding.
+2. **Loosening the tracker barely helped**: +68% tracks bought only +4 deer.
+3. **The real cause was a pipeline bug.** `count_deer.py` had
+   `if b.id is None: continue`, discarding *every* detection in frames where the tracker
+   assigned no ID. BoT-SORT only activates a track after association across >=2 frames,
+   so deer seen in a single isolated frame were deleted before counting. That is exactly
+   the gap between 93.6% of deer being detected and ~80% forming a track.
+   `--keep-orphans` retains them and links them into pseudo-tracks: **+17 deer**, more
+   than tracker tuning and the 1280 detector achieved combined.
+
+**Consequence for the contribution:** headroom for a learned confirmer went from 0.44
+(1.88 -> 1.44) to **0.97** (1.88 -> 0.91), and the pool is now 7008 candidates at **91%
+false** — a regime where threshold rules are hopeless and a learned confirmer is the
+only workable option. Retraining on this pool: job `20565413`.
+
+### 6.4 How close to 236 is reachable?
+
+| Stage | Deer |
+|---|---|
+| Ground truth | 236 |
+| Detected in >=1 frame (conf 0.10) | 220 (93.6%) |
+| Recovered as a track (orphan pool) | 207 (88%) |
+
+~13 deer are detected but still lost in track formation (recoverable by pipeline work);
+~16 are **never detected** at conf 0.10 and are unreachable without a better detector.
+Job `2764134` sweeps detectability at conf 0.05/0.02 for both detectors to set the hard
+limit before committing GPU to ensembling or SAHI tiling.
+
+---
+
+## 7. Open risks for the paper
 
 1. **Dataset scale.** 236 deer / 32 videos is thin for a benchmark contribution, and there
    is no unlabelled backlog — growth requires the RS footage (31 videos, SHW missing) or
@@ -482,7 +577,7 @@ baseline table is needed. Deferred 2026-07-25 to prioritise the counting contrib
 
 ---
 
-## 7. Reproduction
+## 8. Reproduction
 
 ```bash
 # dataset (CLAHE frames from CVAT exports)
@@ -522,6 +617,11 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-07-29** — Counting results (§6). Baseline MAE 1.88; learned confirmation ties
+  the rule (§6.2); the binding constraint is candidate generation, and an orphan-detection
+  bug was deleting single-frame deer — fixing it recovered 17 deer and cut the ceiling
+  from 1.44 to 0.91 (§6.3). 1280 is the best detector but the worst counter (§6.3).
 
 - **2026-07-26** — Phase-B gate PASSED: 93.6% track-level recall under the counting
   criterion (§4.4) -> detector is not the counting bottleneck, proceed to the temporal
