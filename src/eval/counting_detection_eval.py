@@ -68,7 +68,10 @@ def gt_boxes(lbl_path: str, W: int, H: int):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weights", required=True)
-    ap.add_argument("--arch", default="yolo", choices=["yolo", "rtdetr"])
+    ap.add_argument("--arch", default="yolo", choices=["yolo", "rtdetr", "mmdet"])
+    ap.add_argument("--config", default="",
+                    help="mmdetection config .py (required for --arch mmdet). mmdet "
+                         "checkpoints carry no architecture, unlike Ultralytics .pt")
     ap.add_argument("--data", default="data/dataset/yolo_v3/data.yaml")
     ap.add_argument("--split", default="test")
     ap.add_argument("--imgsz", type=int, default=640)
@@ -79,8 +82,36 @@ def main() -> None:
     ap.add_argument("--out", default="results/counting_eval")
     args = ap.parse_args()
 
-    from ultralytics import YOLO, RTDETR
-    model = (RTDETR if args.arch == "rtdetr" else YOLO)(args.weights)
+    # Both back-ends reduce to the same thing: a list of [x1,y1,x2,y2] per image, already
+    # thresholded. Everything downstream is back-end agnostic.
+    if args.arch == "mmdet":
+        if not args.config:
+            raise SystemExit("--arch mmdet requires --config <mmdet config .py>")
+        from mmdet.apis import inference_detector, init_detector
+        mm = init_detector(args.config, args.weights,
+                           device=f"cuda:{args.device}" if args.device.isdigit()
+                           else args.device)
+
+        def predict(chunk):
+            res = inference_detector(mm, chunk)
+            if not isinstance(res, list):
+                res = [res]
+            out = []
+            for r in res:
+                p = r.pred_instances
+                keep = p.scores >= args.conf
+                out.append(p.bboxes[keep].cpu().numpy().tolist())
+            return out
+    else:
+        from ultralytics import YOLO, RTDETR
+        model = (RTDETR if args.arch == "rtdetr" else YOLO)(args.weights)
+
+        def predict(chunk):
+            res = model.predict(source=chunk, imgsz=args.imgsz, conf=args.conf,
+                                device=args.device, verbose=False)
+            return [(r.boxes.xyxy.cpu().numpy().tolist()
+                     if r.boxes is not None and len(r.boxes) else [])
+                    for r in res]
 
     imgs, lbl_dir = load_split(args.data, args.split)
     tp = {c: 0 for c in CRITERIA}
@@ -90,14 +121,11 @@ def main() -> None:
 
     for i in range(0, len(imgs), args.batch):
         chunk = imgs[i:i + args.batch]
-        res = model.predict(source=chunk, imgsz=args.imgsz, conf=args.conf,
-                            device=args.device, verbose=False)
-        for ip, r in zip(chunk, res):
+        preds = predict(chunk)
+        for ip, d in zip(chunk, preds):
             H, W = cv2.imread(ip).shape[:2]
             g = gt_boxes(os.path.join(
                 lbl_dir, os.path.splitext(os.path.basename(ip))[0] + ".txt"), W, H)
-            d = (r.boxes.xyxy.cpu().numpy().tolist()
-                 if r.boxes is not None and len(r.boxes) else [])
             n_gt += len(g)
             for c in CRITERIA:
                 # greedy one-to-one matching per criterion
