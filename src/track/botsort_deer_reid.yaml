@@ -1,0 +1,38 @@
+# BoT-SORT, MAX-RECALL + APPEARANCE ReID ENABLED.
+#
+# Identical to botsort_deer_maxrecall.yaml except `with_reid: True`. That single flag is
+# the whole experiment: association stops being pure motion (Kalman + optical-flow
+# ego-motion compensation) and starts fusing an appearance embedding.
+#
+# `model: auto` means the encoder is the DETECTOR'S OWN backbone features — the
+# penultimate-layer activations YOLO11m already computes for every box, at no extra
+# forward pass. This is generic, not thermal-specific; a thermal-trained embedding drops
+# in by replacing `auto` with a path (see src/reid/train_thermal_reid.py, which exports
+# ONNX for exactly this slot).
+#
+# What ReID can and cannot do here, so the result is read correctly:
+#   CAN  stop one animal fragmenting into several candidate tracks, which is what forces
+#        the counting rule to be aggressive, which is why it under-counts (bias -1.92)
+#   CANNOT split one box covering two deer into two counts. 15 of 18 collisions are
+#        simultaneous (§6.8) and no association method fixes a detection that never
+#        existed.
+#
+# So the number to watch is `primary` and the held-out counted total, not `reached`.
+#
+# proximity_thresh / appearance_thresh are inherited defaults and now actually take
+# effect: a candidate match must be within 0.5 IoU-distance AND 0.8 cosine-distance.
+tracker_type: botsort
+track_high_thresh: 0.05
+track_low_thresh: 0.01
+new_track_thresh: 0.05
+track_buffer: 60
+match_thresh: 0.80
+fuse_score: True
+
+gmc_method: sparseOptFlow
+
+proximity_thresh: 0.5
+appearance_thresh: 0.8
+with_reid: True           # THE EXPERIMENT — everything above matches Phase E exactly
+model: auto               # detector backbone features; swap for an ONNX path to use a
+                          # thermal-specific embedding
