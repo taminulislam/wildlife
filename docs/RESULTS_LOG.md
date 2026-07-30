@@ -6,16 +6,19 @@ Numbers here are *measured*, never estimated; anything unmeasured is marked TODO
 
 Last updated: **2026-07-29** (see [Changelog](#changelog))
 
-## Headline numbers (as of 2026-07-29)
+## Headline numbers (as of 2026-07-30)
 
 | What | Value | Where |
 |---|---|---|
 | Best detector (mAP50, test) | **YOLOv9m @1280 — 0.523** | §4.5 |
+| Best non-Ultralytics detector | RTMDet-m — 0.466 (DINO only 0.365) | §3.1 |
 | Same model, human-verified GT | 0.640 @640 / see §4.5 for 1280 | §4.2 |
 | Best counting-criterion P/R (keyframe GT) | **0.939 / 0.643** (YOLOv9m@1280, conf .25) | §4.5 |
 | **Track-level recall (deer found at all)** | **97.0%** — 228/235 | §4.4 ★ |
 | Deer never detected (counting floor) | 7/235 = 3.0% | §4.4 |
-| **Counting (UNSEEN videos — publish this)** | **69.9%** coverage, MAE **2.38** (13 videos, 58/83 deer) | §6.7 ★★ |
+| **Candidate reach, UNSEEN videos** | **95.2%** — 79/83 deer (vs 98.0% seen) | §6.4.3 ★★ |
+| **Residual loss is track COLLISION** | 10 of the 14 unseen misses share a candidate | §6.4.3 ★★ |
+| Counting (UNSEEN, conf-0.10 pool — stale) | 69.9% coverage, MAE 2.38 — not yet redone on the new pool | §6.7 |
 | Counting over all 32 videos (optimistic) | 89.0%, MAE 1.88 — includes 19 detector-training videos | §6.1, §6.7 |
 | **Counting ceiling after orphan fix** | **0.91** — 207/236 deer recoverable | §6.3 ★★ |
 | Learned confirmation vs rule (CV) | rule 1.88 vs capacity-matched 1.97 (better RMSE 2.78) | §6.5 |
@@ -150,6 +153,39 @@ AP-large is undefined (`-1`) for every model: **no large deer exist in the test 
    came from track fragmentation, not detector FPs.
 4. **Localization, not detection, is the weak axis.** AP@0.50 = 0.459 but AP@0.75 = 0.097
    (YOLOv8m). Fingerprint of imprecise GT — confirmed in §4.2.
+
+### 3.1 mmdetection roster (job `20565690`, finished 2026-07-30)
+
+Six architectures, same pooled split, COCO-pretrained, 1 class, CLAHE frames, 4×A100.
+Wall clock 19 h 33 m. **COCO mAP50 on the held-out test split** — i.e. IoU>=0.50, *not*
+the project's any-overlap criterion:
+
+| Model | schedule | val best mAP50 | **test mAP50** |
+|---|---|---|---|
+| **RTMDet-m** | 70e | 0.490 | **0.466** |
+| Faster R-CNN R50 | 70e | 0.418 | 0.418 |
+| TOOD R50 | 70e | 0.401 | 0.396 |
+| ATSS R50 | 70e | 0.380 | 0.380 |
+| DINO R50 | 36e (native) | 0.365 | 0.365 |
+| Deformable DETR R50 | 50e | 0.113 @ep4 | ✗ CUDA OOM at epoch 5 |
+
+Findings:
+
+1. **RTMDet-m (0.466) is level with the Ultralytics roster** (best 0.498) and beats every
+   other mmdet model by 5+ points. The convolutional one-stage family transfers to 27 px
+   thermal deer; nothing here displaces YOLO, but nothing is embarrassed by it either.
+2. **The DETR family underperforms.** DINO R50 reaches only 0.365 on a full native
+   36-epoch schedule, below plain Faster R-CNN. Consistent with the known weakness of
+   query-based detectors on very small objects, and worth one sentence in the paper.
+3. **Deformable DETR OOM'd** at batch 8 on a 40 GB A100 (multi-scale deformable attention
+   peaks well above its ~29 GB steady state). Config lowered to batch 4 with lr scaled;
+   rerun queued as job `20568561`.
+
+⚠ **These numbers are on the wrong criterion for this project.** mmdet's training loop
+only emits COCO mAP. Under any-overlap (§4.3) the Ultralytics roster gains ~13 points of
+precision and the *ranking changes*, so mmdet-vs-YOLO cannot be read off this table.
+Job `20568689` rescores all six through `counting_detection_eval.py --arch mmdet` and
+regenerates one combined ranking.
 
 ---
 
@@ -571,6 +607,61 @@ only workable option. Retraining on this pool: job `20565413`.
 Job `2764134` sweeps detectability at conf 0.05/0.02 for both detectors to set the hard
 limit before committing GPU to ensembling or SAHI tiling.
 
+#### 6.4.1 Detectability sweep (job 2764134) — the detector is not the wall
+
+Of 235 GT deer, how many does the raw detector see in **at least one frame**:
+
+| Detector | conf | IoU>=0.50 | any overlap (counting) |
+|---|---|---|---|
+| YOLO11m @640 | 0.05 | 226 (96.2%) | **232 (98.7%)** |
+| YOLO11m @640 | 0.02 | 230 (97.9%) | 232 (98.7%) |
+| YOLOv9m @1280 | 0.02 | 230 (97.9%) | **233 (99.1%)** |
+
+Only 2–3 deer are genuinely invisible. Everything else is a pipeline loss.
+
+#### 6.4.2 Lowering the DETECTOR threshold recovers nothing (job 2764510)
+
+Re-ran counting at conf 0.05 (from 0.10), orphans on:
+
+| conf | candidate tracks | deer covered |
+|---|---|---|
+| 0.10 | 7 008 | 207 / 235 |
+| 0.05 | 10 815 | **207 / 235** |
+
+3 807 extra candidates, **zero** extra deer. This rules the detector threshold out as the
+cause of the gap and points at BoT-SORT's `new_track_thresh: 0.15`: a detection below it
+can extend a track but can never *start* one, so faint deer never become candidates.
+
+#### 6.4.3 Removing the track-init gate + fixing the ceiling measurement ★★
+
+`botsort_deer_maxrecall.yaml` (`new_track_thresh` 0.15 -> 0.05, detector conf 0.02),
+job `2765525`: 18 349 candidates, of which **17 229 are orphan pseudo-tracks** — orphan
+recovery, not the tracker, is generating almost the whole pool.
+
+Then a measurement bug surfaced. `label_tracks.py` reports `len(set(best_for_gt.values()))`
+as the ceiling, but that is a set of **candidates**, not deer: when one candidate track is
+the best match for two deer (a track drifting between animals, or two deer walking
+together) the set collapses it and both deer bill as one. `src/eval/pool_coverage.py`
+separates the two:
+
+| Split | Videos | GT | **reached** (>=1 touching candidate) | primary (distinct candidates) | lost to collision |
+|---|---|---|---|---|---|
+| train (detector saw) | 19 | 152 | 149 (98.0%) | 143 (94.1%) | 6 |
+| **unseen (val+test)** | **13** | **83** | **79 (95.2%)** | **69 (83.1%)** | **10** |
+| ALL | 32 | 235 | **228 (97.0%)** | 212 (90.2%) | 16 |
+
+Two conclusions, both load-bearing for the paper:
+
+1. **Candidate generation is solved** — 228 of 235 reachable against the 232 the detector
+   sees, and the seen/unseen gap is only 98.0% vs 95.2%. This supersedes the 69.9%
+   generalisation figure in §6.7, which came from the old conf-0.10 pool.
+2. **The residual is a track-SPLITTING problem.** On the unseen videos, 10 of the 14
+   missing deer share a candidate with another deer. No amount of extra candidate
+   generation, lower thresholds, or orphan recovery can reach them — the candidate
+   already exists and is already counted once. A confirmation head that emits a *count*
+   per track (0/1/2+) rather than a binary keep/drop is required, which is precisely the
+   capability a hand-tuned rule structurally lacks.
+
 ### 6.5 Learned confirmation vs the rule — capacity is the whole story ★
 
 Eight-fold CV over videos, orphan pool, identical protocol for every method (rule swept
@@ -643,6 +734,13 @@ them**. Splitting the best counting result by the DETECTOR's split:
 **PUBLISH THIS NUMBER:** on the 13 unseen videos — 58/83 deer = **69.9% coverage,
 MAE 2.38**. Do NOT publish 89% / MAE 1.88 as a generalisation result; it is an upper
 bound measured partly on training data.
+
+> **SUPERSEDED for candidate coverage (2026-07-30).** The 69.9% above is the conf-0.10
+> pool. With max-recall tracking + orphan recovery (§6.4.3) unseen *reach* is 95.2%
+> (79/83) against 98.0% seen. The seen/unseen split still matters and every absolute
+> figure in §6.1–§6.6 remains all-32-video, but "memorisation, not generalisation" is no
+> longer the right reading of candidate generation. What has NOT been redone on the new
+> pool is the end-to-end counted MAE, so the MAE 2.38 caveat stands until it is.
 
 Consequences for everything above:
 * §6.1, §6.3, §6.5, §6.6 MAE/coverage figures are all all-32-video numbers and inherit
