@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+tood_r50_KEYFRAME,test,0.1,iou50,280,1198,81,0.1894,0.7756,0.3045
+tood_r50_KEYFRAME,test,0.1,iou30,326,1152,35,0.2206,0.903,0.3545
+tood_r50_KEYFRAME,test,0.1,touch,331,1147,30,0.224,0.9169,0.36
+tood_r50_KEYFRAME,test,0.1,center,330,1148,31,0.2233,0.9141,0.3589

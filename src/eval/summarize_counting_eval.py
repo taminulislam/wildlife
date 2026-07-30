@@ -42,7 +42,13 @@ def main() -> None:
         if os.path.basename(f).startswith("counting_eval_"):
             continue                      # don't re-read our own outputs
         with open(f) as fh:
-            for r in csv.DictReader(fh):
+            rd = csv.DictReader(fh)
+            # Other tools write into this directory too (pool_coverage.py, for one).
+            # Identify ours by schema rather than by filename, so a new sibling file
+            # can never take the whole table down again.
+            if not rd.fieldnames or "tag" not in rd.fieldnames:
+                continue
+            for r in rd:
                 tag = r["tag"]
                 if tag.endswith("_KEYFRAME"):
                     gt, model = "keyframe", tag[: -len("_KEYFRAME")]

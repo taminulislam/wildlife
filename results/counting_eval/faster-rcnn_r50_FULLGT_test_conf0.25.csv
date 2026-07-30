@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+faster-rcnn_r50_FULLGT,test,0.25,iou50,1488,3644,1304,0.2899,0.533,0.3756
+faster-rcnn_r50_FULLGT,test,0.25,iou30,1882,3250,910,0.3667,0.6741,0.475
+faster-rcnn_r50_FULLGT,test,0.25,touch,2018,3114,774,0.3932,0.7228,0.5093
+faster-rcnn_r50_FULLGT,test,0.25,center,1971,3161,821,0.3841,0.7059,0.4975

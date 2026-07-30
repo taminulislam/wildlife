@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+atss_r50_FULLGT,test,0.1,iou50,1761,14100,1031,0.111,0.6307,0.1888
+atss_r50_FULLGT,test,0.1,iou30,2267,13594,525,0.1429,0.812,0.2431
+atss_r50_FULLGT,test,0.1,touch,2382,13479,410,0.1502,0.8532,0.2554
+atss_r50_FULLGT,test,0.1,center,2336,13525,456,0.1473,0.8367,0.2505

@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+tood_r50_FULLGT,test,0.1,iou50,1774,15048,1018,0.1055,0.6354,0.1809
+tood_r50_FULLGT,test,0.1,iou30,2196,14626,596,0.1305,0.7865,0.2239
+tood_r50_FULLGT,test,0.1,touch,2303,14519,489,0.1369,0.8249,0.2348
+tood_r50_FULLGT,test,0.1,center,2254,14568,538,0.134,0.8073,0.2298

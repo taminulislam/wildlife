@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+rtmdet_m_KEYFRAME,test,0.25,iou50,264,378,97,0.4112,0.7313,0.5264
+rtmdet_m_KEYFRAME,test,0.25,iou30,309,333,52,0.4813,0.856,0.6162
+rtmdet_m_KEYFRAME,test,0.25,touch,318,324,43,0.4953,0.8809,0.6341
+rtmdet_m_KEYFRAME,test,0.25,center,317,325,44,0.4938,0.8781,0.6321

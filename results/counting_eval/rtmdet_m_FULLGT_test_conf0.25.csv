@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+rtmdet_m_FULLGT,test,0.25,iou50,1607,5082,1185,0.2402,0.5756,0.339
+rtmdet_m_FULLGT,test,0.25,iou30,1947,4742,845,0.2911,0.6973,0.4107
+rtmdet_m_FULLGT,test,0.25,touch,2176,4513,616,0.3253,0.7794,0.459
+rtmdet_m_FULLGT,test,0.25,center,2071,4618,721,0.3096,0.7418,0.4369

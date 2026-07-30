@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+dino_r50_KEYFRAME,test,0.1,iou50,286,1923,75,0.1295,0.7922,0.2226
+dino_r50_KEYFRAME,test,0.1,iou30,323,1886,38,0.1462,0.8947,0.2514
+dino_r50_KEYFRAME,test,0.1,touch,333,1876,28,0.1507,0.9224,0.2591
+dino_r50_KEYFRAME,test,0.1,center,332,1877,29,0.1503,0.9197,0.2584

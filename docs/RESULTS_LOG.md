@@ -12,15 +12,17 @@ Last updated: **2026-07-30** (see [Changelog](#changelog))
 |---|---|---|
 | Best detector (mAP50, test) | **YOLOv9m @1280 — 0.523** | §4.5 |
 | Best non-Ultralytics detector | RTMDet-m — 0.466 (DINO only 0.365) | §3.1 |
+| **Detector ranking on the COUNTING criterion** | YOLO11m F1 **0.758**; no mmdet model displaces it | §3.2 ★ |
 | Same model, human-verified GT | 0.640 @640 / see §4.5 for 1280 | §4.2 |
 | Best counting-criterion P/R (keyframe GT) | **0.939 / 0.643** (YOLOv9m@1280, conf .25) | §4.5 |
-| **Track-level recall (deer found at all)** | **97.0%** — 228/235 | §4.4 ★ |
-| Deer never detected (counting floor) | 7/235 = 3.0% | §4.4 |
+| **Track-level recall (deer found at all)** | **97.9%** — 230/235 (loose NMS) | §4.4, §6.8 ★ |
+| Deer never detected (counting floor) | 5/235 = 2.1% | §4.4, §6.8 |
 | **Candidate reach, UNSEEN videos** | **95.2%** — 79/83 deer (vs 98.0% seen) | §6.4.3 ★★ |
-| **Residual loss is deer COLLISION** | 18 deer share a candidate (10 of 14 unseen misses) | §6.8 ★★ |
-| Counting (UNSEEN, conf-0.10 pool — stale) | 69.9% coverage, MAE 2.38 — not yet redone on the new pool | §6.7 |
+| Deer with their OWN candidate (ceiling) | 215/235 overall; **69/83 unseen** | §6.8 ★★ |
+| **COUNTING, HELD OUT — the number to publish** | **MAE 2.38, 55/83 = 66.3%** of unseen deer | §6.7.1 ★★★ |
+| Unseen bias | **-1.92** — under-counts, never over-counts | §6.7.1 |
 | Counting over all 32 videos (optimistic) | 89.0%, MAE 1.88 — includes 19 detector-training videos | §6.1, §6.7 |
-| **Counting ceiling after orphan fix** | **0.91** — 207/236 deer recoverable | §6.3 ★★ |
+| **The gap the paper must close** | reach 95.2% → primary 83.1% → counted 66.3% | §6.7.1 ★★★ |
 | Learned confirmation vs rule (CV) | rule 1.88 vs capacity-matched 1.97 (better RMSE 2.78) | §6.5 |
 | **Per-deer calibrated confidence >= 0.80** | **92.1%** of counted deer (mean 0.965) | §6.6 ★ |
 
@@ -178,14 +180,44 @@ Findings:
    36-epoch schedule, below plain Faster R-CNN. Consistent with the known weakness of
    query-based detectors on very small objects, and worth one sentence in the paper.
 3. **Deformable DETR OOM'd** at batch 8 on a 40 GB A100 (multi-scale deformable attention
-   peaks well above its ~29 GB steady state). Config lowered to batch 4 with lr scaled;
-   rerun queued as job `20568561`.
+   peaks well above its ~29 GB steady state). A batch-4 config exists
+   (`configs/mmdet/deer_deformable-detr_r50.py`, lr scaled to 2.5e-5) but the rerun was
+   **dropped**: DINO R50 already represents the DETR family on a full native schedule and
+   finishes below Faster R-CNN, so a second query-based detector cannot change any
+   conclusion. Reported as "excluded — did not converge within compute budget".
 
-⚠ **These numbers are on the wrong criterion for this project.** mmdet's training loop
-only emits COCO mAP. Under any-overlap (§4.3) the Ultralytics roster gains ~13 points of
-precision and the *ranking changes*, so mmdet-vs-YOLO cannot be read off this table.
-Job `20568689` rescores all six through `counting_detection_eval.py --arch mmdet` and
-regenerates one combined ranking.
+⚠ These numbers are on the wrong criterion for this project — mmdet's training loop only
+emits COCO mAP. Job `20568689` rescored all five through
+`counting_detection_eval.py --arch mmdet`; §3.2 is the number that counts.
+
+#### 3.2 mmdet under the ANY-OVERLAP criterion (job `20568689`, finished 2026-07-30) ★
+
+Human-keyframe GT, conf 0.25, P / R / F1 — one ranking with the Ultralytics roster
+(`results/counting_eval/counting_eval_TABLE.md`):
+
+| Model | IoU≥0.50 F1 | **any-overlap F1** | any-overlap P | any-overlap R |
+|---|---|---|---|---|
+| **YOLO11m** @640 | 0.652 | **0.758** | 0.942 | 0.634 |
+| RT-DETR-l | 0.660 | 0.766 | 0.818 | 0.720 |
+| ATSS R50 | 0.550 | 0.729 | 0.714 | 0.745 |
+| TOOD R50 | 0.548 | 0.722 | 0.729 | 0.715 |
+| Faster R-CNN R50 | 0.525 | 0.636 | 0.511 | 0.842 |
+| RTMDet-m | 0.526 | 0.634 | 0.495 | **0.881** |
+| DINO R50 | 0.509 | 0.635 | 0.631 | 0.640 |
+
+Findings:
+
+1. **The criterion change does not overturn the roster choice.** YOLO11m keeps the best
+   any-overlap F1 among the trained-from-scratch models; no mmdet architecture displaces
+   it. The detector decision is final — 13 models compared, on the project's own criterion.
+2. **RTMDet-m's mAP lead was a precision artefact.** It ranked first in §3.1 on COCO mAP50
+   (0.466) but falls to 0.634 F1 here: it has the *highest recall of any model tested*
+   (0.881) and the worst precision (0.495). Under any-overlap the loose boxes that COCO
+   mAP punished stop being penalised, and the false positives dominate instead.
+3. **mmdet models are recall-heavy, YOLO is precision-heavy** — a genuinely useful figure
+   for the paper, and a hint that an mmdet model could be the better *candidate generator*
+   for the counting stage even though it is the worse *detector*. Not pursued: Phase F
+   already showed that a larger candidate pool hurts the rule-based counter (§6.8).
 
 ---
 
@@ -471,11 +503,19 @@ designed to fix, and they are now measured rather than assumed.**
 
 ### Running / queued
 
-| Job | Cluster | Purpose |
-|---|---|---|
-| `2730226` | DeltaAI | **Phase B counting run** — ✅ done in 1 h 17 m, §4.7 |
-| `20493649` | Delta | hedge twin — both started before either could be cancelled; the
-Delta copy was killed once the DeltaAI results landed (~1.5 GPU-h duplicated) |
+**Nothing is running as of 2026-07-30 04:11.** Both clusters' queues are empty; every
+experiment the paper needs has reported. Remaining work is analysis and writing, not
+compute — see §9.
+
+Last to finish:
+
+| Job | Cluster | Purpose | Result |
+|---|---|---|---|
+| `2777214` | DeltaAI | loose-NMS counting pool (NMS IoU 0.90) | §6.8 — mechanism confirmed, gain too small; Phase E retained |
+| `20568689` | Delta | mmdet roster rescored on any-overlap | §3.2 — YOLO11m holds |
+| `20568561` | Delta | Deformable DETR batch-4 rerun | **cancelled** — cannot change a conclusion (§3.1) |
+| `2730226` | DeltaAI | Phase B counting run — done in 1 h 17 m | §4.7 |
+| `20493649` | Delta | hedge twin of the above; killed once DeltaAI landed (~1.5 GPU-h duplicated) | — |
 
 Both are 4-GPU / 3-hour requests. Queue note (2026-07-26): DeltaAI had **zero idle
 nodes** and the job's priority was 1,228 vs 11,265 at the queue head — fairshare
@@ -498,12 +538,11 @@ blob spanning two deer -> real/mult 2).
 - **70–90%** → proceed, state the ceiling honestly in the paper
 - **<70%** → detector is the bottleneck; invest there first
 
-### Deferred (built, tested, not run)
+### mmdetection roster — ✅ complete (was deferred 2026-07-25)
 
-6 mmdetection models — Faster R-CNN R50, ATSS R50, TOOD R50, RTMDet-M, DINO-4scale R50,
-Deformable-DETR R50 — configs in `configs/mmdet/`, env `envs/mmdet`, COCO checkpoints
-staged in `weights_mmdet/`. Resubmit `scripts/train_mmdet_all.sbatch` when the broader
-baseline table is needed. Deferred 2026-07-25 to prioritise the counting contribution.
+6 configs in `configs/mmdet/`, env `envs/mmdet`, COCO checkpoints in `weights_mmdet/`.
+5 of 6 trained and scored on both criteria (§3.1 COCO mAP, §3.2 any-overlap);
+Deformable-DETR excluded for non-convergence within budget. Nothing outstanding.
 
 ---
 
@@ -696,14 +735,48 @@ Eight of the sixteen sit in one dense-group video, `NShelbyRd(blue)_SHB`. Only 3
 collision tracks hold multiple boxes per frame, so this is not the orphan linker either —
 it is genuinely one detection covering two animals.
 
-**In test — loose NMS (job `2777214`).** Two adjacent 27 px deer produce boxes overlapping
-above the 0.5 NMS IoU threshold, so the second is suppressed at the detector and never
-reaches the tracker. Re-running with NMS IoU 0.90, everything else identical to Phase E.
+**Tried, and it works — but barely: loose NMS (job `2777214`, finished 2026-07-30).**
+Two adjacent 27 px deer produce boxes overlapping above the 0.5 NMS IoU threshold, so the
+second is suppressed at the detector and never reaches the tracker. Re-ran at NMS IoU 0.90
+(and conf 0.02), everything else identical to Phase E:
 
-Caveat to weigh when it lands: under any-overlap, a box that merely *touches* a
-neighbouring deer's box already "covers" it, so some of the 18 are nominal rather than
-real double-coverage. If loose NMS does not move `primary`, the honest reading is that the
-true ceiling is nearer 210 than 228.
+| pool | candidates | reached | primary | lost to collision |
+|---|---|---|---|---|
+| Phase E — NMS 0.50 | 18 349 | 228 | 210 | 18 |
+| **Phase F — NMS 0.90** | **90 239** | **230** | **215** | **15** |
+
+Per split (`unseen` = val + test, the 13 videos the detector never saw):
+
+| split | GT | Phase E primary | Phase F primary |
+|---|---|---|---|
+| train | 152 | 141 | 145 |
+| **unseen** | **83** | **69** | **70** |
+
+**Verdict: the NMS hypothesis is confirmed in direction and rejected in practice.** The
+mechanism is real — loosening suppression separates deer that were genuinely one box — but
+it buys **+5 primaries overall and +1 on the unseen videos for 5× the candidates**, and the
+rule-based MAE *worsens* on the bigger pool (**3.41** over all 32 videos, vs **2.12** on
+Phase E and **1.88** on the Phase-C orphan pool) because 72 000 extra false candidates
+swamp a 3-parameter filter. **Phase E stays the reachability pool; Phase F is an ablation.**
+
+That MAE column is itself the central result of §6.5, restated. Rule MAE tracks pool
+*size*, not pool *quality*, and moves in the opposite direction to the reachable ceiling:
+
+| pool | candidates | reached | primary | rule MAE (32 vids) |
+|---|---|---|---|---|
+| Phase C orphan (NMS 0.50, conf 0.10) | 7 008 | 222 | 207 | **1.88** |
+| Phase E max-recall (conf 0.02) | 18 349 | 228 | 210 | 2.12 |
+| Phase F loose NMS (0.90) | 90 239 | **230** | **215** | 3.41 |
+
+Every extra deer made reachable costs the hand-tuned rule more than it gains, because a
+3-parameter filter has no way to exploit a pool it cannot discriminate. Separating the
+signal from the noise in a large candidate pool is precisely what a learned confirmer is
+*for* — this table is the argument for the paper's contribution, stated as a measurement.
+
+The caveat flagged before the run is now the conclusion: under any-overlap, a box that
+merely *touches* a neighbouring deer's box already "covers" it, so most of the remaining 15
+collisions are nominal rather than real double-coverage. **The honest ceiling is ~215, not
+228** — and on unseen video, ~70/83 (84.3%).
 
 ### 6.5 Learned confirmation vs the rule — capacity is the whole story ★
 
@@ -782,8 +855,38 @@ bound measured partly on training data.
 > pool. With max-recall tracking + orphan recovery (§6.4.3) unseen *reach* is 95.2%
 > (79/83) against 98.0% seen. The seen/unseen split still matters and every absolute
 > figure in §6.1–§6.6 remains all-32-video, but "memorisation, not generalisation" is no
-> longer the right reading of candidate generation. What has NOT been redone on the new
-> pool is the end-to-end counted MAE, so the MAE 2.38 caveat stands until it is.
+> longer the right reading of candidate generation — see §6.7.1.
+
+#### 6.7.1 The honest held-out number ★★ PUBLISH THIS (2026-07-30)
+
+The table above still leaks twice: the rule was swept on all 32 videos *and* reported on
+them. `src/eval/count_eval_heldout.py` closes both — sweep the 3-parameter rule on the 19
+detector-train videos only, freeze it, apply it to the 13 videos the detector never saw:
+
+| pool | fit MAE (19 seen) | **held-out MAE (13 unseen)** | held-out counted | unseen `reached` | unseen `primary` |
+|---|---|---|---|---|---|
+| **Phase C orphan** (conf 0.10) | 1.53 | **2.38** | **55/83 = 66.3%** | 74/83 | 66/83 |
+| Phase E max-recall (conf 0.02) | 1.84 | 2.54 | 54/83 = 65.1% | **79/83** | 69/83 |
+| Phase F loose NMS | 3.05 | 3.46 | 41/83 = 49.4% | **79/83** | **70/83** |
+
+Fitting on train videos alone selects the *same* rule the all-32 sweep did on the two
+smaller pools (`min_hits>=20, span_s>=0.0, topk_conf>=0.65`), so the 2.38 is not an
+artefact of the new protocol — it is the previous number, now honestly earned.
+
+**This is the single most important table in the log.** On unseen video the best pool
+*reaches* 79/83 deer (95.2%) and awards 69/83 (83.1%) their own candidate, but the rule
+only *counts* 54–55/83 (~66%). The ~17-point gap between `primary` and counted is not a
+detector failure and not a tracker failure — it is entirely the confirmation step, and it
+is the space the paper's learned temporal head has to work in. Per site the gap
+concentrates in dense groups: held-out SHB MAE 4.33 vs SHW 1.67 and MAS 1.00.
+
+Note the pool ranking *inverts* between the two halves of the table. Phase E/F reach more
+deer on unseen video than Phase C (79 vs 74) yet count fewer, because the rule cannot
+survive the extra candidates. Whichever pool the paper adopts, that inversion is the
+evidence that the confirmation stage — not candidate generation — is now binding.
+
+Bias is **-1.92** on unseen video: the system under-counts by ~2 deer per video, never
+over-counts. For a wildlife survey that is the safe direction, and worth saying so.
 
 Consequences for everything above:
 * §6.1, §6.3, §6.5, §6.6 MAE/coverage figures are all all-32-video numbers and inherit
@@ -849,6 +952,13 @@ python src/eval/count_eval.py --counts results/counts/yolov9m_1280_conf0.10
 python src/temporal/build_track_labels.py --counts results/counts/yolov9m_1280_conf0.10
 python src/temporal/build_track_labels.py --counts <same> --keyframes-only \
     --out <dir>/labels_kf                    # ablation vs interpolation drift
+
+# --- the two numbers the paper publishes (CPU only, seconds, no GPU) -> §6.7.1, §6.8 ---
+python src/eval/count_eval_heldout.py \
+    --counts $OUT/counts/phaseC_orphan_yolo11m_conf0.10 \
+    --out results/counting_eval/heldout_phaseC.csv     # held-out MAE + coverage
+python src/eval/pool_coverage.py \
+    --counts-dir $OUT/counts/phaseE_maxrecall_conf0.02 # reached vs primary (the ceiling)
 ```
 
 Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
@@ -857,6 +967,17 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-07-30 (II)** — **All compute is finished; both queues are empty.** Three closures:
+  (a) mmdet roster rescored on the any-overlap criterion — YOLO11m holds the detector
+  decision across all 13 models, and RTMDet-m's mAP lead turns out to be a precision
+  artefact (§3.2); (b) loose NMS confirms the collision mechanism but buys only +1 unseen
+  deer for 5× the candidates, so Phase E remains the pool and Phase F is an ablation
+  (§6.8); (c) `count_eval_heldout.py` fits the rule on detector-train videos only and
+  reports on the 13 unseen — **MAE 2.38, 66.3% counted, bias -1.92** (§6.7.1). The
+  reach → primary → counted chain (95.2% → 83.1% → 66.3%) is now the paper's thesis
+  stated as a measurement. Also fixed `summarize_counting_eval.py`, which crashed on any
+  sibling CSV lacking a `tag` column.
 
 - **2026-07-29 (III)** — ⚠ Found that all counting numbers were computed over all 32
   videos while the detector trained on 19 of them: 99.3% coverage on seen vs 69.9% on

@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+dino_r50_FULLGT,test,0.1,iou50,1808,15657,984,0.1035,0.6476,0.1785
+dino_r50_FULLGT,test,0.1,iou30,2142,15323,650,0.1226,0.7672,0.2115
+dino_r50_FULLGT,test,0.1,touch,2255,15210,537,0.1291,0.8077,0.2226
+dino_r50_FULLGT,test,0.1,center,2213,15252,579,0.1267,0.7926,0.2185

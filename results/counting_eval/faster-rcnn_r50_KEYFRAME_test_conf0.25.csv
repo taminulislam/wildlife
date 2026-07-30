@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+faster-rcnn_r50_KEYFRAME,test,0.25,iou50,251,344,110,0.4218,0.6953,0.5251
+faster-rcnn_r50_KEYFRAME,test,0.25,iou30,292,303,69,0.4908,0.8089,0.6109
+faster-rcnn_r50_KEYFRAME,test,0.25,touch,304,291,57,0.5109,0.8421,0.636
+faster-rcnn_r50_KEYFRAME,test,0.25,center,301,294,60,0.5059,0.8338,0.6297

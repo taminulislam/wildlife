@@ -1,0 +1,5 @@
+tag,split,conf,criterion,tp,fp,fn,precision,recall,f1
+atss_r50_KEYFRAME,test,0.1,iou50,290,1675,71,0.1476,0.8033,0.2494
+atss_r50_KEYFRAME,test,0.1,iou30,337,1628,24,0.1715,0.9335,0.2898
+atss_r50_KEYFRAME,test,0.1,touch,342,1623,19,0.174,0.9474,0.2941
+atss_r50_KEYFRAME,test,0.1,center,341,1624,20,0.1735,0.9446,0.2932
