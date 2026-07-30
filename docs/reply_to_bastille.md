@@ -10,13 +10,25 @@ keep deer separate and avoid double counting, not identification of individuals 
 videos.
 
 I tested this directly. Our CVAT tracks are already identity labels, so the model trained
-on deer from one set of videos and was tested on 69 deer it had never seen, in videos it
-had never seen. Against a chance level of 10 percent, brightness alone gave 10 percent
-meaning no signal, thermal silhouette alone gave 44 percent, an off-the-shelf ResNet-50
-gave 58 percent, simple geometry gave 78 percent, and our trained thermal encoder reached
-90 percent. That 90 overstates it: box size alone already reaches 64 percent, and within
-one video a deer's range changes slowly, so most of it is matching distance rather than the
-animal.
+on deer from one set of videos and was tested on 69 deer it had never seen, in 7 videos it
+had never seen. Rank-1 accuracy, every cue scored on that same held-out set:
+
+| Cue | Rank-1 |
+|---|---|
+| Chance | 10% |
+| Brightness alone | 10% |
+| Thermal silhouette alone (size normalised out) | 44% |
+| Raw thermal crop | 49% |
+| **Box size alone** | **64%** |
+| Off-the-shelf ResNet-50 features | 73% |
+| Simple geometry (size, aspect, intensity) | 80% |
+| Our trained thermal encoder | 90% |
+
+The 90 percent overstates what we have. Box size alone already reaches 64 percent, and
+within one video a deer's range changes slowly, so most of what looks like identification
+is matching distance rather than matching the animal. Appearance on its own is weak:
+brightness carries nothing, silhouette with scale removed gets 44 percent, and a pretrained
+CNN still lands below plain geometry.
 
 There is also no way to validate cross-video ID here. No deer in our corpus appears in two
 videos, and the two road segments we filmed twice have a deer on one pass and none on the
