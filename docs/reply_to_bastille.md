@@ -28,17 +28,13 @@ The 90 percent overstates what we have. Box size alone already reaches 64 percen
 within one video a deer's range changes slowly, so most of what looks like identification
 is matching distance rather than matching the animal. Appearance on its own is weak:
 brightness carries nothing, silhouette with scale removed gets 44 percent, and a pretrained
-CNN still lands below plain geometry.
-
-There is also no way to validate cross-video ID here. No deer in our corpus appears in two
-videos, and the two road segments we filmed twice have a deer on one pass and none on the
-other.
+CNN still lands below plain geometry. At a median 29 by 24 pixels there is simply not
+enough detail on the animal to key an identity to.
 
 So I would like your steer. Do we frame this as track association only, stating the
-resolution limit and making no individual-ID claim? Or keep the individual
-re-identification framing, which would mean collecting repeat-visit footage so the claim
-can actually be tested? I am happy either way and would rather you and the team set the
-scope.
+resolution limit and making no individual-ID claim? Or pursue individual re-identification,
+which would mean labelling more of our footage so the claim can actually be tested across
+sightings? I am happy either way and would rather you and the team set the scope.
 
 A run measuring whether this improves the count finishes shortly; I will send that number.
 
