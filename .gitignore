@@ -68,3 +68,8 @@ id_*
 
 # unverified harvest staging (pre-labels) — merge into labels/ after verifying
 data/annotate/harvest/
+
+# mmdetection COCO pretrained checkpoints — 1.1 GB of re-downloadable public
+# weights. GitHub hard-rejects any blob >100 MB, and *.pt above did not cover .pth.
+*.pth
+weights_mmdet/
