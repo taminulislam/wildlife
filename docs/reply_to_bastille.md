@@ -31,10 +31,15 @@ brightness carries nothing, silhouette with scale removed gets 44 percent, and a
 CNN still lands below plain geometry. At a median 29 by 24 pixels there is simply not
 enough detail on the animal to key an identity to.
 
-So I would like your steer. Do we frame this as track association only, stating the
-resolution limit and making no individual-ID claim? Or pursue individual re-identification,
-which would mean labelling more of our footage so the claim can actually be tested across
-sightings? I am happy either way and would rather you and the team set the scope.
+To be clear, track association is already built and working — the tracker assigns each deer
+an ID within a video, which is what stops the same animal being counted twice, and that is
+what produces our current counting numbers. Nothing new is needed for that.
+
+So the question is really whether we stop there. Do we describe the system as track
+association, state the resolution limit, and make no individual-ID claim? Or do we pursue
+individual re-identification, which would mean labelling more of our footage so the claim
+can actually be tested across sightings? I am happy either way and would rather you and the
+team set the scope.
 
 A run measuring whether this improves the count finishes shortly; I will send that number.
 
