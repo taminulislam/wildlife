@@ -45,7 +45,11 @@ def main() -> None:
     ap.add_argument("--out", default="")
     args = ap.parse_args()
 
-    pred: dict[tuple, dict] = defaultdict(dict)
+    # frame -> LIST of boxes, not frame -> box. A candidate can legitimately hold several
+    # boxes in one frame (the orphan linker groups simultaneous detections), and keying by
+    # frame silently kept only the last row read — 27 655 of 117 978 boxes discarded on the
+    # Phase-E pool, with the survivor decided by CSV row order.
+    pred: dict[tuple, dict] = defaultdict(lambda: defaultdict(list))
     files = sorted(glob.glob(os.path.join(args.counts_dir, "shard*", "tracks.csv"))) or \
         sorted(glob.glob(os.path.join(args.counts_dir, "tracks.csv")))
     for f in files:
@@ -53,8 +57,8 @@ def main() -> None:
             for r in csv.DictReader(fh):
                 xc, yc = float(r["xc"]), float(r["yc"])
                 w, h = float(r["w"]), float(r["h"])
-                pred[(r["video"], int(r["track_id"]))][int(r["frame"])] = (
-                    xc - w / 2, yc - h / 2, xc + w / 2, yc + h / 2)
+                pred[(r["video"], int(r["track_id"]))][int(r["frame"])].append(
+                    (xc - w / 2, yc - h / 2, xc + w / 2, yc + h / 2))
     if not pred:
         raise SystemExit(f"no tracks.csv under {args.counts_dir}")
 
@@ -72,8 +76,8 @@ def main() -> None:
         for c in cands:
             pboxes = pred[c]
             for gi, g in enumerate(gts):
-                n = sum(1 for fr, pb in pboxes.items()
-                        if fr in g and overlaps(pb, g[fr]))
+                n = sum(1 for fr, bs in pboxes.items()
+                        if fr in g and any(overlaps(b, g[fr]) for b in bs))
                 if n >= args.min_overlap_frames:
                     ov[c][gi] = n
         best_for_gt = {}

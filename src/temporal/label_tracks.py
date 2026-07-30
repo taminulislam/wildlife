@@ -75,15 +75,18 @@ def main() -> None:
                     help="frames of overlap needed to associate a candidate with a GT deer")
     args = ap.parse_args()
 
-    # ---- predicted tracks: {(video, tid): {frame: box}} ----
-    pred: dict[tuple, dict] = defaultdict(dict)
+    # ---- predicted tracks: {(video, tid): {frame: [box, ...]}} ----
+    # A LIST per frame: the orphan linker can put several simultaneous detections in one
+    # pseudo-track, and keying frame -> box kept only whichever row was read last (27 655
+    # boxes dropped on the Phase-E pool, survivor decided by CSV order).
+    pred: dict[tuple, dict] = defaultdict(lambda: defaultdict(list))
     for f in sorted(glob.glob(os.path.join(args.counts_dir, "shard*", "tracks.csv"))):
         with open(f) as fh:
             for r in csv.DictReader(fh):
                 xc, yc = float(r["xc"]), float(r["yc"])
                 w, h = float(r["w"]), float(r["h"])
-                pred[(r["video"], int(r["track_id"]))][int(r["frame"])] = (
-                    xc - w / 2, yc - h / 2, xc + w / 2, yc + h / 2)
+                pred[(r["video"], int(r["track_id"]))][int(r["frame"])].append(
+                    (xc - w / 2, yc - h / 2, xc + w / 2, yc + h / 2))
     if not pred:
         raise SystemExit(f"no shard*/tracks.csv under {args.counts_dir}")
 
@@ -110,8 +113,8 @@ def main() -> None:
         for c in cands:
             pboxes = pred[c]
             for gi, g in enumerate(gts):
-                n = sum(1 for fr, pb in pboxes.items()
-                        if fr in g and overlaps(pb, g[fr]))
+                n = sum(1 for fr, bs in pboxes.items()
+                        if fr in g and any(overlaps(b, g[fr]) for b in bs))
                 if n >= args.min_overlap_frames:
                     ov[c][gi] = n
         # each GT deer awards ONE primary: the candidate covering it best

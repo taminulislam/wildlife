@@ -4,7 +4,7 @@
 command/config that produced it, so the paper can be written from this file alone.
 Numbers here are *measured*, never estimated; anything unmeasured is marked TODO.
 
-Last updated: **2026-07-29** (see [Changelog](#changelog))
+Last updated: **2026-07-30** (see [Changelog](#changelog))
 
 ## Headline numbers (as of 2026-07-30)
 
@@ -17,7 +17,7 @@ Last updated: **2026-07-29** (see [Changelog](#changelog))
 | **Track-level recall (deer found at all)** | **97.0%** — 228/235 | §4.4 ★ |
 | Deer never detected (counting floor) | 7/235 = 3.0% | §4.4 |
 | **Candidate reach, UNSEEN videos** | **95.2%** — 79/83 deer (vs 98.0% seen) | §6.4.3 ★★ |
-| **Residual loss is track COLLISION** | 10 of the 14 unseen misses share a candidate | §6.4.3 ★★ |
+| **Residual loss is deer COLLISION** | 18 deer share a candidate (10 of 14 unseen misses) | §6.8 ★★ |
 | Counting (UNSEEN, conf-0.10 pool — stale) | 69.9% coverage, MAE 2.38 — not yet redone on the new pool | §6.7 |
 | Counting over all 32 videos (optimistic) | 89.0%, MAE 1.88 — includes 19 detector-training videos | §6.1, §6.7 |
 | **Counting ceiling after orphan fix** | **0.91** — 207/236 deer recoverable | §6.3 ★★ |
@@ -646,21 +646,64 @@ separates the two:
 
 | Split | Videos | GT | **reached** (>=1 touching candidate) | primary (distinct candidates) | lost to collision |
 |---|---|---|---|---|---|
-| train (detector saw) | 19 | 152 | 149 (98.0%) | 143 (94.1%) | 6 |
+| train (detector saw) | 19 | 152 | 149 (98.0%) | 141 (92.8%) | 8 |
 | **unseen (val+test)** | **13** | **83** | **79 (95.2%)** | **69 (83.1%)** | **10** |
-| ALL | 32 | 235 | **228 (97.0%)** | 212 (90.2%) | 16 |
+| ALL | 32 | 235 | **228 (97.0%)** | 210 (89.4%) | 18 |
 
 Two conclusions, both load-bearing for the paper:
 
 1. **Candidate generation is solved** — 228 of 235 reachable against the 232 the detector
    sees, and the seen/unseen gap is only 98.0% vs 95.2%. This supersedes the 69.9%
    generalisation figure in §6.7, which came from the old conf-0.10 pool.
-2. **The residual is a track-SPLITTING problem.** On the unseen videos, 10 of the 14
-   missing deer share a candidate with another deer. No amount of extra candidate
-   generation, lower thresholds, or orphan recovery can reach them — the candidate
-   already exists and is already counted once. A confirmation head that emits a *count*
-   per track (0/1/2+) rather than a binary keep/drop is required, which is precisely the
-   capability a hand-tuned rule structurally lacks.
+2. **The residual is 18 COLLIDED deer** that share a candidate with another animal — on
+   the unseen videos, 10 of the 14 misses. No amount of extra candidate generation,
+   lower thresholds, or orphan recovery reaches them: the candidate already exists and is
+   already counted once. §6.8 works through what does.
+
+⚠ These numbers are the CORRECTED ones. `label_tracks.py` and `pool_coverage.py`
+originally loaded tracks as `{frame: box}`, but a candidate can hold several boxes in one
+frame (the orphan linker groups simultaneous detections). Last-write-wins silently dropped
+**27 655 of 117 978 boxes**, with the survivor decided by CSV row order, and 20.2% of
+candidates were affected. Both now use `{frame: [box, ...]}`. Effect on the pool: primary
+212 -> **210**, collisions 16 -> **18**; `reached` was unchanged at 228.
+
+### 6.8 The collided deer: three fixes tried, two rejected on evidence ★
+
+**Rejected — learned count-per-track head.** `label_track_counts.py` labels each candidate
+with how many deer it is the best cover for. The distribution makes it untrainable:
+
+| count | tracks |
+|---|---|
+| 0 | 18 137 |
+| 1 | 196 |
+| 2 | 16 |
+
+Two positives per CV fold. Kept in the repo as the right target if the corpus grows.
+
+**Rejected — temporal track splitting.** `split_tracks.py` cuts a track wherever the
+size-normalised per-frame displacement exceeds a threshold (deer move ~0.15 box-widths
+per frame here, so a multi-box-width jump is the tracker changing its mind). Swept
+1.0–8.0; best case **+3 deer for 4 000 extra candidates**.
+
+**Why both failed — the collisions are not temporal.** Measured per collision:
+
+| kind | deer lost |
+|---|---|
+| **SIMULTANEOUS** — one box on two GT deer in the *same* frames (up to 116) | **15** |
+| sequential — track drifts from deer A onto deer B | 1 |
+
+Eight of the sixteen sit in one dense-group video, `NShelbyRd(blue)_SHB`. Only 3 of the 16
+collision tracks hold multiple boxes per frame, so this is not the orphan linker either —
+it is genuinely one detection covering two animals.
+
+**In test — loose NMS (job `2777214`).** Two adjacent 27 px deer produce boxes overlapping
+above the 0.5 NMS IoU threshold, so the second is suppressed at the detector and never
+reaches the tracker. Re-running with NMS IoU 0.90, everything else identical to Phase E.
+
+Caveat to weigh when it lands: under any-overlap, a box that merely *touches* a
+neighbouring deer's box already "covers" it, so some of the 18 are nominal rather than
+real double-coverage. If loose NMS does not move `primary`, the honest reading is that the
+true ceiling is nearer 210 than 228.
 
 ### 6.5 Learned confirmation vs the rule — capacity is the whole story ★
 

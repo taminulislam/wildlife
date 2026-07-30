@@ -134,15 +134,25 @@ def count_video(model, path: str, args, name: str | None = None) -> tuple[list[d
                 continue
             used[i] = True
             group = [o]
+            claimed = {o[0]}          # frames this pseudo-track already occupies
             for j in range(i + 1, len(orphans)):
                 if used[j]:
                     continue
                 p_ = group[-1]; q = orphans[j]
                 if (q[0] - p_[0]) > args.orphan_gap:
                     break
+                # One animal cannot be in two places in the same frame. Without this
+                # guard the linker swallowed every nearby simultaneous detection into a
+                # single pseudo-track — 20% of candidates held multiple boxes per frame,
+                # up to 18 — which caps the count at one deer per group and merges
+                # animals standing together. They are exactly the cases we are trying to
+                # separate, so a second detection in a claimed frame must start its own
+                # pseudo-track instead.
+                if q[0] in claimed:
+                    continue
                 scale = max(p_[5], p_[6], 1.0)
                 if (abs(q[3] - p_[3]) < 2.5 * scale and abs(q[4] - p_[4]) < 2.5 * scale):
-                    used[j] = True; group.append(q)
+                    used[j] = True; group.append(q); claimed.add(q[0])
             tracks[next_id] = group
             next_id += 1
 

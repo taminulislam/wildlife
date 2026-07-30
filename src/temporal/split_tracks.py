@@ -104,14 +104,17 @@ def coverage(seqs: dict, gt_by_video: dict, min_overlap: int = 1):
         by_video[v].append(t)
     tot_gt = tot_reached = tot_primary = 0
     for video, gts in gt_by_video.items():
-        boxes = {}
+        boxes: dict[int, dict] = {}
         for t in by_video.get(video, []):
-            boxes[t] = {fr: (xc - w / 2, yc - h / 2, xc + w / 2, yc + h / 2)
-                        for (fr, _cf, xc, yc, w, h, _s) in seqs[(video, t)]}
+            d = defaultdict(list)                 # frame -> [box, ...]; see pool_coverage
+            for (fr, _cf, xc, yc, w, h, _s) in seqs[(video, t)]:
+                d[fr].append((xc - w / 2, yc - h / 2, xc + w / 2, yc + h / 2))
+            boxes[t] = d
         ov = defaultdict(dict)
         for t, pb in boxes.items():
             for gi, g in enumerate(gts):
-                n = sum(1 for fr, b in pb.items() if fr in g and overlaps(b, g[fr]))
+                n = sum(1 for fr, bs in pb.items()
+                        if fr in g and any(overlaps(b, g[fr]) for b in bs))
                 if n >= min_overlap:
                     ov[t][gi] = n
         best = {}
