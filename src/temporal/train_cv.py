@@ -197,6 +197,9 @@ def main() -> None:
     ap.add_argument("--layers", type=int, default=2)
     ap.add_argument("--dropout", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--heldout", action="store_true",
+                    help="single fold = the 13 videos the DETECTOR never saw, instead of "
+                         "k-fold over all 32. Comparable to count_eval_heldout.py.")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = ap.parse_args()
     torch.manual_seed(args.seed); np.random.seed(args.seed)
@@ -211,7 +214,21 @@ def main() -> None:
 
     rng = np.random.RandomState(args.seed)
     order = list(videos); rng.shuffle(order)
-    folds = [order[i::args.folds] for i in range(args.folds)]
+    if args.heldout:
+        # ONE fold, and it is the honest one: the 13 videos the DETECTOR never saw.
+        # K-fold over all 32 mixes detector-train videos into every test fold, so its MAE
+        # inherits the §6.7 optimism. This mode is directly comparable to
+        # count_eval_heldout.py, whose frozen rule scores MAE 2.38 / 55 of 83 deer.
+        from dataset import video_splits                              # noqa: E402
+        sp = video_splits()
+        unseen = [v for v in videos if sp.get(v) in ("val", "test")]
+        if not unseen:
+            raise SystemExit("--heldout: no val/test videos found")
+        folds = [unseen]
+        print(f"HELD-OUT protocol: train on {len(videos)-len(unseen)} detector-train "
+              f"videos, test on {len(unseen)} never-seen videos")
+    else:
+        folds = [order[i::args.folds] for i in range(args.folds)]
 
     head_pred: dict[str, int] = {}
     rule_pred: dict[str, int] = {}
@@ -267,7 +284,9 @@ def main() -> None:
               f"head MAE {h['MAE']:.2f}  rule MAE {r['MAE']:.2f}  thr {best_thr:.2f}",
               flush=True)
 
-    allv = set(videos)
+    # In held-out mode only the 13 unseen videos were predicted; scoring against all 32
+    # would silently count the 19 untested ones as zero-prediction misses.
+    allv = set(folds[0]) if args.heldout else set(videos)
     H = metrics(head_pred, gt, allv)
     R = metrics(rule_pred, gt, allv)
     T = {k: metrics(v, gt, allv) for k, v in tab_pred.items()}
@@ -281,7 +300,7 @@ def main() -> None:
         for v in videos:
             w.writerow([v, gt[v], head_pred.get(v, 0), rule_pred.get(v, 0)])
 
-    print(f"\n=== CROSS-VALIDATED over ALL {len(allv)} videos "
+    print(f"\n=== {'HELD OUT (detector never saw these)' if args.heldout else 'CROSS-VALIDATED'} over {len(allv)} videos "
           f"({H['gt_total']} GT deer) ===")
     print(f"{'method':<28} {'MAE':>7} {'RMSE':>7} {'bias':>7} {'over':>5} "
           f"{'under':>6} {'pred':>6}")
