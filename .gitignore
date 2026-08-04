@@ -73,3 +73,8 @@ data/annotate/harvest/
 # weights. GitHub hard-rejects any blob >100 MB, and *.pt above did not cover .pth.
 *.pth
 weights_mmdet/
+
+# Paper and email deliverables are small and hand-picked, and losing them means
+# re-running GPU jobs to regenerate. Exempt them from the blanket *.jpg rule above.
+!docs/figures/**/*.jpg
+!docs/email_figures/*.jpg
