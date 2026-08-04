@@ -42,8 +42,11 @@
 #     rule on pool C   MAE 2.38   55/83 = 66.3%
 #     rule on pool G   MAE 2.69   52/83 = 62.7%
 set -eo pipefail
-source /work/nvme/bgte/tislam6/envs/wildlife/bin/activate 2>/dev/null || \
-  { module load anaconda3_gpu 2>/dev/null; conda activate /work/nvme/bgte/tislam6/envs/wildlife; }
+# envs/wildlife is a CONDA env with no bin/activate; sourcing that path fails instantly
+# under set -e. Use the same incantation as the mmdet jobs, which work on this cluster.
+module load miniforge3-python
+source /sw/rh9.4/python/miniforge3/etc/profile.d/conda.sh
+conda activate /work/nvme/bgte/tislam6/envs/wildlife
 cd /work/nvme/bgte/tislam6/wildlife_project
 
 OUT=/work/hdd/bgte/tislam6/wildlife_outputs/counts
