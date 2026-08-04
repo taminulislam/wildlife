@@ -313,9 +313,14 @@ def main() -> None:
     print(f"{'TTC transformer (ours)':<28} {H['MAE']:>7.2f} {H['RMSE']:>7.2f} "
           f"{H['bias']:>+7.2f} {H['over']:>5.0f} {H['under']:>6.0f} {H['pred_total']:>6}")
     bestk = min(list(T.items()) + [("TTC", H)], key=lambda kv: kv[1]["MAE"])
+    # Sign convention: MAE is an ERROR, so lower is better. Print the verdict in words —
+    # the bare delta reads as an improvement when the learned method is in fact worse.
+    _d = R["MAE"] - bestk[1]["MAE"]
+    _verdict = ("BEATS the rule" if _d > 0.005 else
+                "TIES the rule" if _d > -0.005 else "LOSES to the rule")
     print(f"\n  BEST learned: {bestk[0]} MAE {bestk[1]['MAE']:.2f} vs rule "
-          f"{R['MAE']:.2f}  ({R['MAE']-bestk[1]['MAE']:+.2f}, "
-          f"{100*(R['MAE']-bestk[1]['MAE'])/R['MAE']:+.1f}%)")
+          f"{R['MAE']:.2f}  ->  {_verdict} by {abs(_d):.2f} MAE "
+          f"({100*abs(_d)/R['MAE']:.1f}%)")
     d = R["MAE"] - H["MAE"]
     print(f"\n  MAE {d:+.2f} ({100*d/R['MAE']:+.1f}%) vs baseline"
           if R["MAE"] else "")

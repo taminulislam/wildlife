@@ -1,0 +1,56 @@
+{
+  "folds": 8,
+  "per_fold": [
+    {
+      "fold": 1,
+      "test_videos": 13,
+      "head_MAE": 2.8461538461538463,
+      "rule_MAE": 2.3846153846153846,
+      "thr": 0.9500000000000001
+    }
+  ],
+  "head": {
+    "videos": 13,
+    "MAE": 2.8461538461538463,
+    "RMSE": 3.5409690112258168,
+    "bias": -2.3846153846153846,
+    "over": 3,
+    "under": 34,
+    "pred_total": 52,
+    "gt_total": 83
+  },
+  "rule": {
+    "videos": 13,
+    "MAE": 2.3846153846153846,
+    "RMSE": 3.1500915737605033,
+    "bias": -1.9230769230769231,
+    "over": 3,
+    "under": 28,
+    "pred_total": 58,
+    "gt_total": 83
+  },
+  "tabular": {
+    "gbm": {
+      "videos": 13,
+      "MAE": 2.8461538461538463,
+      "RMSE": 3.8927941319630754,
+      "bias": -2.5384615384615383,
+      "over": 2,
+      "under": 35,
+      "pred_total": 50,
+      "gt_total": 83
+    },
+    "logreg": {
+      "videos": 13,
+      "MAE": 3.0,
+      "RMSE": 3.8927941319630754,
+      "bias": -2.5384615384615383,
+      "over": 3,
+      "under": 36,
+      "pred_total": 50,
+      "gt_total": 83
+    }
+  },
+  "n_tracks": 7008,
+  "n_positives": 207
+}

@@ -26,6 +26,7 @@ Last updated: **2026-07-30** (see [Changelog](#changelog))
 | **The gap the paper must close** | unseen: reach **98.8%** → primary **88.0%** → counted **62.7%** | §6.9 ★★★ |
 | Individual ReID at 27 px | rank-1 0.899, but box size alone 0.638 — **not identification** | §6.9 |
 | Learned confirmation vs rule (CV) | rule 1.88 vs capacity-matched 1.97 (better RMSE 2.78) | §6.5 |
+| **Learned head, HELD OUT** | **loses (2.85) / ties (2.77) — does NOT beat rule 2.38** | §6.10 ★★★ |
 | **Per-deer calibrated confidence >= 0.80** | **92.1%** of counted deer (mean 0.965) | §6.6 ★ |
 
 ---
@@ -838,6 +839,50 @@ labelling should be performed**. The paper therefore reports **track association
 the resolution limit, and makes no individual-ID claim. The trained encoder and the rank-1
 table above are retained as the evidence for that limit — a measured negative, not a
 discarded experiment.
+
+### 6.10 The learned head under the HELD-OUT protocol — it does not beat the rule ★★★
+
+Job `20851097` (Delta). §6.5 showed learned confirmers losing under 8-fold CV over all 32
+videos. That protocol mixes detector-train videos into every test fold, so the objection
+was open: maybe the head only looked bad because the *evaluation* was optimistic for the
+rule. This closes it. `train_cv.py --heldout` trains on the 19 detector-train videos,
+freezes, and reports on the 13 the detector never saw — the same protocol that produced
+the rule's MAE 2.38.
+
+Run on two pools: **C** (7 008 candidates, ceiling 66/83) and **G** (27 679, ceiling 73/83).
+
+| pool | method | MAE | RMSE | bias | counted (capped) |
+|---|---|---|---|---|---|
+| **C** | **hand-tuned rule** | **2.38** | 3.15 | −1.92 | **55/83 = 66.3%** |
+| C | GBM | 2.85 | 3.89 | −2.54 | — |
+| C | logistic regression | 3.00 | 3.89 | −2.54 | — |
+| C | TTC transformer | 2.85 | 3.54 | −2.38 | 49/83 = 59.0% |
+| G | hand-tuned rule | 2.77 | 3.28 | −2.31 | 50/83 = 60.2% |
+| G | GBM | 2.92 | 3.98 | −2.62 | — |
+| G | logistic regression | 3.15 | 5.36 | **+1.46** | — (unstable: 102 predicted) |
+| G | TTC transformer | 2.77 | 3.26 | −2.15 | 51/83 = 61.4% |
+
+**Verdict: the learned head does not beat the rule.** On pool C it loses outright (2.85 vs
+2.38, and 6 fewer deer counted). On pool G it ties exactly on MAE, one deer ahead on capped
+count — inside noise on 13 videos. Every learned variant *under-counts harder* than the
+rule: it rejects more candidates rather than recovering the 26 confidence-rejected deer
+that motivated the experiment.
+
+The richer pool did not rescue it. G raises the ceiling from 66 to 73 reachable deer and the
+head converts none of that headroom. Logistic regression on G collapses in the opposite
+direction (+1.46 bias, 102 predicted for 83 deer), which is what "4× the noise" does to a
+linear model.
+
+**Consequence for the paper.** The intended novelty — a learned temporal head replacing the
+hand-tuned rule — is not supported by the data. Three protocols now agree (§6.2 single
+split, §6.5 8-fold CV, §6.10 held-out), so this is settled rather than a tuning problem.
+The contribution is the **diagnosis**, not a method: see `docs/PAPER_PLAN.md`.
+
+**Why it fails is itself the finding.** ~200 positives against 7k–27k negatives, and the
+positives are not separable in the available features — §6.5 measured duplicates sitting
+*between* primaries and false candidates in every feature. The rule's 3 parameters are
+better matched to that data volume than anything with more capacity, exactly as §6.5
+concluded from the stump experiment.
 
 ### 6.5 Learned confirmation vs the rule — capacity is the whole story ★
 
