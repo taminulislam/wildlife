@@ -1,0 +1,10 @@
+videos scored: 16   identities: 202
+
+embedding               rank-1
+  chance                 0.079
+  geom                   0.782
+  pixels                 0.351
+  cnn                    0.584
+
+appearance gain over geometry: -0.198
+VERDICT: appearance adds little or nothing at this resolution

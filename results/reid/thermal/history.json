@@ -1,0 +1,74 @@
+[
+ {
+  "epoch": 5,
+  "loss": 2.4457,
+  "rank1_unseen": 0.8261,
+  "identities": 69
+ },
+ {
+  "epoch": 10,
+  "loss": 2.3031,
+  "rank1_unseen": 0.8551,
+  "identities": 69
+ },
+ {
+  "epoch": 15,
+  "loss": 2.1809,
+  "rank1_unseen": 0.8841,
+  "identities": 69
+ },
+ {
+  "epoch": 20,
+  "loss": 2.0635,
+  "rank1_unseen": 0.8696,
+  "identities": 69
+ },
+ {
+  "epoch": 25,
+  "loss": 1.9765,
+  "rank1_unseen": 0.8696,
+  "identities": 69
+ },
+ {
+  "epoch": 30,
+  "loss": 1.8785,
+  "rank1_unseen": 0.8841,
+  "identities": 69
+ },
+ {
+  "epoch": 35,
+  "loss": 1.8208,
+  "rank1_unseen": 0.8841,
+  "identities": 69
+ },
+ {
+  "epoch": 40,
+  "loss": 1.7683,
+  "rank1_unseen": 0.8986,
+  "identities": 69
+ },
+ {
+  "epoch": 45,
+  "loss": 1.7301,
+  "rank1_unseen": 0.8986,
+  "identities": 69
+ },
+ {
+  "epoch": 50,
+  "loss": 1.7065,
+  "rank1_unseen": 0.8986,
+  "identities": 69
+ },
+ {
+  "epoch": 55,
+  "loss": 1.7271,
+  "rank1_unseen": 0.8986,
+  "identities": 69
+ },
+ {
+  "epoch": 60,
+  "loss": 1.6989,
+  "rank1_unseen": 0.8986,
+  "identities": 69
+ }
+]

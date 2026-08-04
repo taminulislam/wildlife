@@ -1,0 +1,44 @@
+[
+ {
+  "video": "AquaCultureRd_TON_12.03.25_LS",
+  "identities": 3,
+  "rank1": 0.6667,
+  "chance": 0.3333
+ },
+ {
+  "video": "GiantCityRd_TON_12.03.25_LS",
+  "identities": 8,
+  "rank1": 1.0,
+  "chance": 0.125
+ },
+ {
+  "video": "GolfDr_SHB_12.11.2025",
+  "identities": 12,
+  "rank1": 1.0,
+  "chance": 0.0833
+ },
+ {
+  "video": "Melvin_SHW_01.18.2026_LS",
+  "identities": 4,
+  "rank1": 1.0,
+  "chance": 0.25
+ },
+ {
+  "video": "NShelbyRd(blue)_SHB_12.11.2025_LS",
+  "identities": 27,
+  "rank1": 0.9259,
+  "chance": 0.037
+ },
+ {
+  "video": "NWolfCreek(orange)_SHB_12.11.2025_LS",
+  "identities": 8,
+  "rank1": 0.5,
+  "chance": 0.125
+ },
+ {
+  "video": "Robinson_SHW_01.18.2026_LS",
+  "identities": 7,
+  "rank1": 1.0,
+  "chance": 0.1429
+ }
+]

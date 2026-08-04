@@ -22,7 +22,9 @@ Last updated: **2026-07-30** (see [Changelog](#changelog))
 | **COUNTING, HELD OUT — the number to publish** | **MAE 2.38, 55/83 = 66.3%** of unseen deer | §6.7.1 ★★★ |
 | Unseen bias | **-1.92** — under-counts, never over-counts | §6.7.1 |
 | Counting over all 32 videos (optimistic) | 89.0%, MAE 1.88 — includes 19 detector-training videos | §6.1, §6.7 |
-| **The gap the paper must close** | reach 95.2% → primary 83.1% → counted 66.3% | §6.7.1 ★★★ |
+| **Best candidate pool (ReID)** | reached **233/235**, primary **219**; unseen **82/83** | §6.9 ★★ |
+| **The gap the paper must close** | unseen: reach **98.8%** → primary **88.0%** → counted **62.7%** | §6.9 ★★★ |
+| Individual ReID at 27 px | rank-1 0.899, but box size alone 0.638 — **not identification** | §6.9 |
 | Learned confirmation vs rule (CV) | rule 1.88 vs capacity-matched 1.97 (better RMSE 2.78) | §6.5 |
 | **Per-deer calibrated confidence >= 0.80** | **92.1%** of counted deer (mean 0.965) | §6.6 ★ |
 
@@ -778,6 +780,65 @@ merely *touches* a neighbouring deer's box already "covers" it, so most of the r
 collisions are nominal rather than real double-coverage. **The honest ceiling is ~215, not
 228** — and on unseen video, ~70/83 (84.3%).
 
+### 6.9 Appearance ReID: best pool ever built, and the rule still cannot use it ★★★
+
+Requested by a co-author: a thermal ReID keyed on body shape, antler structure, thermal
+silhouette, relative size and movement. Three experiments answered it.
+
+**(a) Can appearance identify individual deer at all?** (job `2788117`, +
+`src/reid/reid_feasibility.py`). CVAT tracks are identity labels, so this is textbook
+closed-set ReID: gallery = first half of each track, query = second half, rank-1 on **69
+deer never seen, in 7 videos never seen**.
+
+| Cue | rank-1 |
+|---|---|
+| chance | 0.101 |
+| brightness alone | 0.101 — *no signal whatever* |
+| thermal silhouette alone (scale removed) | 0.435 |
+| raw thermal crop | 0.493 |
+| **box size alone** | **0.638** |
+| ImageNet ResNet-50 features | 0.725 |
+| geometry bundle (size, aspect, intensity) | 0.797 |
+| **trained thermal encoder** (job `2788317`) | **0.899** |
+
+The 0.899 does not mean individual identification. Box size alone reaches 0.638, and
+within one video a deer's range changes slowly, so most of the score is matching *distance*.
+Decisively: an off-the-shelf CNN scores **below plain geometry**, and brightness is exactly
+chance. At a median 29×24 px there is not enough detail to key an identity to.
+
+**(b) Does appearance association improve counting?** (job `2788316`,
+`src/track/botsort_deer_reid.yaml` — byte-identical to the max-recall config except
+`with_reid: True`, so this is a true single-variable experiment.)
+
+| pool | candidates | reached | primary | unseen reached | unseen primary | **held-out counted** |
+|---|---|---|---|---|---|---|
+| C orphan | 7 008 | 222 | 207 | 74/83 | 66/83 | **55/83 = 66.3%** |
+| E max-recall | 18 349 | 228 | 210 | 79/83 | 69/83 | 54/83 = 65.1% |
+| F loose NMS | 90 239 | 230 | 215 | 79/83 | 70/83 | 41/83 = 49.4% |
+| **G ReID** | **27 679** | **233 (99.1%)** | **219 (93.2%)** | **82/83 (98.8%)** | **73/83 (88.0%)** | 52/83 = 62.7% |
+
+**ReID produces the best candidate pool in the project by every measure** — 233/235 reached,
+219 primaries, 82 of 83 unseen deer reached — and it does so at 27 679 candidates, less than
+a third of Phase F's 90 239 for four *more* primaries. Appearance association is genuinely
+working: it stops one animal fragmenting into several tracks.
+
+**And the counted total still falls**, 55 → 52 of 83. This is the third independent
+confirmation of §6.7.1: every improvement to candidate generation makes the hand-tuned rule
+worse, because a 3-parameter filter cannot discriminate within a pool it did not shrink.
+
+**The gap is now the headline.** On unseen video the pipeline reaches **98.8%** of deer,
+gives **88.0%** their own candidate, and counts **62.7%**. Twenty-five points sit in the
+confirmation step alone, and nothing about detection, tracking or association can recover
+them. That is the case for the learned temporal head, stated as a measurement.
+
+**(c) Scope decision (2026-07-30).** The wildlife-ecology co-author confirmed that
+preventing double counting *within a survey* is the requirement, that individual-ID claims
+would not be credible at this resolution to any wildlife ecologist, and that **no additional
+labelling should be performed**. The paper therefore reports **track association**, states
+the resolution limit, and makes no individual-ID claim. The trained encoder and the rank-1
+table above are retained as the evidence for that limit — a measured negative, not a
+discarded experiment.
+
 ### 6.5 Learned confirmation vs the rule — capacity is the whole story ★
 
 Eight-fold CV over videos, orphan pool, identical protocol for every method (rule swept
@@ -866,8 +927,9 @@ detector-train videos only, freeze it, apply it to the 13 videos the detector ne
 | pool | fit MAE (19 seen) | **held-out MAE (13 unseen)** | held-out counted | unseen `reached` | unseen `primary` |
 |---|---|---|---|---|---|
 | **Phase C orphan** (conf 0.10) | 1.53 | **2.38** | **55/83 = 66.3%** | 74/83 | 66/83 |
-| Phase E max-recall (conf 0.02) | 1.84 | 2.54 | 54/83 = 65.1% | **79/83** | 69/83 |
-| Phase F loose NMS | 3.05 | 3.46 | 41/83 = 49.4% | **79/83** | **70/83** |
+| Phase E max-recall (conf 0.02) | 1.84 | 2.54 | 54/83 = 65.1% | 79/83 | 69/83 |
+| Phase F loose NMS | 3.05 | 3.46 | 41/83 = 49.4% | 79/83 | 70/83 |
+| **Phase G ReID** (§6.9) | 2.00 | 2.69 | 52/83 = 62.7% | **82/83** | **73/83** |
 
 Fitting on train videos alone selects the *same* rule the all-32 sweep did on the two
 smaller pools (`min_hits>=20, span_s>=0.0, topk_conf>=0.65`), so the 2.38 is not an
