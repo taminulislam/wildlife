@@ -884,6 +884,54 @@ positives are not separable in the available features — §6.5 measured duplica
 better matched to that data volume than anything with more capacity, exactly as §6.5
 concluded from the stump experiment.
 
+### 6.11 What the 36 missed deer actually are — GT is sound, but the detector fails at BOTH scale extremes ★★
+
+Checked directly (`src/viz/missed_deer.py`, job `20851169`) whether the uncounted deer are
+annotation errors. **They are not.** Every one of the 36 was rendered with its GT box at
+three points in its track and inspected: all are real animals. The label set is sound.
+
+| group | n | median box | median GT frames | best candidate conf |
+|---|---|---|---|---|
+| counted | 47 | **38.1 px** | 102 | 0.76 |
+| rejected by the rule | 27 | 28.0 px | 47 | 0.52 |
+| never detected | 9 | **19.9 px** | 47 | 0.00 |
+
+Missed deer are smaller and shorter-lived — as expected. But three are the opposite:
+
+| video | deer | box | state |
+|---|---|---|---|
+| GiantCityRd_TON | 5 | 104 px | rejected |
+| GiantCityRd_TON | 6 | **149 px** | **never detected** |
+| GiantCityRd_TON | 7 | 157 px | rejected |
+
+A detector that finds 27 px deer does not miss a 149 px one — unless it has never seen one.
+It has not:
+
+| training-set box size | value |
+|---|---|
+| median | 26.8 px |
+| p99 | 65.0 px |
+| **max** | **95.6 px** |
+| boxes ≥ 100 px | **0 (zero)** |
+
+**The three missed deer are all larger than the largest box in training.** This is an
+out-of-distribution failure, not a capability limit, and it is the mirror image of the
+small-object problem the project has focused on throughout. §1.3 recorded "0% COCO-large"
+as a *property of the data*; it is also a **hole in the training distribution**.
+
+Consequences:
+
+1. **Actionable and cheap.** Scale augmentation (or multi-scale training) covers 100–200 px
+   at no data cost. Unlike the faint 12–20 px deer, nothing physical prevents this.
+2. **Concentrated.** GiantCityRd counts 3 of 8 deer, and 3 of its 5 misses are these
+   oversized animals — roughly 4 points of the headline 66.3% sitting in one video.
+3. **Publishable in its own right.** "The detector fails at both ends of the scale, and the
+   large end is a training-distribution artefact" is a concrete, verifiable finding that
+   most small-object papers never check.
+
+Rendered panels: `/work/hdd/bgte/tislam6/wildlife_outputs/viz/missed_deer/` (32 sheets,
+named worst-first by box size).
+
 ### 6.5 Learned confirmation vs the rule — capacity is the whole story ★
 
 Eight-fold CV over videos, orphan pool, identical protocol for every method (rule swept
