@@ -78,3 +78,7 @@ weights_mmdet/
 # re-running GPU jobs to regenerate. Exempt them from the blanket *.jpg rule above.
 !docs/figures/**/*.jpg
 !docs/email_figures/*.jpg
+
+# Overleaf upload bundle — regenerate with: cd overleaf_WACV && zip -r ../overleaf_WACV.zip .
+overleaf_WACV.zip
+wacv-2027-author-kit-template.zip

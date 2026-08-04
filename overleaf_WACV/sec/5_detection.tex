@@ -1,0 +1,145 @@
+\section{Detection Benchmark}
+\label{sec:detection}
+
+We first establish that the detection stage is not the limiting factor, by benchmarking it
+thoroughly enough that a reviewer need not wonder whether a better backbone would close the
+gap. Thirteen architectures were trained on the identical site-stratified split with
+identical preprocessing.
+
+\subsection{Preprocessing}
+
+All models consume CLAHE-normalized~\cite{zuiderveld1994clahe} frames, applied identically
+at training and inference. Thermal transects have low and drifting global contrast; local
+histogram equalization is worth more than any architectural choice we tested
+(\cref{tab:ablations}, test mAP50 $0.519$ with, $0.299$ without).
+
+\subsection{Results}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
+\toprule
+Model & P & R & mAP50 & mAP50-95 & AP$_{S}$ \\
+\midrule
+\multicolumn{6}{l}{\emph{Ultralytics roster, 640\,px}}\\
+YOLOv9m & 0.704 & 0.448 & \textbf{0.498} & 0.184 & \textbf{0.128} \\
+YOLOv10m & 0.674 & \textbf{0.455} & \textbf{0.498} & \textbf{0.197} & 0.117 \\
+YOLO12m & 0.646 & 0.431 & 0.473 & 0.184 & 0.104 \\
+YOLO11m & \textbf{0.732} & 0.434 & 0.466 & 0.177 & 0.081 \\
+YOLOv8m & 0.650 & 0.408 & 0.448 & 0.174 & 0.127 \\
+RT-DETR-L & 0.713 & 0.451 & 0.433 & 0.155 & 0.072 \\
+\midrule
+\multicolumn{6}{l}{\emph{MMDetection roster, 640\,px}}\\
+RTMDet-m & --- & --- & 0.466 & --- & --- \\
+Faster R-CNN R50 & --- & --- & 0.418 & --- & --- \\
+TOOD R50 & --- & --- & 0.396 & --- & --- \\
+ATSS R50 & --- & --- & 0.380 & --- & --- \\
+DINO R50 & --- & --- & 0.365 & --- & --- \\
+Deformable DETR & \multicolumn{5}{c}{\emph{excluded: did not converge in budget}} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Detector benchmark on the held-out test split} (3,725 images, 2,792 boxes),
+strict IoU$\geq$0.50. AP-large is undefined for every model because no large animals exist in
+the test set. The spread is narrow (0.365--0.498): this is a data-limited regime, not an
+architecture-limited one.}
+\label{tab:detectors}
+\end{table}
+
+\Cref{tab:detectors} gives the standard metric. Four observations shape the rest of the
+paper.
+
+\paragraph{The spread is narrow.} 0.365--0.498 across thirteen architectures spanning
+two-stage, one-stage, and query-based designs. No architecture is dramatically better,
+which is the signature of a data-limited rather than architecture-limited regime.
+
+\paragraph{Query-based detectors underperform.} DINO R50 reaches 0.365 on a full native
+schedule --- below plain Faster R-CNN --- and Deformable DETR did not converge within our
+compute budget. This is consistent with the known weakness of query-based detectors on very
+small objects and is worth stating explicitly for practitioners choosing a backbone for
+thermal wildlife work.
+
+\paragraph{False positives are near zero} (0.000--0.005 per background frame for the YOLO
+family; RT-DETR-L at 0.044 is the outlier). The regime is recall-limited, not
+precision-limited, which is what later justifies running the detector at very low confidence
+and letting a downstream stage filter --- and what makes the results of \cref{sec:counting}
+surprising.
+
+\paragraph{Localization, not detection, is the weak axis.} AP@0.50 is 0.459 against AP@0.75
+of 0.097 for the same model. That is the fingerprint of imprecise ground truth, which
+\cref{sec:gtquality} confirms directly.
+
+\subsection{Ground-truth quality accounts for a third of the error}
+\label{sec:gtquality}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Model & full GT (94\% interp.) & human keyframes & $\Delta$ \\
+\midrule
+YOLOv10m & 0.498 & \textbf{0.670} & +35\% \\
+YOLOv9m & 0.498 & \textbf{0.640} & +29\% \\
+YOLO11m & 0.466 & \textbf{0.636} & +37\% \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{mAP50 against interpolated versus human-placed ground truth.} Identical
+weights, images, and code --- only the ground truth changes. Roughly a third of the apparent
+detection error is interpolation drift, not detector failure.}
+\label{tab:keyframe}
+\end{table}
+
+Scoring the same weights against human-placed keyframes only raises mAP50 by 29--37\%
+(\cref{tab:keyframe}). True detector quality is $\approx$0.64--0.67 mAP50 at the strict
+criterion. We recommend reporting both numbers for any video corpus annotated by
+keyframe-and-interpolate, and we note the actionable consequence: denser keyframes on
+fast-moving animals would improve measured accuracy more than any architecture change we
+tested.
+
+\subsection{The criterion re-ranks the models}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig3_criterion.pdf}
+  \caption{\textbf{Rank under IoU$\geq$0.50 does not predict rank under the counting
+  criterion.} Five of twelve models shift by two or more places; YOLOv10m falls from 3rd to
+  8th. Choosing a detector for a counting system by its detection metric selects the wrong
+  model.}
+  \label{fig:criterion}
+\end{figure}
+
+\Cref{fig:criterion} compares each model's F1 under IoU$\geq$0.50 against the any-overlap
+criterion on human-keyframe ground truth. The top two are stable, but the middle of the
+field reshuffles: five of twelve models move at least two places and YOLOv10m falls five.
+The practical implication is direct --- a practitioner selecting a detector for a counting
+pipeline using the standard metric will not select the model that counts best.
+
+Under the counting criterion at confidence 0.25, YOLO11m reaches
+$P=0.942$, $R=0.634$, $F_1=0.758$. We adopt it as the production detector for all counting
+experiments.
+
+\subsection{Resolution is architecture-dependent}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{llcccc}
+\toprule
+Model & res & P & R & mAP50 & AP$_{S}$ \\
+\midrule
+YOLOv9m & 640 & 0.704 & 0.448 & 0.498 & 0.128 \\
+\textbf{YOLOv9m} & \textbf{1280} & \textbf{0.757} & \textbf{0.491} & \textbf{0.523} & 0.119 \\
+YOLOv10m & 640 & 0.674 & 0.455 & 0.498 & 0.117 \\
+YOLOv10m & 1280 & 0.670 & 0.432 & 0.458 & 0.093 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{640 versus 1280\,px.} Higher resolution helps YOLOv9m and \emph{hurts}
+YOLOv10m; at 640 the two are tied, at 1280 they diverge by 0.065 mAP50. Note AP$_S$ does not
+improve for either, so the small-object deficit is not primarily a resolution deficit.}
+\label{tab:resolution}
+\end{table}
+
+\Cref{tab:resolution} shows that ``higher resolution helps small objects'' does not hold as
+a general claim on this data. It helps one architecture and hurts another, and AP-small
+declines for both even where overall mAP50 rises. We flag this because the opposite is often
+assumed. Notably, the best detector at 1280 (YOLOv9m) is \emph{not} the best counter
+(\cref{sec:counting}) --- an early instance of the theme this paper develops.

@@ -1,0 +1,54 @@
+% WACV 2027 submission — thermal deer detection and counting.
+% Build:  pdflatex main; bibtex main; pdflatex main; pdflatex main
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+%%%%%%%%% TRACK — applications track is the intended venue for this paper.
+% \usepackage[review,algorithms]{wacv}
+\usepackage[review,applications]{wacv}
+% \usepackage[review,datasets]{wacv}
+% \usepackage{wacv}                 % camera-ready
+% \usepackage[pagenumbers]{wacv}    % arXiv
+
+\input{preamble}
+
+\definecolor{wacvblue}{rgb}{0.21,0.49,0.74}
+\usepackage[pagebackref,breaklinks,colorlinks,allcolors=wacvblue]{hyperref}
+
+%%%%%%%%% PAPER ID — update from CMT before submitting
+\def\wacvPaperID{*****}
+\def\confName{WACV}
+\def\confYear{2027}
+
+\title{Counting Is Not Detecting: Localizing the Bottleneck\\in Thermal Wildlife Video}
+
+\author{First Author\\
+Institution1\\
+Institution1 address\\
+{\tt\small firstauthor@i1.org}
+\and
+Second Author\\
+Institution2\\
+First line of institution2 address\\
+{\tt\small secondauthor@i2.org}
+}
+
+\begin{document}
+\maketitle
+
+\input{sec/0_abstract}
+\input{sec/1_intro}
+\input{sec/2_related}
+\input{sec/3_dataset}
+\input{sec/4_protocol}
+\input{sec/5_detection}
+\input{sec/6_counting}
+\input{sec/7_analysis}
+\input{sec/8_conclusion}
+
+{
+    \small
+    \bibliographystyle{ieeenat_fullname}
+    \bibliography{main}
+}
+
+\end{document}

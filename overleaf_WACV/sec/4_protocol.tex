@@ -1,0 +1,95 @@
+\section{Evaluation Protocol}
+\label{sec:protocol}
+
+Before reporting any number we have to fix what counts as correct, and for this task the
+default answer is wrong in two independent ways. This section states both, because they
+change the conclusions rather than the decimal places.
+
+\subsection{Matching criterion: IoU is the wrong question}
+\label{sec:criterion}
+
+A detection metric asks whether a predicted box \emph{localizes} an animal well. A survey
+asks whether the animal was \emph{noticed}. On a 27-pixel target these diverge sharply: a
+box offset by six pixels has IoU below 0.5 and is scored as both a false positive and a
+false negative, while for counting purposes it has correctly found the animal.
+
+We therefore evaluate under four matching rules --- IoU$\geq$0.50, IoU$\geq$0.30, centre-in-box,
+and \emph{any overlap} --- and treat the last as the counting criterion. Any overlap is
+deliberately permissive: it asks only whether the predicted box touches the animal at all.
+We are explicit about the trade: this quantity must be reported as \emph{presence} or
+\emph{counting recall} and never as mAP, and we report the strict criterion alongside it
+everywhere.
+
+\subsection{Ground truth: keyframes versus interpolation}
+
+Following \cref{sec:annotation}, we score every model twice --- once against all 21,646
+boxes, and once against only the 1,295 boxes a human actually placed (182 images, 361
+boxes). The second is the honest measurement of detector quality; the first is what a
+practitioner would compute by default.
+
+\subsection{Decomposing counting error}
+\label{sec:decomposition}
+
+The paper's main instrument. Let $G$ be the ground-truth animals in a video and $C$ the
+candidate tracks a pipeline produces. For each $g\in G$ we define:
+
+\begin{itemize}\itemsep2pt \parskip0pt
+\item \reachedq --- $g$ is touched, on at least one frame, by at least one candidate. If
+an animal is not \reachedq, no downstream stage can recover it; this measures
+\textbf{detection and tracking}.
+\item \primaryq --- among the candidates touching $g$, the one that covers $g$ on the most
+frames is not simultaneously the best cover for some other animal. Two animals sharing a
+single best-covering candidate are indistinguishable to any decision rule that emits one
+count per track; this measures \textbf{association}.
+\item \countedq --- the confirmation stage accepted a candidate covering $g$. This measures
+\textbf{confirmation}, and it is the end-to-end result.
+\end{itemize}
+
+The three are nested, $\countedq \le \primaryq \le \reachedq \le |G|$, and the gaps
+attribute error to the three stages. We report all three for every configuration; reporting
+only the last, as is conventional, makes a detection failure and a confirmation failure look
+identical.
+
+One subtlety matters for reproduction. An earlier version of our matching code keyed
+predictions by frame, so a candidate holding several boxes in one frame silently kept only
+the last one read --- discarding 27,655 of 117,978 boxes and making the reported ceiling
+depend on CSV row order. All numbers here use the corrected list-valued matching.
+
+\subsection{Counting metrics}
+
+We report mean absolute error in animals per video (MAE), signed bias, and a
+\emph{counted} fraction. The latter is $\sum_v \min(\hat{c}_v, c_v) / \sum_v c_v$, capped
+per video so that over-counting in one video cannot mask misses in another.
+
+We also report a stricter, identity-matched variant: the fraction of individual animals
+covered by an \emph{accepted} candidate. This is the more faithful quantity --- the capped
+aggregate credits a video for predicting the right \emph{number} even when the accepted
+tracks do not land on the animals --- and \cref{sec:counting} shows it is 10 points lower.
+We give both and are explicit about which is which.
+
+\subsection{The held-out protocol}
+\label{sec:heldout}
+
+Counting runs process all 32 videos, but the detector trained on 19 of them, and the
+hand-tuned confirmation rule is conventionally swept on the same videos it is reported on.
+Both leaks inflate the result. Our protocol closes both: \textbf{sweep the rule on the 19
+detector-training videos, freeze it, and report on the 13 unseen videos}. Learned
+confirmers are trained and thresholded under the identical split, so the comparison in
+\cref{sec:counting} is like-for-like. \Cref{tab:leak} shows what the protocol is worth.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Evaluation scope & Videos & Deer & Coverage \\
+\midrule
+Detector-training videos & 19 & 153 & 99.3\% \\
+\textbf{Unseen (val + test)} & \textbf{13} & \textbf{83} & \textbf{66.3\%} \\
+All 32 (the default) & 32 & 236 & 89.0\% \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Why the held-out protocol matters.} Evaluating on all 32 videos, as a
+naive pipeline evaluation would, reports 89\% coverage. On video the detector has never
+seen it is 66.3\%. We report the latter throughout.}
+\label{tab:leak}
+\end{table}

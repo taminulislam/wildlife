@@ -1,0 +1,25 @@
+%
+% --- inline annotations
+%
+\newcommand{\red}[1]{{\color{red}#1}}
+\newcommand{\todo}[1]{{\color{red}#1}}
+\newcommand{\TODO}[1]{\textbf{\color{red}[TODO: #1]}}
+% --- disable by uncommenting
+% \renewcommand{\TODO}[1]{}
+% \renewcommand{\todo}[1]{#1}
+
+%
+% --- Only packages wacv.sty does NOT already provide. It loads graphicx, amsmath,
+%     amssymb, booktabs, xcolor, xspace, caption and subcaption itself (some with
+%     options), so re-declaring them here risks an option clash for no benefit.
+%
+\usepackage{multirow}
+\usepackage{array}
+
+%
+% --- The three quantities the paper is built around. Defined once so a rename never
+%     has to be applied by hand across nine section files.
+%
+\newcommand{\reachedq}{\textsc{reached}\xspace}
+\newcommand{\primaryq}{\textsc{primary}\xspace}
+\newcommand{\countedq}{\textsc{counted}\xspace}

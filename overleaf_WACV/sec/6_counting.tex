@@ -1,0 +1,203 @@
+\section{Counting}
+\label{sec:counting}
+
+\subsection{Pipeline}
+
+Detections from YOLO11m at 640\,px are associated by BoT-SORT~\cite{aharon2022botsort} with
+sparse-optical-flow global motion compensation --- mandatory here, since the whole frame
+translates as the vehicle moves --- producing candidate tracks. A confirmation stage then
+decides which candidates are real, distinct animals. The count is the number of accepted
+candidates.
+
+The confirmation baseline is a three-parameter rule: accept a candidate if it persists for
+at least $m$ frames, spans at least $s$ seconds, and has top-$k$ mean detector confidence at
+least $c$. Under the held-out protocol (\cref{sec:heldout}) the swept values are
+$m\ge20$, $s\ge0$, $c\ge0.65$.
+
+We additionally recover \emph{orphan} detections --- those the tracker returns without a
+track identity --- by linking detections within a temporal gap and a scale-normalized
+distance into pseudo-tracks. Without this, single-frame animals are discarded entirely; with
+it, 17 animals are recovered.
+
+\subsection{The headline result}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Scope & MAE & Bias & Counted \\
+\midrule
+Fit videos (detector saw these) & 1.53 & $-0.05$ & 99.3\% \\
+\textbf{Held out (13 unseen videos)} & \textbf{2.38} & $\mathbf{-1.92}$ & \textbf{55/83 = 66.3\%} \\
+All 32 videos (optimistic) & 1.88 & $-0.81$ & 89.0\% \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{End-to-end counting.} The held-out row is the honest number: the rule is
+swept on the 19 detector-training videos, frozen, and applied to the 13 unseen ones. Bias is
+consistently negative --- the system under-counts and essentially never over-counts, which is
+the conservative direction for a wildlife survey.}
+\label{tab:counting}
+\end{table}
+
+\Cref{tab:counting} is the end-to-end result: \textbf{MAE 2.38 animals per video and 66.3\%
+of unseen animals counted}, with a bias of $-1.92$. The system under-counts systematically
+and over-counts almost never, which for management purposes is the safe direction --- a
+survey that never inflates its estimate is preferable to one that occasionally does.
+
+Per site, the error concentrates in dense groups: held-out MAE is 4.33 at SHB (the
+group-heavy site), 2.20 at TON, 2.67 at SHW, and 1.00 at MAS.
+
+Under the stricter identity-matched criterion of \cref{sec:decomposition} --- animals
+covered by an \emph{accepted} track, rather than per-video count agreement --- the figure is
+47/83 = 56.6\%. The 10-point gap is coincidental agreement: accepted tracks that do not land
+on an animal offsetting animals that were missed. We report the capped aggregate as our
+headline for comparability with the counting literature, and the identity-matched figure so
+the difference is on record.
+
+\subsection{Improving candidate generation makes counting worse}
+\label{sec:inversion}
+
+This is the paper's central experimental result. We improved the candidate pool four
+independent ways and measured the effect on the decomposition and on the final count.
+
+\begin{table*}[t]
+\centering\small
+\begin{tabular}{llrccccc}
+\toprule
+Pool & Intervention & Candidates & \reachedq & \primaryq & \countedq & MAE & Ceiling \\
+\midrule
+C & Orphan recovery, conf 0.10 (operating point) & 7,008 & 74/83 & 66/83 & \textbf{55/83 = 66.3\%} & \textbf{2.38} & 79.5\% \\
+E & \quad + track-initialization gate removed, conf 0.02 & 18,349 & 79/83 & 69/83 & 54/83 = 65.1\% & 2.54 & 83.1\% \\
+F & \quad + NMS IoU $0.50\!\to\!0.90$ & 90,239 & 79/83 & 70/83 & 41/83 = 49.4\% & 3.46 & 84.3\% \\
+G & \quad + appearance re-identification & 27,679 & \textbf{82/83 = 98.8\%} & \textbf{73/83 = 88.0\%} & 52/83 = 62.7\% & 2.69 & \textbf{88.0\%} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Every improvement to candidate generation degrades the count.} Pool G
+reaches 82 of 83 unseen animals and gives 73 their own track --- the best pool we built, at
+less than a third of pool F's candidate count --- yet counts fewer animals than pool C, which
+reaches only 74. ``Ceiling'' is \primaryq/83, the maximum a one-count-per-track confirmation
+stage could achieve.}
+\label{tab:pools}
+\end{table*}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig2_inversion.pdf}
+  \caption{\textbf{The inversion.} As candidate generation improves, more animals become
+  reachable and fewer are counted. Both series are animals out of 83 and share one axis.}
+  \label{fig:inversion}
+\end{figure}
+
+\Cref{tab:pools} and \cref{fig:inversion} give the result. Each intervention does what it
+was designed to do:
+
+\begin{itemize}\itemsep2pt \parskip0pt
+\item \textbf{Lowering detector confidence} 0.10$\to$0.02 and \textbf{removing the tracker's
+track-initialization gate} raised \reachedq from 74 to 79. We note in passing that lowering
+confidence \emph{alone} recovered zero additional animals: the gate, not the threshold, was
+the binding constraint --- BoT-SORT will extend a track from a low-confidence detection but
+will not \emph{start} one, so faint animals were invisible to counting regardless of
+detector threshold.
+\item \textbf{Loosening NMS} to IoU 0.90 addressed animals standing close enough that one
+box suppressed another; it added 4 \primaryq at the cost of $5\times$ the candidates.
+\item \textbf{Appearance re-identification} produced the best pool by every measure: 82 of
+83 animals reached, 73 with their own track, at 27,679 candidates --- fewer than a third of
+pool F's for four more \primaryq. It genuinely works: it merges fragments of one animal
+rather than merely adding candidates.
+\end{itemize}
+
+And the count falls, monotonically in candidate volume: 55, 54, 52, 41. The confirmation
+stage cannot exploit a pool it did not shrink. Each intervention adds far more negatives
+than positives --- pool G has 219 positive tracks against 27,460 negatives --- and a
+three-parameter rule tuned to survive that ratio must be aggressive enough to reject real
+animals along with the noise.
+
+\subsection{Learned confirmation does not beat three parameters}
+\label{sec:learned}
+
+If the rule is the bottleneck, replacing it should help. We tested that under three
+protocols and it does not.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{llcc}
+\toprule
+Pool & Confirmer & MAE & Counted \\
+\midrule
+\multirow{4}{*}{C} & \textbf{Hand-tuned rule (3 params)} & \textbf{2.38} & \textbf{55/83} \\
+ & Gradient boosting & 2.85 & --- \\
+ & Logistic regression & 3.00 & --- \\
+ & Temporal transformer ($\sim$60k params) & 2.85 & 49/83 \\
+\midrule
+\multirow{4}{*}{G} & Hand-tuned rule & 2.77 & 50/83 \\
+ & Gradient boosting & 2.92 & --- \\
+ & Logistic regression & 3.15 & --- \\
+ & Temporal transformer & 2.77 & 51/83 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Held-out confirmation comparison.} All methods trained and thresholded on
+the 19 detector-training videos, reported on the 13 unseen. Learned confirmers lose on pool
+C and tie on pool G. Logistic regression on pool G fails in the opposite direction,
+predicting 102 animals where 83 exist.}
+\label{tab:confirmers}
+\end{table}
+
+\Cref{tab:confirmers} gives the held-out comparison. On pool C every learned method loses;
+on pool G the transformer ties. Notably, every learned variant \emph{under-counts harder}
+than the rule, so they are rejecting more candidates rather than recovering the animals the
+rule rejects.
+
+Two further protocols agree. Under 8-fold cross-validation over videos
+(\cref{tab:capacity}) the rule again wins, and the pattern in that table is diagnostic:
+performance degrades monotonically with model capacity, and shrinking a gradient-boosted
+model to depth-1 stumps ($\sim$40 effective parameters) recovers nearly the whole gap and
+achieves the best RMSE of any method. This is a variance limit, not an architectural one.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrcc}
+\toprule
+Method & Params & MAE & RMSE \\
+\midrule
+\textbf{Hand-tuned rule} & 3 & \textbf{1.88} & 2.99 \\
+Capacity-matched stumps & $\sim$40 & 1.97 & \textbf{2.78} \\
+Gradient boosting (depth 3) & $\sim$10$^3$ & 2.41--2.66 & 3.60 \\
+Temporal transformer & $\sim$60k & 2.81 & 4.86 \\
+Logistic regression & 13 & 3.41 & 4.86 \\
+Learned accept + clustering & $\sim$10$^3$ & 3.66 & 5.99 \\
+Soft-count MLP & $\sim$5k & 3.89--4.44 & 6.34 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Capacity, not architecture, decides the confirmation stage} (8-fold CV over
+videos). Error grows monotonically with parameter count; capacity-matched stumps recover
+nearly the whole gap and give the best RMSE, i.e.\ fewer catastrophic per-video errors.}
+\label{tab:capacity}
+\end{table}
+
+We also trained directly on the counting objective, letting fragments share probability mass
+so the loss is $|\sum_i p_i - c|$ rather than per-track cross-entropy. It was the worst
+variant tested, which rules out ``the rule wins because it optimizes MAE directly'' as the
+explanation.
+
+\subsection{Calibrated per-animal confidence}
+
+A survey system that cannot say how sure it is cannot be audited. We calibrate a per-track
+posterior for ``this track is on a real animal'' and report it with every counted animal:
+\textbf{92.1\% of counted animals carry confidence $\ge0.80$} (mean 0.965, AUC 0.893), and
+793 low-confidence tracks are flagged for human review rather than auto-counted. We also
+propagate per-track probabilities into a Poisson-binomial standard deviation on each video's
+count, giving an uncertainty interval rather than a point estimate.
+
+Raw detector confidence cannot serve this purpose: no track in the corpus exceeds 0.90 and
+the median counted track sits at 0.74, because the animals are 27 pixels. The requirement is
+only meaningful against a calibrated posterior.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{figures/fig3_per_deer_evidence_sheet.jpg}
+  \caption{\textbf{Per-animal evidence.} Every counted animal is exported as a contact sheet
+  of its own track with timestamps and per-frame confidence, so a human auditor can verify
+  any individual count. Confidence $\approx$0.82 for this track.}
+  \label{fig:evidence}
+\end{figure}

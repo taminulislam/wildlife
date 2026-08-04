@@ -1,0 +1,92 @@
+\section{Dataset}
+\label{sec:dataset}
+
+\subsection{Collection and scale}
+
+The corpus is 32 nocturnal road-transect videos recorded with a vehicle-mounted FLIR
+thermal camera across four sites in southern Illinois, eight videos per site. Frames are
+$640\times512$ single-channel thermal at 60\,fps; the vehicle travels at 25--90\,km/h, so
+the background translates continuously and the same animal is visible for a few seconds at
+most. \Cref{tab:dataset} summarizes the corpus.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+Site & Videos & Unique deer \\
+\midrule
+SHB & 8 & 132 \\
+TON & 8 & 51 \\
+SHW & 8 & 38 \\
+MAS & 8 & 15 \\
+\midrule
+\textbf{Total} & \textbf{32} & \textbf{236} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Corpus composition.} 521,930 frames, 21,646 annotated boxes,
+$640\times512$ at 60\,fps, single class. One site (SHB) holds 56\% of all animals; MAS holds
+15, so per-site results for MAS are noisy and we report them as such.}
+\label{tab:dataset}
+\end{table}
+
+Every individual deer is annotated in CVAT as a distinct \emph{track}. This is the property
+the paper depends on: one track is one animal, so the same annotation simultaneously serves
+as per-frame detection ground truth, as association ground truth, as count ground truth
+(the number of tracks in a video), and --- as \cref{sec:analysis} exploits --- as identity
+labels for re-identification.
+
+\subsection{Object scale}
+
+The animals are small and the distribution is one-sided: median box $29\times24$ pixels
+($\sqrt{\text{area}}=26.8$), 71\% below the COCO~\cite{lin2014coco} small-object threshold
+of $32^2$, and \emph{zero} boxes in the COCO-large category. Resolution is therefore the
+strongest single accuracy lever, which motivates the ablation in \cref{sec:detection}. It
+also has a consequence we did not anticipate and report in \cref{sec:analysis}: the
+training split contains no box above 96 pixels, and the detector fails on the handful of
+animals that appear larger than that.
+
+\subsection{Annotation quality is itself a result}
+\label{sec:annotation}
+
+Video annotation is normally produced by keyframing and interpolation, and the resulting
+label noise is normally left unquantified. We measured it, because it turns out to be worth
+roughly a third of our apparent detection accuracy.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lr}
+\toprule
+Quantity & Value \\
+\midrule
+Total ground-truth boxes & 21,646 \\
+\textbf{Human-placed keyframes} & \textbf{1,295 (6.0\%)} \\
+\textbf{Interpolated} & \textbf{20,351 (94.0\%)} \\
+Median gap between keyframes & 15 frames \\
+Median centre travel between keyframes & \textbf{2.28 box-widths} \\
+Segments where the deer moves $>$1 box-width & 79\% \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{94\% of frame-level ground truth is interpolation.} With a moving camera
+at 60\,fps, an animal travels a median 2.28 box-widths between the frames a human actually
+labelled, so linear interpolation cannot track the true path and mid-gap boxes can sit
+entirely off the animal.}
+\label{tab:annotation}
+\end{table}
+
+\Cref{tab:annotation} gives the measurement. The consequence is bidirectional: interpolated
+boxes inject label noise at training time \emph{and} penalize correct detections at
+evaluation time. \Cref{sec:detection} quantifies the evaluation half by scoring the same
+weights against human-placed keyframes only.
+
+\subsection{Splits}
+
+We split by \emph{video}, never by frame, and stratify by site so all four sites appear in
+each split --- the deployment target is these same sites, and a frame-level split would leak
+near-duplicate frames across the boundary. The result is 19 training videos (12,852 images),
+4 validation (2,337) and 9 test (3,725), allocated by animal count to roughly
+65/19/16\%.
+
+Throughout the paper, \textbf{``unseen'' means the 13 validation and test videos the
+detector never trained on}, containing 83 of the 236 deer. \Cref{sec:counting} shows why
+this distinction is not pedantic: counting accuracy measured over all 32 videos, 19 of which
+trained the detector, is 33 points higher than on unseen video alone.

@@ -1,0 +1,23 @@
+\begin{abstract}
+Wildlife surveys ask \emph{how many animals are there}, but the computer-vision pipelines
+built to answer that question are optimized as \emph{detectors}. We show that on thermal
+road-transect video these are different problems, and we localize precisely where the
+difference costs animals. Using a new corpus of 32 fully annotated FLIR thermal transects
+(521,930 frames, 236 individually tracked white-tailed deer, 21,646 boxes), we benchmark 13
+detectors and then decompose end-to-end counting error into three measurable stages: how
+many animals are \emph{detected at all}, how many acquire their \emph{own} candidate track,
+and how many are finally \emph{counted}. On held-out video the pipeline detects 98.8\% of
+deer, gives 88.0\% a distinct track, and counts 62.7\%. Detection is not the bottleneck.
+We then show something counter-intuitive and, we argue, generalizable: four independent
+interventions that each \emph{improve} candidate generation --- lowering the detector
+threshold, removing the tracker's initialization gate, loosening NMS, and adding appearance
+re-identification --- each make the final count \emph{worse}, because the confirmation stage
+cannot exploit a pool it did not shrink. Under three evaluation protocols, learned
+confirmation heads (transformer, gradient boosting, logistic regression) all lose to a
+three-parameter hand-tuned rule. We further show that the standard IoU$\geq$0.50 criterion
+re-ranks detectors relative to a counting-appropriate criterion (5 of 12 models shift
+$\geq$2 places), that 94\% of frame-level ground truth is interpolation whose drift accounts
+for roughly a third of apparent detection error, and that the detector fails at
+\emph{both} scale extremes --- the large end being a hole in the training distribution
+rather than a capability limit. We release the dataset, annotations, and evaluation harness.
+\end{abstract}
