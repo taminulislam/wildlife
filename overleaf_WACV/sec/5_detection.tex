@@ -125,13 +125,18 @@ the gap between small and medium objects is not primarily a resolution deficit. 
 detector at 1280 (YOLOv9m) is also not the best counter (\cref{sec:counting}), an early
 instance of the divergence this paper characterizes.
 
-Every counting experiment that follows uses YOLO11m, and it is worth being explicit that this
-is not the roster's best model on any single metric: YOLOv8m leads F1 at 0.660 and YOLO12m
-leads precision at 0.929. YOLO11m was chosen because the confirmation stage that consumes
-these detections is starved of precision rather than recall --- it must reject tens of
-thousands of false candidates per run (\cref{sec:counting}) --- and among the four models
-operating above 0.87 precision, YOLO11m has clearly the highest recall (0.503 against
-0.450--0.453) and correspondingly the best F1 of that group (0.645 against 0.597--0.608).
+Every counting experiment that follows uses YOLO11m, and the way it was selected illustrates
+the section's argument on the production model itself. Under the strict criteria it is the
+best model on the roster: highest F1 at IoU$\geq$0.50 (0.535) and at IoU$\geq$0.30 (0.623).
+Relax the criterion toward counting and it slips --- 2nd under centre-in-box, 4th under
+presence, where YOLOv8m leads at 0.660. A detector chosen by conventional detection
+standards is therefore not the one that ranks best once the criterion matches the task.
+
+We keep YOLO11m nonetheless, for a reason tied to what consumes its output: the confirmation
+stage is starved of precision rather than recall, since it must reject tens of thousands of
+false candidates per run (\cref{sec:counting}). Among the four models operating above 0.87
+precision, YOLO11m has clearly the highest recall (0.503 against 0.450--0.453) and the best
+F1 of that group (0.645 against 0.597--0.608).
 
 The choice matters less than it might appear, and the reason is the section's own finding.
 The eleven models span 0.145 in AP$_{50}$ and 0.20 in F1, but \cref{sec:counting} shows that
