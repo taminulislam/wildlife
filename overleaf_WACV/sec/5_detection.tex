@@ -34,9 +34,10 @@ metric. The three F1 columns give the value under the stricter matching rules of
 \cref{sec:criterion}; Precision, Recall and F1 use the presence criterion. F1
 rises monotonically as the rule relaxes, and the centre-in-box column tracks the presence F1
 to within 0.032 for every model, so no conclusion depends on which counting-oriented rule is
-used. Precision and Recall separate the two families --- the
-convolutional one-stage models are precision-oriented (0.87--0.93) and the MMDetection
-models recall-oriented (0.72--0.78). Twelve architectures were trained; Deformable DETR R50
+used. Precision and Recall separate the models along one axis:
+YOLO12m, YOLOv9m, YOLO11m and YOLOv10m operate at 0.87--0.93 precision and around 0.45
+recall, while RTMDet-m and Faster R-CNN R50 invert that, reaching 0.72--0.78 recall at
+0.33--0.39 precision. Twelve architectures were trained; Deformable DETR R50
 is excluded because it did not converge within our compute budget.}
 \label{tab:detectors}
 \end{table*}
@@ -72,11 +73,14 @@ ceiling: on the 71\% of the corpus below $32^2$, YOLO11m scores 0.081 against 0.
 medium objects, a factor of 3.6, and the gap is consistent across both families. This is
 the first quantitative argument for the criterion of \cref{sec:criterion}.
 
-\paragraph{The two families trade precision against recall.} The convolutional one-stage
-models are precision-oriented (YOLO12m 0.929, YOLOv9m 0.917) and the MMDetection models
-recall-oriented (RTMDet-m 0.779, Faster R-CNN 0.723). Because they sit on opposite sides of
-that trade, AP$_{50}$ rank and presence-F1 rank diverge: RTMDet-m is 4th on AP$_{50}$ and
-last on F1, while YOLOv8m is 8th on AP$_{50}$ and 1st on F1.
+\paragraph{The models trade precision against recall, and the trade decides the ranking.}
+YOLO12m and YOLOv9m operate at 0.929 and 0.917 precision against roughly 0.45 recall;
+RTMDet-m and Faster R-CNN R50 invert it, at 0.779 and 0.723 recall against 0.33 and 0.39
+precision. Because they sit on opposite sides of that trade, AP$_{50}$ rank and F1 rank
+diverge: RTMDet-m is 4th on AP$_{50}$ and last on F1, while YOLOv8m is 8th on AP$_{50}$ and
+1st on F1. Which operating point is preferable is not a detection question --- it depends on
+whether the downstream stage can filter false candidates, which \cref{sec:counting}
+addresses directly.
 
 \paragraph{Query-based detectors underperform.} DINO R50 reaches 0.365 AP$_{50}$ on a full
 native schedule, below plain Faster R-CNN, and Deformable DETR did not converge within
