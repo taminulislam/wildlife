@@ -137,7 +137,7 @@ Ablation & Range tested & Effect \\
 \midrule
 CLAHE normalization & on / off & 0.519 vs 0.299 mAP50 \\
 Input resolution & 640 / 1280 & architecture-dependent \\
-Detector architecture & 13 models & 0.365--0.498 mAP50 \\
+Detector architecture & 12 models & 0.365--0.510 AP$_{50}$ \\
 Matching criterion & 4 rules & re-ranks 8/12 models \\
 Detector confidence & 0.10/0.05/0.02 & 0 extra animals \\
 Track-init threshold & 0.15 / 0.05 & $+5$ \primaryq \\
@@ -149,7 +149,7 @@ ReID cue & 7 variants & size dominates \\
 Track splitting & threshold sweep & $+3$ for 4k cands \\
 \bottomrule
 \end{tabular}
-\caption{\textbf{Thirteen ablation families.} Every stage of the pipeline was varied
+\caption{\textbf{Twelve ablation families.} Every stage of the pipeline was varied
 independently. The consistent pattern: interventions that improve the candidate pool do not
 improve the count.}
 \label{tab:ablations}
