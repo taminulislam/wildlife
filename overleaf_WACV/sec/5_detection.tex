@@ -1,12 +1,10 @@
 \section{Detection Benchmark}
 \label{sec:detection}
 
-We first establish that the detection stage is not the limiting factor. Twelve
-architectures spanning two-stage, one-stage and query-based designs were trained on the
-identical site-stratified split with identical preprocessing, which bounds how much of the
-counting error any choice of backbone could account for.
-
-\subsection{Detection accuracy}
+We first establish that the detection stage is not the limiting factor. Twelve architectures
+spanning two-stage, one-stage and query-based designs were trained on the identical
+site-stratified split with identical preprocessing, which bounds how much of the counting
+error any choice of backbone could account for.
 
 \begin{table*}[t]
 \centering\small
@@ -42,54 +40,6 @@ is excluded because it did not converge within our compute budget.}
 \label{tab:detectors}
 \end{table*}
 
-\Cref{tab:detectors} reports every model on identical data under both a standard metric and
-the presence criterion this task requires. Four observations shape the rest of the paper.
-
-\paragraph{These numbers count boxes, not animals, and the distinction is large.}
-Every frame of every animal is scored separately, so an animal visible for 100 frames
-contributes 100 ground-truth boxes and one found in half of them scores 0.5 recall --- even
-though a single detection is all that counting requires. The 11,476 background frames
-contribute nothing at all, because precision, recall and F1 have no true-negative term, so a
-detector that correctly fires on none of them earns no credit for it. Read per animal rather
-than per box, the same detectors that score $\approx$0.50 box recall in \cref{tab:detectors}
-find 220 of the 235 individually annotated deer in at least one frame, and the full pipeline
-of \cref{sec:counting} reaches 82 of 83 on held-out video. The gap between 0.50 and 0.94 is
-not a discrepancy: it is two metrics answering different questions, and it is the first
-indication that detection accuracy is a poor proxy for counting ability.
-
-\paragraph{The spread across architectures is narrow.} AP$_{50}$ ranges 0.365--0.510 across
-twelve architectures spanning two-stage, one-stage and query-based designs, with the top
-three within 0.004 of each other. That is the signature of a data-limited rather than an
-architecture-limited regime, and it bounds how much of the counting error in
-\cref{sec:counting} any choice of backbone could account for.
-
-\paragraph{Strict-IoU metrics compress at this object size, for geometric reasons.} For two
-axis-aligned boxes of side $s$ whose centres differ by $d$ pixels,
-$\mathrm{IoU}=(s-d)/(s+d)$. At the corpus median $s=27$, a \emph{four-pixel} centre error
-already drops IoU to $0.742$ and fails a 0.75 threshold; nine pixels fails 0.50. Sub-pixel
-localization is therefore required to score at the upper thresholds, on animals whose entire
-extent is 27 pixels and whose thermal boundary is diffuse. Size-stratified COCO metrics inherit that
-ceiling: on the 71\% of the corpus below $32^2$, YOLO11m scores 0.081 against 0.291 on
-medium objects, a factor of 3.6, and the gap is consistent across both families. This is
-the first quantitative argument for the criterion of \cref{sec:criterion}.
-
-\paragraph{The models trade precision against recall, and the trade decides the ranking.}
-YOLO12m and YOLOv9m operate at 0.929 and 0.917 precision against roughly 0.45 recall;
-RTMDet-m and Faster R-CNN R50 invert it, at 0.779 and 0.723 recall against 0.33 and 0.39
-precision. Because they sit on opposite sides of that trade, AP$_{50}$ rank and F1 rank
-diverge: RTMDet-m is 4th on AP$_{50}$ and last on F1, while YOLOv8m is 8th on AP$_{50}$ and
-1st on F1. Which operating point is preferable is not a detection question --- it depends on
-whether the downstream stage can filter false candidates, which \cref{sec:counting}
-addresses directly.
-
-\paragraph{Query-based detectors underperform.} DINO R50 reaches 0.365 AP$_{50}$ on a full
-native schedule, below plain Faster R-CNN, and Deformable DETR did not converge within
-budget. This is consistent with the known difficulty query-based detectors have with very
-small objects, and it holds for both query-based models tested. RT-DETR-L, which targets
-that weakness, recovers to 0.434 but still trails the convolutional one-stage models.
-
-\subsection{The consequence for detector selection}
-
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig3_criterion.pdf}
@@ -100,18 +50,52 @@ that weakness, recovers to 0.434 but still trails the convolutional one-stage mo
   \label{fig:criterion}
 \end{figure}
 
-\Cref{fig:criterion} plots the same data as a rank change. Eight of the eleven models move
-at least two places and YOLOv10m falls seven, from 2nd under IoU$\geq$0.50 to 9th under the
-counting criterion. Selecting a detector for a counting pipeline on its detection metric
-therefore does not select the model that counts best.
+\Cref{tab:detectors} reports every model on identical data. The first thing it shows is how
+little separates them: AP$_{50}$ ranges from 0.365 to 0.510, with the top three within 0.004
+of each other, across designs as different as Faster R-CNN, DINO and YOLO12m. That is the
+signature of a data-limited rather than an architecture-limited regime, and it puts a ceiling
+on how much of the counting error in \cref{sec:counting} any backbone choice could explain.
 
-We adopt YOLO11m as the production detector for every counting experiment that follows. It
-is not the single best model under the counting criterion --- the top five are separated by
-0.015 F1, which is inside the noise of a 32-video corpus --- but it has the highest precision
-of the roster (0.732), and \cref{sec:counting} shows that precision, not recall, is what the
-downstream confirmation stage is starved of.
+The absolute values are low, and two separate effects account for it. The first is
+geometric. For two axis-aligned boxes of side $s$ whose centres differ by $d$ pixels,
+$\mathrm{IoU}=(s-d)/(s+d)$; at the corpus median $s=27$ a four-pixel centre error already
+drops IoU to 0.742 and fails a 0.75 threshold, and nine pixels fails 0.50. Scoring at the
+upper IoU thresholds therefore demands sub-pixel localization on animals whose entire extent
+is 27 pixels and whose thermal boundary is diffuse, and size-stratified metrics inherit the
+same ceiling --- on the 71\% of the corpus below $32^2$, YOLO11m scores 0.081 against 0.291
+on medium objects, a factor of 3.6.
 
-\subsection{Resolution is architecture-dependent}
+The second effect is that these metrics count boxes rather than animals. Every frame of every
+animal is scored separately, so an animal visible for 100 frames contributes 100 ground-truth
+boxes, and one found in half of them scores 0.5 recall even though a single detection is all
+that counting requires. The 11,476 background frames contribute nothing in either direction,
+because precision, recall and F1 have no true-negative term, so a detector that correctly
+fires on none of them earns no credit for it. Counted per animal instead, the same detectors
+that score around 0.50 box recall find 220 of the 235 individually annotated deer in at least
+one frame, and the full pipeline of \cref{sec:counting} reaches 82 of 83 on held-out video.
+The distance between 0.50 and 0.94 is not a discrepancy but two metrics answering different
+questions, and it is the first sign that detection accuracy is a poor proxy for counting
+ability.
+
+The models are also wrong in different ways, which matters more than the narrow spread in
+their aggregate scores. YOLO12m and YOLOv9m operate at 0.929 and 0.917 precision against
+roughly 0.45 recall, while RTMDet-m and Faster R-CNN R50 invert that entirely, reaching 0.779
+and 0.723 recall at 0.33 and 0.39 precision. Because they sit on opposite sides of that
+trade, a model's rank depends on which criterion is applied: RTMDet-m is 4th on AP$_{50}$ and
+last on F1, while YOLOv8m is 8th on AP$_{50}$ and 1st. \Cref{fig:criterion} plots this as a
+rank change --- eight of the eleven models move at least two places, and YOLOv10m falls seven,
+from 2nd under IoU$\geq$0.50 to 9th under the counting criterion. Selecting a detector for a
+counting pipeline on its detection metric therefore does not select the model that counts
+best, and which operating point is preferable is not a detection question at all: it depends
+on whether the downstream stage can filter false candidates, which \cref{sec:counting}
+measures directly.
+
+One architectural pattern does survive the criterion change. The query-based detectors
+underperform: DINO R50 reaches 0.365 AP$_{50}$ on a full native schedule, below plain Faster
+R-CNN, and Deformable DETR did not converge within our compute budget. This is consistent
+with the known difficulty query-based designs have with very small objects, and it holds for
+both models of that type tested; RT-DETR-L, which targets that weakness specifically,
+recovers to 0.434 but still trails the convolutional one-stage models.
 
 \begin{table}[t]
 \centering\small
@@ -131,8 +115,16 @@ improve for either, so the small-object deficit is not primarily a resolution de
 \label{tab:resolution}
 \end{table}
 
-\Cref{tab:resolution} shows that ``higher resolution helps small objects'' does not hold as
-a general claim on this data. It helps one architecture and hurts another, and AP-small
-declines for both even where overall mAP50 rises. The best detector at 1280\,px (YOLOv9m) is also
-not the best counter (\cref{sec:counting}), an early instance of the divergence this paper
-characterizes.
+Resolution behaves less predictably than the small-object literature would suggest.
+\Cref{tab:resolution} shows that doubling the input to 1280\,px helps YOLOv9m
+(+0.025 AP$_{50}$) and hurts YOLOv10m ($-0.040$); at 640 the two are tied at 0.498, and at
+1280 they diverge by 0.065. AP-small declines for both even where overall AP$_{50}$ rises, so
+the gap between small and medium objects is not primarily a resolution deficit. The best
+detector at 1280 (YOLOv9m) is also not the best counter (\cref{sec:counting}), an early
+instance of the divergence this paper characterizes.
+
+We adopt YOLO11m as the production detector for every counting experiment that follows. It is
+not the single best model under the counting criterion --- the top five are separated by 0.015
+F1, inside the noise of a 32-video corpus --- but it has the highest precision of the roster
+(0.897), and \cref{sec:counting} shows that precision, not recall, is what the downstream
+confirmation stage is starved of.
