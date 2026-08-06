@@ -94,8 +94,8 @@ count rather than improving it. We therefore summarize with the precision-weight
 $F_{0.5}$ in the last column of \cref{tab:detectors}, fixing $\beta$ at its conventional
 value rather than selecting it. YOLO11m ranks first at 0.775, ahead of YOLO12m at 0.767 and
 YOLOv9m at 0.759. That margin of 0.008 makes the top three effectively equivalent; the
-substantive separation is from the recall-oriented models at 0.368--0.433. We adopt YOLO11m
-for the counting experiments that follow.
+substantive separation is from the recall-oriented models at 0.368--0.433. We adopt \textbf{YOLO11m at 640\,px} as the
+production detector, and every counting result in this paper uses it.
 
 \begin{table}[t]
 \centering\small
@@ -122,6 +122,12 @@ Resolution is the one lever that behaves unpredictably. \Cref{tab:resolution} sh
 1280\,px helping YOLOv9m on every metric and hurting YOLOv10m on every one; at 640 the two
 are within 0.004 AP$_{50}$, at 1280 they diverge by 0.065. AP-small falls for both (0.128 to
 0.119, 0.117 to 0.093), so the extra resolution buys medium-object accuracy and precision
-rather than the smallest animals. The best detector at 1280 is also not the best counter
-(\cref{sec:counting}) --- an early instance of the divergence this paper characterizes, and a
-reason not to treat the detector as the place where counting accuracy is won.
+rather than the smallest animals.
+
+That gain does not survive the pipeline. YOLOv9m at 1280\,px is the strongest detector in
+this section by AP$_{50}$ (0.523 against YOLO11m's 0.460), so we ran it through the complete
+counting pipeline under the protocol of \cref{sec:heldout}. It counts \emph{fewer} animals:
+MAE 2.54 and 54 of 83 held-out animals, against 2.38 and 55 of 83 for YOLO11m at 640\,px.
+A 14\% advantage in detection accuracy becomes a small deficit in counting accuracy, which
+is why the production detector is not the one this section ranks highest, and the first
+direct evidence for the divergence the rest of the paper characterizes.
