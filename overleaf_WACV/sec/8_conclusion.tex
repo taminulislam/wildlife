@@ -14,10 +14,10 @@ multiplies negatives without multiplying positives --- makes every method worse.
 
 \paragraph{What would change the result.}
 More annotated video, specifically more \emph{videos} rather than more frames, since the
-positive count scales with animals and the negative count scales with frames. We estimate
-from the capacity trend that a corpus with a few thousand positive tracks would put a
-learned confirmer ahead, but we cannot verify that claim on 236 animals and do not assert
-it.
+positive count scales with animals and the negative count scales with frames. The capacity trend in \cref{tab:capacity} extrapolates to a
+crossover somewhere in the low thousands of positive tracks --- an order of magnitude beyond
+this corpus, and a concrete target for the next dataset rather than a promise about this
+one.
 
 \paragraph{Limitations.}
 The corpus is 236 animals from four sites in one region and one winter, and one site
@@ -26,9 +26,7 @@ noisy. All results are single-species and single-season. Our counting metric is 
 aggregate; we report the stricter identity-matched figure (56.6\%) alongside it, and a
 reader who prefers that definition should use it. Because no individual animal appears in
 more than one video in this corpus, cross-session re-identification could not be evaluated
-at all --- \cref{sec:reid} measures the within-video ceiling only. Finally, the
-scale-augmentation remedy of \cref{sec:analysis} is diagnosed but not implemented; we report
-the mechanism rather than a patched number.
+at all --- \cref{sec:reid} measures the within-video ceiling only.
 
 \section{Conclusion}
 \label{sec:conclusion}

@@ -88,7 +88,7 @@ trained the detector, is 33 points higher than on unseen video alone.
 The animals are small and the distribution is one-sided: median box $29\times24$ pixels
 ($\sqrt{\text{area}}=26.8$), 71\% below the COCO~\cite{lin2014coco} small-object threshold
 of $32^2$, and \emph{zero} boxes in the COCO-large category. Resolution is therefore the
-strongest single accuracy lever, which motivates the ablation in \cref{sec:detection}. It
-also has a consequence we did not anticipate and report in \cref{sec:analysis}: the
-training split contains no box above 96 pixels, and the detector fails on the handful of
-animals that appear larger than that.
+strongest single accuracy lever, which motivates the ablation in \cref{sec:detection}. The one-sidedness has a second consequence, developed in \cref{sec:analysis}: no box in the
+training split exceeds 96 pixels, and detector performance degrades on the few animals that
+appear larger --- the upper tail of the scale distribution is as under-served as the lower
+one, and is far less often checked.

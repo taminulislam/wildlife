@@ -155,10 +155,11 @@ improve the count.}
 \label{tab:ablations}
 \end{table}
 
-\Cref{tab:ablations} consolidates every ablation. We highlight one negative result not yet
-mentioned: lowering detector confidence from 0.10 to 0.05 added 3,807 candidates and
-recovered \emph{zero} additional animals, which is what first directed us to the tracker's
-initialization gate rather than the detector.
+\Cref{tab:ablations} consolidates every ablation. One entry deserves emphasis because it
+redirected the whole investigation: lowering detector confidence from 0.10 to 0.05 added
+3,807 candidates and recovered \emph{zero} additional animals. That single measurement
+ruled out the detector threshold and pointed us at the tracker's initialization gate, which
+turned out to be the real constraint.
 
 \subsection{Qualitative results}
 
