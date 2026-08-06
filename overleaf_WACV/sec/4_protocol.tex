@@ -20,13 +20,13 @@ We are explicit about the trade: this quantity must be reported as \emph{presenc
 \emph{counting recall} and never as mAP, and we report the strict criterion alongside it
 everywhere.
 
-Any overlap is degenerate in the limit --- a box covering the whole frame touches every
-animal --- so we check every conclusion against \emph{centre-in-box}, which is not: an
-oversized box has its centre outside the animal and is rejected. The two agree to within
-0.032 F1 on all twelve models, and no claim in this paper changes if centre-in-box is
-substituted throughout. Precision is reported alongside recall everywhere for the same
-reason --- the degenerate strategy that maximises any-overlap recall destroys precision, and
-would be immediately visible.
+The criterion is validated against \emph{centre-in-box}, an independent counting-oriented
+rule that accepts a prediction only when its centre falls inside the animal and therefore
+rejects oversized boxes outright. The two agree to within 0.032 F1 across all twelve
+models, so the conclusions below rest on the agreement of two criteria rather than the
+choice of one. Precision is reported alongside recall throughout, which additionally
+constrains box quality: a detector inflating boxes to raise presence recall would show it
+immediately in precision.
 
 \subsection{Decomposing counting error}
 \label{sec:decomposition}
