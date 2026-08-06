@@ -81,10 +81,12 @@ The models are also wrong in different ways, which matters more than the narrow 
 their aggregate scores. YOLO12m and YOLOv9m operate at 0.929 and 0.917 precision against
 roughly 0.45 recall, while RTMDet-m and Faster R-CNN R50 invert that entirely, reaching 0.779
 and 0.723 recall at 0.33 and 0.39 precision. Because they sit on opposite sides of that
-trade, a model's rank depends on which criterion is applied: RTMDet-m is 4th on AP$_{50}$ and
-last on F1, while YOLOv8m is 8th on AP$_{50}$ and 1st. \Cref{fig:criterion} plots this as a
-rank change --- eight of the eleven models move at least two places, and YOLOv10m falls seven,
-from 2nd under IoU$\geq$0.50 to 9th under the counting criterion. Selecting a detector for a
+trade, a model's rank depends on which criterion is applied: YOLO11m is 1st under
+IoU$\geq$0.50 and 4th under the counting criterion, while YOLOv8m moves the other way, from
+5th to 1st. \Cref{fig:criterion} plots this as a
+rank change: seven of the eleven models move at least two places, and YOLOv10m falls six, from
+2nd under IoU$\geq$0.50 to 8th under the counting criterion, while ATSS R50 climbs from 8th
+to 2nd. Selecting a detector for a
 counting pipeline on its detection metric therefore does not select the model that counts
 best, and which operating point is preferable is not a detection question at all: it depends
 on whether the downstream stage can filter false candidates, which \cref{sec:counting}

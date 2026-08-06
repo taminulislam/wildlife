@@ -117,67 +117,83 @@ def fig_inversion(out: str) -> None:
 # --------------------------------------------------------------------------- fig 3
 def fig_criterion(out: str, table_csv: str) -> None:
     """Slope chart: the reader's job is RANK CHANGE between two criteria, which a slope
-    shows directly and a grouped bar hides."""
+    shows directly and a grouped bar hides.
+
+    Colour encodes final rank on a truncated `rocket_r` ramp. A sequential ramp is the
+    right family here because the models are ORDERED by F1, not merely distinct -- the
+    reader should be able to see rank from colour alone. The ramp is sampled from 0.25
+    upward rather than from 0.0: its lightest steps sit near luminance 0.83 and would be
+    illegible as thin lines on a white page.
+    """
+    import seaborn as sns
+
+    # Display names must match tab:detectors exactly. yolov8mfix is the same architecture
+    # as yolov8m with a re-selected checkpoint, so including both would double-count one
+    # model and put 12 rows in a figure the text describes as eleven.
+    DISPLAY = {"yolov8m": "YOLOv8m", "yolov9m": "YOLOv9m", "yolov10m": "YOLOv10m",
+               "yolo11m": "YOLO11m", "yolo12m": "YOLO12m", "rtdetr-l": "RT-DETR-L",
+               "rtmdet_m": "RTMDet-m", "faster-rcnn_r50": "Faster R-CNN R50",
+               "tood_r50": "TOOD R50", "atss_r50": "ATSS R50", "dino_r50": "DINO R50"}
     rows = [r for r in csv.DictReader(open(table_csv))
             if r["gt_set"] == "full" and r["conf"] == "0.25"]
     per: dict[str, dict] = {}
     for r in rows:
-        per.setdefault(r["model"], {})[r["criterion"]] = float(r["f1"])
+        name = DISPLAY.get(r["model"])
+        if name:
+            per.setdefault(name, {})[r["criterion"]] = float(r["f1"])
     models = {m: v for m, v in per.items() if "iou50" in v and "touch" in v}
     if not models:
         print("  [skip] fig3: no rows"); return
-    # Which models actually change rank between the two criteria? That is the figure's
-    # claim, so compute it rather than asserting it: the top two are stable, but the
-    # middle of the field reshuffles, and the biggest mover is worth naming.
+
     ra = {m: i for i, m in enumerate(sorted(models, key=lambda k: -models[k]["iou50"]))}
     rb = {m: i for i, m in enumerate(sorted(models, key=lambda k: -models[k]["touch"]))}
     mover = max(models, key=lambda m: rb[m] - ra[m])
     n_moved = sum(1 for m in models if abs(rb[m] - ra[m]) >= 2)
 
-    fig, ax = plt.subplots(figsize=(5.2, 4.2))
-    for m, v in sorted(models.items(), key=lambda kv: -kv[1]["touch"]):
-        hero = m.startswith("yolo11m")
-        big = m == mover
-        col = ORANGE if hero else (YELLOW if big else BLUE)
-        ax.plot([0, 1], [v["iou50"], v["touch"]], color=col,
-                lw=2.2 if (hero or big) else 1.0,
-                alpha=1.0 if (hero or big) else 0.45, marker="o",
-                ms=5 if (hero or big) else 3.5,
-                markeredgecolor="white", markeredgewidth=0.8,
-                zorder=3 if (hero or big) else 2)
-
-    # De-collide the right-hand labels. Several models finish within 0.002 F1 of each
-    # other, so at 6.5 pt their text overlaps and the figure becomes unreadable. Walk them
-    # in descending order and push each down to at least MIN_GAP below the previous, then
-    # leader-line back to the true value so nothing is misread.
     ordered = sorted(models.items(), key=lambda kv: -kv[1]["touch"])
-    span = max(v["touch"] for v in models.values()) - min(v["touch"]
-                                                          for v in models.values())
-    MIN_GAP = max(span, 0.01) * 0.075
-    ys: list[float] = []
-    for _m, v in ordered:
-        y = v["touch"] if not ys else min(v["touch"], ys[-1] - MIN_GAP)
-        ys.append(y)
-    for (m, v), y in zip(ordered, ys):
-        hero = m.startswith("yolo11m")
-        big = m == mover
-        if abs(y - v["touch"]) > 1e-6:                 # moved -> show where it belongs
-            ax.plot([1.0, 1.055], [v["touch"], y], color=GRID, lw=0.6, zorder=1)
-        tag = m + (f"   {ra[m]+1}\u2192{rb[m]+1}" if big else "")
-        ax.annotate(tag, (1.06, y), textcoords="offset points", xytext=(2, 0),
-                    va="center", fontsize=7.5 if (hero or big) else 6.5,
-                    color=INK if (hero or big) else INK2,
-                    weight="bold" if (hero or big) else "normal")
-    ax.set_xticks([0, 1])
-    ax.set_xticklabels(["IoU $\\geq$ 0.50\n(standard)", "any overlap\n(counting)"],
-                       fontsize=8)
-    ax.set_xlim(-0.12, 1.55); ax.set_ylabel("F1 (test split, conf 0.25)")
-    ax.set_title(f"IoU$\\geq$0.50 rank does not predict counting rank\n"
-                 f"{n_moved} of {len(models)} models shift $\\geq$2 places",
-                 loc="left", fontsize=9.5)
-    ax.grid(axis="x", visible=False)
-    ax.spines[["top", "right"]].set_visible(False)
-    save(fig, out, "fig3_criterion")
+    ramp = sns.color_palette("rocket_r", as_cmap=True)
+    cols = {m: ramp(0.25 + 0.72 * i / max(len(ordered) - 1, 1))
+            for i, (m, _v) in enumerate(ordered)}
+
+    with sns.axes_style("ticks"):
+        fig, ax = plt.subplots(figsize=(5.4, 4.3))
+        for m, v in ordered:
+            hero = m == "YOLO11m" or m == mover
+            ax.plot([0, 1], [v["iou50"], v["touch"]], color=cols[m],
+                    lw=2.6 if hero else 1.4, alpha=1.0 if hero else 0.75,
+                    marker="o", ms=6 if hero else 4,
+                    markeredgecolor="white", markeredgewidth=0.9,
+                    zorder=3 if hero else 2, solid_capstyle="round")
+
+        span = max(v["touch"] for v in models.values()) - min(v["touch"]
+                                                              for v in models.values())
+        MIN_GAP = max(span, 0.01) * 0.075
+        ys: list[float] = []
+        for _m, v in ordered:
+            ys.append(v["touch"] if not ys else min(v["touch"], ys[-1] - MIN_GAP))
+        for (m, v), y in zip(ordered, ys):
+            hero = m == "YOLO11m" or m == mover
+            if abs(y - v["touch"]) > 1e-6:
+                ax.plot([1.0, 1.055], [v["touch"], y], color="#cfcfcf", lw=0.6, zorder=1)
+            tag = m + (f"  {ra[m]+1}\u2192{rb[m]+1}" if m == mover else "")
+            ax.annotate(tag, (1.06, y), textcoords="offset points", xytext=(2, 0),
+                        va="center", fontsize=7.6 if hero else 6.8,
+                        color=cols[m], weight="bold" if hero else "normal")
+
+        ax.set_xticks([0, 1])
+        ax.set_xticklabels(["IoU $\\geq$ 0.50\n(standard)", "any overlap\n(counting)"],
+                           fontsize=8.5)
+        ax.set_xlim(-0.1, 1.52)
+        ax.set_ylabel("F1 (test split, conf 0.25)")
+        ax.set_title(f"IoU$\\geq$0.50 rank does not predict counting rank\n"
+                     f"{n_moved} of {len(models)} models shift $\\geq$2 places",
+                     loc="left", fontsize=9.5)
+        sns.despine(ax=ax, trim=False)
+        ax.grid(axis="y", color="#e6e6e6", lw=0.5)
+        ax.grid(axis="x", visible=False)
+        ax.set_axisbelow(True)
+        save(fig, out, "fig3_criterion")
+    style()          # sns.axes_style leaves rcParams touched; restore ours for later figures
 
 
 # --------------------------------------------------------------------------- fig 4
