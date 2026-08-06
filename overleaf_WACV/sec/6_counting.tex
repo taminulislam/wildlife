@@ -45,8 +45,45 @@ of unseen animals counted}, with a bias of $-1.92$. The system under-counts syst
 and over-counts almost never, which for management purposes is the safe direction --- a
 survey that never inflates its estimate is preferable to one that occasionally does.
 
-Per site, the error concentrates in dense groups: held-out MAE is 4.33 at SHB (the
-group-heavy site), 2.20 at TON, 2.67 at SHW, and 1.00 at MAS.
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrrr}
+\toprule
+Video & Site & GT & Reach & Prim. & Count & Err \\
+\midrule
+NShelbyRd (blue) & SHB & 27 & 22 & 16 & 20 & $-7$ \\
+GolfDr & SHB & 12 & 12 & 10 & 14 & $+2$ \\
+NWolfCreek (orange) & SHB & 9 & 9 & 9 & 5 & $-4$ \\
+GiantCityRd & TON & 8 & 7 & 7 & 3 & $-5$ \\
+Robinson & SHW & 7 & 7 & 7 & 7 & $0$ \\
+Melvin & SHW & 5 & 5 & 5 & 1 & $-4$ \\
+AquaCultureRd & TON & 3 & 1 & 1 & 0 & $-3$ \\
+N25thBlue & MAS & 3 & 3 & 3 & 3 & $0$ \\
+NMarseilles & MAS & 3 & 3 & 3 & 1 & $-2$ \\
+OikosRd & TON & 2 & 2 & 2 & 1 & $-1$ \\
+TouchofNature & TON & 2 & 1 & 1 & 0 & $-2$ \\
+ChipsRd & TON & 1 & 1 & 1 & 1 & $0$ \\
+SIron & SHW & 1 & 1 & 1 & 2 & $+1$ \\
+\midrule
+\textbf{Total} & & \textbf{83} & \textbf{74} & \textbf{66} & \textbf{58} & $\mathbf{-25}$ \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per-video breakdown on the 13 held-out videos.} GT is the annotated number
+of individual animals; Reach and Prim.\ are the decomposition of \cref{sec:decomposition};
+Count is the number the pipeline reports and Err its signed error. Reading a row left to
+right attributes that video's loss to a stage. NShelbyRd loses 5 animals to detection
+(27$\to$22) and a further 6 to association (22$\to$16), the largest tracking failure in the
+corpus and the reason dense-group video dominates the error. GolfDr and SIron are the only
+videos that over-count, and both do so while their reach and primary counts are complete ---
+the error there is confirmation accepting spurious tracks, not missing animals.}
+\label{tab:pervideo}
+\end{table}
+
+\Cref{tab:pervideo} gives the breakdown per video. The error concentrates in dense-group
+footage: SHB contributes 9 of the 25 net missing animals from three videos, and its
+group-heavy NShelbyRd transect alone accounts for 7. Two videos over-count, both by
+accepting spurious tracks rather than by finding extra animals.
 
 Under the stricter identity-matched criterion of \cref{sec:decomposition} --- animals
 covered by an \emph{accepted} track, rather than per-video count agreement --- the figure is
@@ -150,32 +187,15 @@ on pool G the transformer ties. Every learned variant \emph{under-counts harder}
 rule, indicating that they reject additional candidates rather than recovering the animals
 the rule discards.
 
-Two further protocols agree. Under 8-fold cross-validation over videos
-(\cref{tab:capacity}) the rule again wins, and the pattern in that table is diagnostic:
-performance degrades monotonically with model capacity, and shrinking a gradient-boosted
+Two further protocols agree. Under 8-fold cross-validation over videos the rule again wins
+(1.88 MAE), and the pattern across that sweep is diagnostic: performance degrades
+monotonically with model capacity --- logistic regression at 13 parameters reaches 3.41,
+gradient boosting at $10^3$ reaches 2.41--2.66, and the transformer at $6\times10^4$ reaches
+2.81 --- while shrinking a gradient-boosted
 model to depth-1 stumps ($\sim$40 effective parameters) recovers nearly the whole gap and
 achieves the best RMSE of any method. This is a variance limit, not an architectural one.
 
-\begin{table}[t]
-\centering\small
-\begin{tabular}{lrcc}
-\toprule
-Method & Params & MAE & RMSE \\
-\midrule
-\textbf{Hand-tuned rule} & 3 & \textbf{1.88} & 2.99 \\
-Capacity-matched stumps & $\sim$40 & 1.97 & \textbf{2.78} \\
-Gradient boosting (depth 3) & $\sim$10$^3$ & 2.41--2.66 & 3.60 \\
-Temporal transformer & $\sim$60k & 2.81 & 4.86 \\
-Logistic regression & 13 & 3.41 & 4.86 \\
-Learned accept + clustering & $\sim$10$^3$ & 3.66 & 5.99 \\
-Soft-count MLP & $\sim$5k & 3.89--4.44 & 6.34 \\
-\bottomrule
-\end{tabular}
-\caption{\textbf{Capacity, not architecture, decides the confirmation stage} (8-fold CV over
-videos). Error grows monotonically with parameter count; capacity-matched stumps recover
-nearly the whole gap and give the best RMSE, i.e.\ fewer catastrophic per-video errors.}
-\label{tab:capacity}
-\end{table}
+
 
 We also trained directly on the counting objective, letting fragments share probability mass
 so the loss is $|\sum_i p_i - c|$ rather than per-track cross-entropy. It was the worst
