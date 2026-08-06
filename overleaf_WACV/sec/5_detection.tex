@@ -85,15 +85,17 @@ plots the shift: seven of eleven models move at least two places, YOLOv10m falls
 8th, and ATSS R50 climbs from 8th to 2nd. Selecting a detector on its detection metric does
 not select the model that counts best.
 
-Neither ranking is the right one here, because both weight precision and recall equally and
-the stage consuming these detections does not. The confirmation step must reject tens of
-thousands of false candidates against roughly two hundred true ones (\cref{sec:counting}),
-and \cref{sec:inversion} shows that handing it a larger haystack makes the final count worse
-rather than better. The appropriate summary is the precision-weighted $F_{0.5}$ in the last
-column, with $\beta$ fixed at its conventional value rather than chosen. YOLO11m ranks first
-at 0.775, ahead of YOLO12m at 0.767 and YOLOv9m at 0.759 --- a margin of 0.008, so the top
-three are equivalent and the meaningful gap is to the recall-oriented models at
-0.368--0.433. We adopt YOLO11m for every counting experiment that follows.
+Both AP$_{50}$ and F1 weight precision and recall equally, which does not reflect the cost
+structure of the stage that consumes these detections. The confirmation step must reject tens
+of thousands of false candidates against roughly two hundred true ones
+(\cref{sec:counting}), so a false positive and a false negative are not equally expensive to
+it, and \cref{sec:inversion} shows that enlarging the candidate pool degrades the final
+count rather than improving it. We therefore summarize with the precision-weighted
+$F_{0.5}$ in the last column of \cref{tab:detectors}, fixing $\beta$ at its conventional
+value rather than selecting it. YOLO11m ranks first at 0.775, ahead of YOLO12m at 0.767 and
+YOLOv9m at 0.759. That margin of 0.008 makes the top three effectively equivalent; the
+substantive separation is from the recall-oriented models at 0.368--0.433. We adopt YOLO11m
+for the counting experiments that follow.
 
 \begin{table}[t]
 \centering\small
