@@ -36,8 +36,11 @@ sys.path.insert(0, os.path.join(_HERE, "..", "temporal"))
 BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
 INK, INK2, GRID = "#0b0b0b", "#52514e", "#d8d7d2"
 
-# Held-out (13 unseen videos, 83 deer). reached/primary from pool_coverage_*.csv,
-# counted from count_eval_heldout — one source per quantity, across all four pools.
+# Held-out (13 unseen videos, 83 deer). reached/primary are per-animal; `counted` is the
+# per-video capped aggregate sum_v min(pred_v, gt_v) / sum_v gt_v, which is the figure the
+# counting literature reports and the one this paper headlines. The per-animal equivalent
+# is lower (47/47/37/47, see src/eval/counted_per_deer.py and §6); both are reported, and
+# §4.4 states which is which so the two are never confused.
 POOLS = [
     # tag, label, candidates, reached, primary, counted
     ("C", "Orphan\n(conf 0.10)",      7008, 74, 66, 55),
@@ -240,7 +243,7 @@ def ablation_table(out: str) -> None:
           "## Candidate generation (detector + tracker), confirmation rule fixed", "",
           "| Pool | change | candidates | reached | primary | counted | MAE |",
           "|---|---|---|---|---|---|---|"]
-    mae = {"C": 2.38, "E": 2.54, "F": 3.46, "G": 2.69}
+    mae = {"C": 2.38, "E": 2.54, "F": 3.46, "G": 2.69}   # per-video MAE, capped aggregate
     note = {"C": "orphan recovery, conf 0.10 (operating point)",
             "E": "+ track-init gate removed, conf 0.02",
             "F": "+ NMS IoU 0.50 -> 0.90",
