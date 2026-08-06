@@ -8,35 +8,40 @@ counting error any choice of backbone could account for.
 
 \subsection{Detection accuracy}
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering\small
-\setlength{\tabcolsep}{3.2pt}
-\begin{tabular}{lccccc}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lccc|ccc|ccc}
 \toprule
-& & \multicolumn{3}{c}{Presence matching} & \\
-\cmidrule(lr){3-5}
-Model & AP$_{50}$ & P & R & F1 & AP$_{S}$ \\
+& \multicolumn{3}{c|}{COCO} & \multicolumn{3}{c|}{F1 by matching criterion} & \multicolumn{3}{c}{Presence matching} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+Model & AP$_{50}$ & AP$_{S}$ & AP$_{M}$ & IoU$\geq$.50 & IoU$\geq$.30 & centre & P & R & F1 \\
 \midrule
-YOLOv8m & 0.459 & 0.780 & 0.572 & \textbf{0.660} & 0.127 \\
-ATSS R50 & 0.380 & 0.683 & 0.635 & 0.658 & 0.063 \\
-TOOD R50 & 0.396 & 0.683 & 0.621 & 0.650 & 0.068 \\
-YOLO11m & 0.460 & \textbf{0.897} & 0.503 & 0.645 & 0.081 \\
-RT-DETR-L & 0.434 & 0.643 & 0.605 & 0.623 & 0.072 \\
-YOLO12m & 0.508 & 0.929 & 0.452 & 0.608 & 0.104 \\
-YOLOv9m & 0.506 & 0.917 & 0.450 & 0.604 & \textbf{0.128} \\
-YOLOv10m & \textbf{0.510} & 0.874 & 0.453 & 0.597 & 0.117 \\
-DINO R50 & 0.365 & 0.560 & 0.572 & 0.566 & 0.084 \\
-Faster R-CNN R50 & 0.418 & 0.393 & 0.723 & 0.509 & 0.094 \\
-RTMDet-m & 0.466 & 0.325 & \textbf{0.779} & 0.459 & 0.065 \\
+YOLOv8m & 0.459 & 0.127 & 0.274 & 0.502 & 0.603 & 0.628 & 0.780 & 0.572 & \textbf{0.660} \\
+ATSS R50 & 0.380 & 0.063 & 0.217 & 0.441 & 0.556 & \textbf{0.648} & 0.683 & 0.635 & 0.658 \\
+TOOD R50 & 0.396 & 0.068 & 0.258 & 0.442 & 0.572 & 0.623 & 0.683 & 0.621 & 0.650 \\
+YOLO11m & 0.460 & 0.081 & 0.291 & \textbf{0.535} & \textbf{0.623} & 0.638 & 0.897 & 0.503 & 0.645 \\
+RT-DETR-L & 0.434 & 0.072 & 0.259 & 0.497 & 0.595 & 0.610 & 0.643 & 0.605 & 0.623 \\
+YOLO12m & 0.508 & 0.104 & 0.292 & 0.506 & 0.583 & 0.595 & \textbf{0.929} & 0.452 & 0.608 \\
+YOLOv9m & 0.506 & \textbf{0.128} & 0.265 & 0.527 & 0.581 & 0.592 & 0.917 & 0.450 & 0.604 \\
+YOLOv10m & \textbf{0.510} & 0.117 & \textbf{0.299} & 0.527 & 0.575 & 0.583 & 0.874 & 0.453 & 0.597 \\
+DINO R50 & 0.365 & 0.084 & 0.187 & 0.425 & 0.520 & 0.548 & 0.560 & 0.572 & 0.566 \\
+Faster R-CNN R50 & 0.418 & 0.094 & 0.204 & 0.376 & 0.475 & 0.497 & 0.393 & 0.723 & 0.509 \\
+RTMDet-m & 0.466 & 0.065 & 0.259 & 0.339 & 0.411 & 0.437 & 0.325 & \textbf{0.779} & 0.459 \\
 \bottomrule
 \end{tabular}
-\caption{\textbf{Detection on the held-out test split} (3,725 images, 2,792 boxes),
-640\,px, ordered by presence F1. AP$_{50}$ and AP$_{S}$ are standard COCO metrics;
-P/R/F1 use the presence criterion of \cref{sec:criterion}, at confidence 0.25. Twelve
-architectures were trained; Deformable DETR R50 is excluded because it did not converge
-within our compute budget.}
+\caption{\textbf{Detection on the held-out test split} (3,725 images, 2,792 boxes), 640\,px,
+ordered by presence F1; best per column in bold. AP$_{50}$, AP$_{S}$ and AP$_{M}$ are
+standard COCO metrics. The centre block gives F1 under three of the four matching rules of
+\cref{sec:criterion} at confidence 0.25 --- F1 rises monotonically as the rule relaxes, and
+centre-in-box tracks the presence F1 in the final column to within 0.032 for every model, so
+no conclusion here depends on which of the two counting-oriented rules is used. The right
+block expands presence matching into precision and recall, which is where the two families
+separate: the convolutional one-stage models are precision-oriented (0.87--0.93) and the
+MMDetection models recall-oriented (0.72--0.78). Twelve architectures were trained;
+Deformable DETR R50 is excluded because it did not converge within our compute budget.}
 \label{tab:detectors}
-\end{table}
+\end{table*}
 
 \Cref{tab:detectors} reports every model on identical data under both a standard metric and
 the presence criterion this task requires. Four observations shape the rest of the paper.
