@@ -1,0 +1,50 @@
+{
+  "tag": "loso_SHW_yolo11m_gh",
+  "weights": "/work/hdd/bgte/tislam6/wildlife_outputs/runs/loso_SHW_yolo11m_gh/weights/best.pt",
+  "arch": "yolo",
+  "split": "test",
+  "imgsz": 640,
+  "native": {
+    "precision": 0.5678213722679544,
+    "recall": 0.2619564757787779,
+    "mAP50": 0.28556515638644947,
+    "mAP75": 0.04581725897878232,
+    "mAP50-95": 0.10469982379642626,
+    "f1": 0.35851640508678817,
+    "fitness": 0.10469982379642626,
+    "speed_ms": {
+      "preprocess": 0.06519905727143226,
+      "inference": 1.118680420969492,
+      "loss": 0.00034882329552765395,
+      "postprocess": 0.3335611774767903
+    },
+    "confusion": {
+      "tp": 668.0,
+      "fp": 0.0,
+      "fn": 0.0,
+      "precision_cm": 1.0,
+      "recall_cm": 1.0
+    }
+  },
+  "coco": {
+    "AP": 0.10686271149495247,
+    "AP50": 0.2853179261698148,
+    "AP75": 0.04415697423755239,
+    "AP_small": 0.004179027699685443,
+    "AP_medium": 0.15726002358267888,
+    "AP_large": 0.029701344650760474,
+    "AR1": 0.13351435221101626,
+    "AR10": 0.19759503491078356,
+    "AR100": 0.20674941815360745,
+    "AR_small": 0.09208633093525179,
+    "AR_medium": 0.26494960806270995,
+    "AR_large": 0.03644067796610169
+  },
+  "unique": {
+    "background_frames": 1372,
+    "fp_per_background_frame": 0.0029154518950437317,
+    "small_gt": 278,
+    "small_deer_recall_proxy": 0.0035971223021582736,
+    "deploy_conf": 0.5
+  }
+}

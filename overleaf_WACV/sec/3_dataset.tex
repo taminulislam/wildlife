@@ -7,7 +7,35 @@ The corpus is 32 nocturnal road-transect videos recorded with a vehicle-mounted 
 thermal camera across four sites in southern Illinois, eight videos per site. Frames are
 $640\times512$ single-channel thermal at 60\,fps; the vehicle travels at 25--90\,km/h, so
 the background translates continuously and the same animal is visible for a few seconds at
-most. \Cref{tab:dataset} summarizes the corpus.
+most. \Cref{fig:dataset} shows representative frames with their annotation, and
+\cref{tab:dataset} summarizes the corpus.
+
+\begin{figure*}[t]
+\centering
+\setlength{\tabcolsep}{1.5pt}
+\renewcommand{\arraystretch}{0.6}
+\begin{tabular}{cccc}
+\includegraphics[width=0.243\textwidth]{figures/dataset/p1_raw.jpg} &
+\includegraphics[width=0.243\textwidth]{figures/dataset/p2_raw.jpg} &
+\includegraphics[width=0.243\textwidth]{figures/dataset/p3_raw.jpg} &
+\includegraphics[width=0.243\textwidth]{figures/dataset/p4_raw.jpg} \\
+\includegraphics[width=0.243\textwidth]{figures/dataset/p1_gt.jpg} &
+\includegraphics[width=0.243\textwidth]{figures/dataset/p2_gt.jpg} &
+\includegraphics[width=0.243\textwidth]{figures/dataset/p3_gt.jpg} &
+\includegraphics[width=0.243\textwidth]{figures/dataset/p4_gt.jpg} \\[2pt]
+\small (a) two ranges & \small (b) close approach &
+\small (c) group, three ranges & \small (d) mid-range pair \\
+\end{tabular}
+\caption{\textbf{Dataset examples.} Top row: raw thermal frames as the sensor delivers
+them, after the CLAHE normalization the detector is trained and evaluated with. Bottom row:
+the same frames with human-placed ground-truth boxes. Showing both is the point --- the
+annotation looks unambiguous once drawn, but the top row is what a detector actually
+receives, and in (c) and (d) the animals are a few dozen pixels of slightly warmer texture
+against a background of thermal clutter. These panels deliberately show the \emph{large}
+end of the corpus so the animals are legible at print scale; the median animal is
+$29\times24$\,px, roughly the smallest box in (c).}
+\label{fig:dataset}
+\end{figure*}
 
 \begin{table}[t]
 \centering\small
