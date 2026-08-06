@@ -6,14 +6,7 @@ architectures spanning two-stage, one-stage and query-based designs were trained
 identical site-stratified split with identical preprocessing, which bounds how much of the
 counting error any choice of backbone could account for.
 
-\subsection{Preprocessing}
-
-All models consume CLAHE-normalized~\cite{zuiderveld1994clahe} frames, applied identically
-at training and inference. Thermal transects have low and drifting global contrast; local
-histogram equalization is worth more than any architectural choice we tested
-(\cref{tab:ablations}, test mAP50 $0.519$ with, $0.299$ without).
-
-\subsection{Results}
+\subsection{The roster}
 
 \begin{table}[t]
 \centering\small
