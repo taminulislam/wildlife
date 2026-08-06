@@ -125,8 +125,17 @@ the gap between small and medium objects is not primarily a resolution deficit. 
 detector at 1280 (YOLOv9m) is also not the best counter (\cref{sec:counting}), an early
 instance of the divergence this paper characterizes.
 
-We adopt YOLO11m as the production detector for every counting experiment that follows. It is
-not the single best model under the counting criterion --- the top five are separated by 0.015
-F1, inside the noise of a 32-video corpus --- but it has the highest precision of the roster
-(0.897), and \cref{sec:counting} shows that precision, not recall, is what the downstream
-confirmation stage is starved of.
+Every counting experiment that follows uses YOLO11m, and it is worth being explicit that this
+is not the roster's best model on any single metric: YOLOv8m leads F1 at 0.660 and YOLO12m
+leads precision at 0.929. YOLO11m was chosen because the confirmation stage that consumes
+these detections is starved of precision rather than recall --- it must reject tens of
+thousands of false candidates per run (\cref{sec:counting}) --- and among the four models
+operating above 0.87 precision, YOLO11m has clearly the highest recall (0.503 against
+0.450--0.453) and correspondingly the best F1 of that group (0.645 against 0.597--0.608).
+
+The choice matters less than it might appear, and the reason is the section's own finding.
+The eleven models span 0.145 in AP$_{50}$ and 0.20 in F1, but \cref{sec:counting} shows that
+interventions changing the candidate pool far more than a backbone swap would --- including
+one that raises the pool's reach from 74 to 82 of 83 animals --- move the final count by at
+most three animals, and usually downward. A detector sitting within a few points of the
+roster's best is not what limits this system.
