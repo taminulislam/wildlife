@@ -8,34 +8,33 @@ error any choice of backbone could account for.
 
 \begin{table*}[t]
 \centering\small
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{lccccccc}
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{lcccccccc}
 \toprule
-Model & AP$_{50}$ & F1 (IoU$\geq$.50) & F1 (IoU$\geq$.30) & F1 (centre) & Precision & Recall & F1 \\
+Model & AP$_{50}$ & F1 (IoU$\geq$.50) & F1 (IoU$\geq$.30) & F1 (centre) & Precision & Recall & F1 & F$_{0.5}$ \\
 \midrule
-YOLOv8m & 0.459 & 0.502 & 0.603 & 0.628 & 0.780 & 0.572 & \textbf{0.660} \\
-ATSS R50 & 0.380 & 0.441 & 0.556 & \textbf{0.648} & 0.683 & 0.635 & 0.658 \\
-TOOD R50 & 0.396 & 0.442 & 0.572 & 0.623 & 0.683 & 0.621 & 0.650 \\
-YOLO11m & 0.460 & \textbf{0.535} & \textbf{0.623} & 0.638 & 0.897 & 0.503 & 0.645 \\
-RT-DETR-L & 0.434 & 0.497 & 0.595 & 0.610 & 0.643 & 0.605 & 0.623 \\
-YOLO12m & 0.508 & 0.506 & 0.583 & 0.595 & \textbf{0.929} & 0.452 & 0.608 \\
-YOLOv9m & 0.506 & 0.527 & 0.581 & 0.592 & 0.917 & 0.450 & 0.604 \\
-YOLOv10m & \textbf{0.510} & 0.527 & 0.575 & 0.583 & 0.874 & 0.453 & 0.597 \\
-DINO R50 & 0.365 & 0.425 & 0.520 & 0.548 & 0.560 & 0.572 & 0.566 \\
-Faster R-CNN R50 & 0.418 & 0.376 & 0.475 & 0.497 & 0.393 & 0.723 & 0.509 \\
-RTMDet-m & 0.466 & 0.339 & 0.411 & 0.437 & 0.325 & \textbf{0.779} & 0.459 \\
+YOLOv8m & 0.459 & 0.502 & 0.603 & 0.628 & 0.780 & 0.572 & \textbf{0.660} & 0.727 \\
+ATSS R50 & 0.380 & 0.441 & 0.556 & \textbf{0.648} & 0.683 & 0.635 & 0.658 & 0.673 \\
+TOOD R50 & 0.396 & 0.442 & 0.572 & 0.623 & 0.683 & 0.621 & 0.650 & 0.670 \\
+YOLO11m & 0.460 & \textbf{0.535} & \textbf{0.623} & 0.638 & 0.897 & 0.503 & 0.645 & \textbf{0.775} \\
+RT-DETR-L & 0.434 & 0.497 & 0.595 & 0.610 & 0.643 & 0.605 & 0.623 & 0.635 \\
+YOLO12m & 0.508 & 0.506 & 0.583 & 0.595 & \textbf{0.929} & 0.452 & 0.608 & 0.767 \\
+YOLOv9m & 0.506 & 0.527 & 0.581 & 0.592 & 0.917 & 0.450 & 0.604 & 0.759 \\
+YOLOv10m & \textbf{0.510} & 0.527 & 0.575 & 0.583 & 0.874 & 0.453 & 0.597 & 0.737 \\
+DINO R50 & 0.365 & 0.425 & 0.520 & 0.548 & 0.560 & 0.572 & 0.566 & 0.562 \\
+Faster R-CNN R50 & 0.418 & 0.376 & 0.475 & 0.497 & 0.393 & 0.723 & 0.509 & 0.433 \\
+RTMDet-m & 0.466 & 0.339 & 0.411 & 0.437 & 0.325 & \textbf{0.779} & 0.459 & 0.368 \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{Detection on the held-out test split} (3,725 images, 2,792 boxes), 640\,px,
 at confidence 0.25, ordered by F1; best per column in bold. AP$_{50}$ is the standard COCO
-metric. The three F1 columns give the value under the stricter matching rules of
-\cref{sec:criterion}; Precision, Recall and F1 use the presence criterion. F1
-rises monotonically as the rule relaxes, and the centre-in-box column tracks the presence F1
-to within 0.032 for every model, so no conclusion depends on which counting-oriented rule is
-used. Precision and Recall separate the models along one axis:
-YOLO12m, YOLOv9m, YOLO11m and YOLOv10m operate at 0.87--0.93 precision and around 0.45
-recall, while RTMDet-m and Faster R-CNN R50 invert that, reaching 0.72--0.78 recall at
-0.33--0.39 precision. Twelve architectures were trained; Deformable DETR R50
+metric and the three F1 columns give the value under the stricter matching rules of
+\cref{sec:criterion}; Precision, Recall, F1 and F$_{0.5}$ use the presence criterion. F1
+rises monotonically as the rule relaxes, and centre-in-box tracks presence to within 0.032
+for every model. The final column is the precision-weighted F-measure
+$F_{0.5}=1.25\,PR/(0.25P+R)$, reported because the confirmation stage downstream is
+constrained by precision rather than recall (\cref{sec:counting}); $\beta$ is fixed at the
+conventional $0.5$ rather than tuned. Twelve architectures were trained; Deformable DETR R50
 is excluded because it did not converge within our compute budget.}
 \label{tab:detectors}
 \end{table*}
@@ -125,18 +124,23 @@ the gap between small and medium objects is not primarily a resolution deficit. 
 detector at 1280 (YOLOv9m) is also not the best counter (\cref{sec:counting}), an early
 instance of the divergence this paper characterizes.
 
-Every counting experiment that follows uses YOLO11m, and the way it was selected illustrates
-the section's argument on the production model itself. Under the strict criteria it is the
-best model on the roster: highest F1 at IoU$\geq$0.50 (0.535) and at IoU$\geq$0.30 (0.623).
-Relax the criterion toward counting and it slips --- 2nd under centre-in-box, 4th under
-presence, where YOLOv8m leads at 0.660. A detector chosen by conventional detection
-standards is therefore not the one that ranks best once the criterion matches the task.
+Every counting experiment that follows uses YOLO11m, and the way it is selected illustrates
+the section's argument on the production model itself. Under the strict criteria YOLO11m is
+the best model on the roster --- highest F1 at IoU$\geq$0.50 (0.535) and at IoU$\geq$0.30
+(0.623) --- but relax the criterion toward counting and it slips to 2nd under centre-in-box
+and 4th under presence, where YOLOv8m leads at 0.660. A detector chosen by conventional
+detection standards is not the one that ranks best once the criterion matches the task.
 
-We keep YOLO11m nonetheless, for a reason tied to what consumes its output: the confirmation
-stage is starved of precision rather than recall, since it must reject tens of thousands of
-false candidates per run (\cref{sec:counting}). Among the four models operating above 0.87
-precision, YOLO11m has clearly the highest recall (0.503 against 0.450--0.453) and the best
-F1 of that group (0.645 against 0.597--0.608).
+Neither ranking is the right one for this pipeline, because both weight precision and recall
+equally and the stage consuming these detections does not. The confirmation step must reject
+tens of thousands of false candidates against roughly two hundred true ones
+(\cref{sec:counting}); a recall-oriented detector hands it a larger haystack, and
+\cref{sec:inversion} shows that this makes the final count worse rather than better. The
+appropriate summary is therefore the precision-weighted $F_{0.5}$ in the last column of
+\cref{tab:detectors}, with $\beta$ fixed at its conventional value rather than chosen. On
+that measure YOLO11m ranks first at 0.775, ahead of YOLO12m at 0.767 and YOLOv9m at 0.759 ---
+a margin of 0.008, so the top three should be read as equivalent, and the meaningful gap is
+to the recall-oriented models, which fall to 0.368--0.433.
 
 The choice matters less than it might appear, and the reason is the section's own finding.
 The eleven models span 0.145 in AP$_{50}$ and 0.20 in F1, but \cref{sec:counting} shows that
