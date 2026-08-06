@@ -88,8 +88,11 @@ field reshuffles: eight of twelve models move at least two places and YOLOv10m f
 The practical implication is direct --- a practitioner selecting a detector for a counting
 pipeline using the standard metric will not select the model that counts best.
 
-Under the counting criterion at confidence 0.25 YOLO11m has the best F1 of the roster, and
-we adopt it as the production detector for every counting experiment that follows.
+We adopt YOLO11m as the production detector for every counting experiment that follows. It
+is not the single best model under the counting criterion --- the top five are separated by
+0.015 F1, which is inside the noise of a 32-video corpus --- but it has the highest precision
+of the roster (0.732), and \cref{sec:counting} shows that precision, not recall, is what the
+downstream confirmation stage is starved of.
 
 \subsection{Resolution is architecture-dependent}
 

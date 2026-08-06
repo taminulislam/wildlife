@@ -20,6 +20,14 @@ We are explicit about the trade: this quantity must be reported as \emph{presenc
 \emph{counting recall} and never as mAP, and we report the strict criterion alongside it
 everywhere.
 
+Any overlap is degenerate in the limit --- a box covering the whole frame touches every
+animal --- so we check every conclusion against \emph{centre-in-box}, which is not: an
+oversized box has its centre outside the animal and is rejected. The two agree to within
+0.032 F1 on all twelve models, and no claim in this paper changes if centre-in-box is
+substituted throughout. Precision is reported alongside recall everywhere for the same
+reason --- the degenerate strategy that maximises any-overlap recall destroys precision, and
+would be immediately visible.
+
 \subsection{Decomposing counting error}
 \label{sec:decomposition}
 
