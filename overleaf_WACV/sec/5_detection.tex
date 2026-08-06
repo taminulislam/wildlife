@@ -100,27 +100,33 @@ recovers to 0.434 but still trails the convolutional one-stage models.
 
 \begin{table}[t]
 \centering\small
-\begin{tabular}{llcccc}
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{llccccc}
 \toprule
-Model & res & P & R & mAP50 & AP$_{S}$ \\
+Model & res & Precision & Recall & F1 & AP$_{50}$ & AP$_{M}$ \\
 \midrule
-YOLOv9m & 640 & 0.704 & 0.448 & 0.498 & 0.128 \\
-\textbf{YOLOv9m} & \textbf{1280} & \textbf{0.757} & \textbf{0.491} & \textbf{0.523} & 0.119 \\
-YOLOv10m & 640 & 0.674 & 0.455 & 0.498 & 0.117 \\
-YOLOv10m & 1280 & 0.670 & 0.432 & 0.458 & 0.093 \\
+YOLOv9m & 640 & 0.704 & 0.448 & 0.547 & 0.498 & 0.265 \\
+\textbf{YOLOv9m} & \textbf{1280} & \textbf{0.757} & \textbf{0.491} & \textbf{0.595} & \textbf{0.523} & \textbf{0.300} \\
+YOLOv10m & 640 & 0.674 & 0.455 & 0.543 & 0.498 & 0.299 \\
+YOLOv10m & 1280 & 0.669 & 0.432 & 0.525 & 0.458 & 0.262 \\
 \bottomrule
 \end{tabular}
-\caption{\textbf{640 versus 1280\,px.} Higher resolution helps YOLOv9m and \emph{hurts}
-YOLOv10m; at 640 the two are tied, at 1280 they diverge by 0.065 mAP50. Note AP$_S$ does not
-improve for either, so the small-object deficit is not primarily a resolution deficit.}
+\caption{\textbf{640 versus 1280\,px.} Higher resolution helps YOLOv9m on every column and
+hurts YOLOv10m on every column: at 640 the two are within 0.004 AP$_{50}$, at 1280 they
+diverge by 0.065. AP-small moves the other way for both (0.128 to 0.119 and 0.117 to 0.093),
+so the small-object deficit is not primarily a resolution deficit --- what 1280\,px buys
+YOLOv9m is medium-object accuracy and overall precision, not the smallest animals.}
 \label{tab:resolution}
 \end{table}
 
 Resolution behaves less predictably than the small-object literature would suggest.
-\Cref{tab:resolution} shows that doubling the input to 1280\,px helps YOLOv9m
-(+0.025 AP$_{50}$) and hurts YOLOv10m ($-0.040$); at 640 the two are tied at 0.498, and at
-1280 they diverge by 0.065. AP-small declines for both even where overall AP$_{50}$ rises, so
-the gap between small and medium objects is not primarily a resolution deficit. The best
+\Cref{tab:resolution} shows that doubling the input to 1280\,px helps YOLOv9m on every
+metric --- precision, recall, F1, AP$_{50}$ and medium-object AP all rise --- and hurts
+YOLOv10m on every one of them. At 640 the two are within 0.004 AP$_{50}$; at 1280 they
+diverge by 0.065. AP-small falls for both even where the aggregate metrics rise, so what the
+extra resolution buys YOLOv9m is medium-object accuracy and precision rather than the
+smallest animals, and the gap between small and medium objects is not primarily a resolution
+deficit. The best
 detector at 1280 (YOLOv9m) is also not the best counter (\cref{sec:counting}), an early
 instance of the divergence this paper characterizes.
 
