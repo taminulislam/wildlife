@@ -215,11 +215,16 @@ Raw detector confidence cannot serve this purpose: no track in the corpus exceed
 the median counted track sits at 0.74, because the animals are 27 pixels. The requirement is
 only meaningful against a calibrated posterior.
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=0.92\linewidth]{figures/fig3_per_deer_evidence_sheet.jpg}
-  \caption{\textbf{Per-animal evidence.} Every counted animal is exported as a contact sheet
-  of its own track with timestamps and per-frame confidence, so a human auditor can verify
-  any individual count. Confidence $\approx$0.82 for this track.}
+  \includegraphics[width=\linewidth]{figures/evidence_two.jpg}
+  \caption{\textbf{Per-animal evidence, two individuals.} Every counted animal is exported
+  as a contact sheet of its own track, one panel per sampled frame, with the elapsed time
+  and the raw per-frame detector confidence beneath each. A human auditor can therefore
+  verify any individual count against the frames that produced it. Both animals are from
+  videos the detector never trained on. The two rows also show why a per-track score is
+  needed: the raw confidence varies by 0.15 across frames of the same animal (Animal B,
+  0.66--0.81) even when every frame is a clean detection, so no single frame's value
+  characterizes the track.}
   \label{fig:evidence}
-\end{figure}
+\end{figure*}
