@@ -1,10 +1,10 @@
 \section{Detection Benchmark}
 \label{sec:detection}
 
-We first establish that the detection stage is not the limiting factor, by benchmarking it
-thoroughly enough that a reviewer need not wonder whether a better backbone would close the
-gap. Thirteen architectures were trained on the identical site-stratified split with
-identical preprocessing.
+We first establish that the detection stage is not the limiting factor. Thirteen
+architectures spanning two-stage, one-stage and query-based designs were trained on the
+identical site-stratified split with identical preprocessing, which bounds how much of the
+counting error any choice of backbone could account for.
 
 \subsection{Preprocessing}
 
@@ -55,9 +55,8 @@ which is the signature of a data-limited rather than architecture-limited regime
 
 \paragraph{Query-based detectors underperform.} DINO R50 reaches 0.365 on a full native
 schedule --- below plain Faster R-CNN --- and Deformable DETR did not converge within our
-compute budget. This is consistent with the known weakness of query-based detectors on very
-small objects and is worth stating explicitly for practitioners choosing a backbone for
-thermal wildlife work.
+compute budget. This is consistent with the known difficulty query-based detectors have with very small
+objects, and it holds across both of the query-based models tested.
 
 \paragraph{False positives are near zero} (0.000--0.005 per background frame for the YOLO
 family; RT-DETR-L at 0.044 is the outlier). The regime is recall-limited, not
@@ -116,6 +115,6 @@ improve for either, so the small-object deficit is not primarily a resolution de
 
 \Cref{tab:resolution} shows that ``higher resolution helps small objects'' does not hold as
 a general claim on this data. It helps one architecture and hurts another, and AP-small
-declines for both even where overall mAP50 rises. We flag this because the opposite is often
-assumed. Notably, the best detector at 1280 (YOLOv9m) is \emph{not} the best counter
-(\cref{sec:counting}) --- an early instance of the theme this paper develops.
+declines for both even where overall mAP50 rises. The best detector at 1280\,px (YOLOv9m) is also
+not the best counter (\cref{sec:counting}), an early instance of the divergence this paper
+characterizes.

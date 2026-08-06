@@ -27,18 +27,17 @@ counted --- that no detection metric scores and that, we find, dominates the err
 
 We study this on a corpus we built for the purpose: 32 FLIR thermal road transects from
 four sites in Illinois, 521,930 frames at $640\times512$ and 60\,fps, with every individual
-deer annotated as a distinct track --- 236 animals, 21,646 boxes. Because one annotated
-track is one animal, the corpus supplies detection ground truth, tracking ground truth, and
-count ground truth simultaneously, which is what makes the decomposition below possible.
+deer annotated as a distinct track --- 236 animals, 21,646 boxes. Because one annotated track is one animal, the corpus supplies detection, tracking and
+count ground truth simultaneously --- the property on which the decomposition below
+depends.
 
 Our central instrument is a three-stage decomposition of counting error. For each ground-truth
 animal we ask whether it is \reachedq (touched by at least one candidate track), whether it
 is \primaryq (some candidate covers it better than it covers any other animal, so a
 one-count-per-track decision \emph{could} count it), and whether it is finally \countedq.
 The gaps between these three numbers attribute error to detection, to association, and to
-confirmation respectively. \Cref{fig:funnel} is the result, and it is the paper in one
-picture: on unseen video the pipeline reaches 98.8\% of animals, gives 88.0\% their own
-track, and counts 62.7\%.
+confirmation respectively. \Cref{fig:funnel} gives the result: on unseen video the pipeline reaches 98.8\% of
+animals, gives 88.0\% their own track, and counts 62.7\%.
 
 Having localized the loss, we attack it. We improve candidate generation four independent
 ways --- lowering detector confidence from 0.10 to 0.02, removing the tracker's

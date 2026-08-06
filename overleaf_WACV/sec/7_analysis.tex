@@ -78,8 +78,8 @@ small-object work does not check the upper tail at all.
 
 A natural proposal for the association stage is appearance-based individual
 re-identification, keyed on body shape, thermal silhouette, relative size, and movement.
-Because our annotation gives one track per individual, the corpus already contains identity
-labels, so we could test this rather than argue about it.
+Because the annotation gives one track per individual, the corpus already contains identity
+labels, and the question can be settled empirically.
 
 We evaluate closed-set re-identification on \textbf{69 animals never seen, in 7 videos never
 seen}: each animal's track is split temporally, the first half forms the gallery and the
@@ -122,7 +122,7 @@ $29\times24$ pixels there is not enough detail on the animal to key an identity 
 report this as a measured limit rather than a discarded experiment, because the negative
 result is the useful part: it tells practitioners where the sensor resolution boundary lies.
 
-Notably, adding appearance to the \emph{association} stage does help
+Adding appearance to the \emph{association} stage does help
 (\cref{tab:pools}, pool G) --- it merges fragments of one animal within a video, which is a
 much easier problem than identifying an individual across sightings.
 
@@ -155,8 +155,7 @@ improve the count.}
 \label{tab:ablations}
 \end{table}
 
-\Cref{tab:ablations} consolidates every ablation. One entry deserves emphasis because it
-redirected the whole investigation: lowering detector confidence from 0.10 to 0.05 added
+\Cref{tab:ablations} consolidates every ablation. One entry is worth isolating: lowering detector confidence from 0.10 to 0.05 added
 3,807 candidates and recovered \emph{zero} additional animals. That single measurement
 ruled out the detector threshold and pointed us at the tracker's initialization gate, which
 turned out to be the real constraint.

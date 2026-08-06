@@ -51,9 +51,9 @@ group-heavy site), 2.20 at TON, 2.67 at SHW, and 1.00 at MAS.
 Under the stricter identity-matched criterion of \cref{sec:decomposition} --- animals
 covered by an \emph{accepted} track, rather than per-video count agreement --- the figure is
 47/83 = 56.6\%. The 10-point gap is coincidental agreement: accepted tracks that do not land
-on an animal offsetting animals that were missed. We report the capped aggregate as our
-headline for comparability with the counting literature, and the identity-matched figure so
-the difference is on record.
+on an animal offsetting animals that were missed. The capped aggregate is our headline figure, for comparability with the counting
+literature; the identity-matched figure is reported alongside it because the two answer
+different questions.
 
 \subsection{Improving candidate generation makes counting worse}
 \label{sec:inversion}
@@ -94,8 +94,7 @@ was designed to do:
 
 \begin{itemize}\itemsep2pt \parskip0pt
 \item \textbf{Lowering detector confidence} 0.10$\to$0.02 and \textbf{removing the tracker's
-track-initialization gate} raised \reachedq from 74 to 79. We note in passing that lowering
-confidence \emph{alone} recovered zero additional animals: the gate, not the threshold, was
+track-initialization gate} raised \reachedq from 74 to 79. Lowering confidence \emph{alone} recovered zero additional animals: the gate, not the threshold, was
 the binding constraint --- BoT-SORT will extend a track from a low-confidence detection but
 will not \emph{start} one, so faint animals were invisible to counting regardless of
 detector threshold.
@@ -144,9 +143,9 @@ predicting 102 animals where 83 exist.}
 \end{table}
 
 \Cref{tab:confirmers} gives the held-out comparison. On pool C every learned method loses;
-on pool G the transformer ties. Notably, every learned variant \emph{under-counts harder}
-than the rule, so they are rejecting more candidates rather than recovering the animals the
-rule rejects.
+on pool G the transformer ties. Every learned variant \emph{under-counts harder} than the
+rule, indicating that they reject additional candidates rather than recovering the animals
+the rule discards.
 
 Two further protocols agree. Under 8-fold cross-validation over videos
 (\cref{tab:capacity}) the rule again wins, and the pattern in that table is diagnostic:
