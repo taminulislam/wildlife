@@ -52,18 +52,26 @@ but very \emph{large}: 104, 149 and 157\,px, against a corpus median of 27. One 
 149\,px, was never detected at all --- implausible for a detector that routinely finds
 27-pixel animals.
 
-\Cref{fig:scale} explains it. The largest box in the training split is 95.6\,px, and the
-split contains \emph{zero} boxes at or above 100\,px. All three animals are outside the
-training distribution entirely. This is the mirror image of the small-object problem the
-field concentrates on: our data has no large examples because animals close to the road are
-rare, so the detector never learned them.
+\Cref{fig:scale} gives the likely explanation. The largest box in the training split is
+95.6\,px and the split contains \emph{zero} boxes at or above 100\,px, so all three
+animals sit outside the annotated size distribution. We state this carefully: scale
+augmentation does present enlarged copies during training, so the detector is not strictly
+naive to large objects --- but enlargement is sampled rarely and mosaic augmentation shrinks
+objects at the same time, so large presentations are uncommon. The mirror image of the
+small-object problem the field concentrates on is nonetheless visible here: animals close
+to the road are rare in our data, and the detector performs worst exactly where examples
+are scarcest.
 
-The consequence is practical and cheap to act on. Unlike the faint 20-pixel animals, nothing
-physical prevents detecting a large one --- scale augmentation covering 100--200\,px costs no
-additional data. The loss is also concentrated: the single video containing these animals
-counts 3 of 8, and three of its five misses are these oversized individuals, worth roughly 4
-points of our headline figure. We report the diagnosis rather than the patched number, and
-note that most small-object work does not check the upper tail.
+The remedy is less straightforward than it first appears, and the attempt is instructive.
+Widening scale augmentation to cover 100--200\,px collapsed training to zero mAP within
+five epochs, because the standard implementation is symmetric: enlarging the sampling range
+also shrinks a 27\,px animal to sub-pixel size, and on a corpus that is 71\% small objects
+those examples are unlearnable. Enlarging the upper tail without destroying the lower one
+requires asymmetric augmentation that common frameworks do not expose. The loss is
+concentrated --- the single video containing these animals counts 3 of 8, and three of its
+five misses are the oversized individuals --- so this is worth roughly 4 points of our
+headline figure. We report the diagnosis and the failed remedy, and note that most
+small-object work does not check the upper tail at all.
 
 \subsection{Individual re-identification at 27 pixels}
 \label{sec:reid}
