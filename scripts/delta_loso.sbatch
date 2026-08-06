@@ -4,7 +4,7 @@
 #SBATCH --partition=gpuA100x4-preempt,gpuA100x4
 #SBATCH --qos=bgte-delta-gpu
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=4 --mem=200G
-#SBATCH --time=06:00:00
+#SBATCH --time=10:00:00
 #SBATCH --requeue
 #SBATCH --mail-user=islamtaminul@gmail.com
 #SBATCH --mail-type=FAIL
@@ -27,10 +27,11 @@
 # Compare against the pooled result (MAE 2.38, 66.3% counted on unseen video). A large
 # drop is itself publishable -- it bounds how far the system transfers.
 #
-# Tuned for turnaround, not for the last point of mAP: 80 epochs, patience 20, batch 48.
-# §3 shows most models peak by epoch 22 (YOLO11m at 60), so 80 with early stopping is
-# ample, and the four folds run concurrently on four GPUs -- wall clock is one training,
-# not four. Expect ~2-3 h rather than the ~12 h a full-schedule sweep would take.
+# 40 epochs, patience 12, batch 48. The first attempt used 80 and would have hit the wall
+# before phase 3 ever ran: measured rates were 4.7 / 6.1 / 8.9 min per epoch for the TON /
+# SHW / MAS folds (they differ in size), so 80 epochs needed 6.3-11.9 h against a 6 h
+# limit. 40 epochs fits with room for counting, and §3 shows most models peak by epoch 22.
+# What matters here is the RELATIVE drop from the pooled split, not the last point of mAP.
 set -eo pipefail
 module load miniforge3-python
 source /sw/rh9.4/python/miniforge3/etc/profile.d/conda.sh
@@ -45,12 +46,29 @@ echo "=== job $SLURM_JOB_ID  LOSO over $SITES  $(date) ==="
 # ---------- phase 1: build one dataset per fold (CPU, fast) ----------
 for S in $SITES; do
   D=data/dataset/loso_$S
-  if [ ! -s "$D/data.yaml" ]; then
-    echo "--- building $D (test site = $S) ---"
-    python -u src/dataset/build_yolo_dataset.py \
-        --images data/annotate_v2/frames --labels data/annotate_v2/labels \
-        --out "$D" --test-sites "$S" --val-frac 0.15
-  fi
+  # Rebuild every time. The previous run's guard ("skip if data.yaml exists") let a
+  # concurrent twin on the other cluster read a half-built directory, and it also masked
+  # the val bug below.
+  #
+  # THE VAL BUG: build_yolo_dataset assigns val by a per-video hash that does not depend on
+  # which site is held out, so the SAME videos land in val for every fold. Those videos are
+  # SHB's, so the SHB fold got 0 val images and Ultralytics died on an empty val loader --
+  # on both clusters. Naming val videos explicitly, drawn from the sites that are NOT held
+  # out, fixes it and makes each fold's val set auditable.
+  case "$S" in
+    SHB) VK="TON__GiantCityRd_v1_LS SHW__Robinson_v1_LS MAS__N25thBlue_v2_LS" ;;
+    TON) VK="SHB__NShelbyRdblue_v1_LS SHW__Robinson_v1_LS MAS__N25thBlue_v2_LS" ;;
+    SHW) VK="SHB__NShelbyRdblue_v1_LS TON__GiantCityRd_v1_LS MAS__N25thBlue_v2_LS" ;;
+    MAS) VK="SHB__NShelbyRdblue_v1_LS TON__GiantCityRd_v1_LS SHW__Robinson_v1_LS" ;;
+  esac
+  echo "--- building $D (test site = $S, val = $VK) ---"
+  rm -rf "$D"
+  python -u src/dataset/build_yolo_dataset.py \
+      --images data/annotate_v2/frames --labels data/annotate_v2/labels \
+      --out "$D" --test-sites "$S" --val-keys $VK
+  NV=$(find "$D/images/val" -maxdepth 1 \( -type l -o -type f \) 2>/dev/null | wc -l)
+  echo "    val images: $NV"
+  [ "$NV" -lt 50 ] && { echo "FATAL: $S fold has $NV val images"; exit 1; }
 done
 
 # ---------- phase 2: train four detectors, one per GPU ----------
@@ -60,7 +78,7 @@ for S in $SITES; do
   CUDA_VISIBLE_DEVICES=$i python -u src/detect/train.py \
       --model weights/yolo11m.pt --arch yolo \
       --data data/dataset/loso_$S/data.yaml \
-      --imgsz 640 --epochs 80 --batch 48 --patience 20 \
+      --imgsz 640 --epochs 40 --batch 48 --patience 12 \
       --optimizer SGD --lr0 0.01 \
       --project "$OUT/runs" --name "loso_${S}_yolo11m" \
       > "$LOGS/wild_loso_${SLURM_JOB_ID}_train_$S.out" 2>&1 &
