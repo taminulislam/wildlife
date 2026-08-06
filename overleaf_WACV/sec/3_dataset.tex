@@ -1,7 +1,7 @@
 \section{Dataset}
 \label{sec:dataset}
 
-\subsection{Collection and scale}
+\subsection{Corpus, annotation and splits}
 
 The corpus is 32 nocturnal road-transect videos recorded with a vehicle-mounted FLIR
 thermal camera across four sites in southern Illinois, eight videos per site. Frames are
@@ -72,8 +72,20 @@ as per-frame detection ground truth, as association ground truth, as count groun
 (the number of tracks in a video), and --- as \cref{sec:analysis} exploits --- as identity
 labels for re-identification.
 
-\subsection{Object scale}
+We split by \emph{video}, never by frame, and stratify by site so all four sites appear in
+each split --- the deployment target is these same sites, and a frame-level split would leak
+near-duplicate frames across the boundary. The result is 19 training videos (12,852 images),
+4 validation (2,337) and 9 test (3,725), allocated by animal count to roughly
+65/19/16\%.
 
+Throughout the paper, \textbf{``unseen'' means the 13 validation and test videos the
+detector never trained on}, containing 83 of the 236 deer. \Cref{sec:counting} shows why
+this distinction is not pedantic: counting accuracy measured over all 32 videos, 19 of which
+trained the detector, is 33 points higher than on unseen video alone.
+
+\subsection{Two properties that shape every later result}
+
+\paragraph{Object scale.}
 The animals are small and the distribution is one-sided: median box $29\times24$ pixels
 ($\sqrt{\text{area}}=26.8$), 71\% below the COCO~\cite{lin2014coco} small-object threshold
 of $32^2$, and \emph{zero} boxes in the COCO-large category. Resolution is therefore the
@@ -82,9 +94,8 @@ also has a consequence we did not anticipate and report in \cref{sec:analysis}: 
 training split contains no box above 96 pixels, and the detector fails on the handful of
 animals that appear larger than that.
 
-\subsection{Annotation protocol}
+\paragraph{Annotation protocol.}
 \label{sec:annotation}
-
 Annotation follows the standard video workflow: a human places boxes on selected frames and
 the tool interpolates between them. The resulting label noise is normally left
 unquantified, and we measure it instead, because on a moving camera at 60\,fps an animal
@@ -96,16 +107,3 @@ penalises correct detections at evaluation time. \Cref{sec:gtquality} quantifies
 evaluation half by scoring identical weights against human-placed frames only, and finds
 that roughly a third of the apparent detection error is an annotation artefact rather than
 a detector failure.
-
-\subsection{Splits}
-
-We split by \emph{video}, never by frame, and stratify by site so all four sites appear in
-each split --- the deployment target is these same sites, and a frame-level split would leak
-near-duplicate frames across the boundary. The result is 19 training videos (12,852 images),
-4 validation (2,337) and 9 test (3,725), allocated by animal count to roughly
-65/19/16\%.
-
-Throughout the paper, \textbf{``unseen'' means the 13 validation and test videos the
-detector never trained on}, containing 83 of the 236 deer. \Cref{sec:counting} shows why
-this distinction is not pedantic: counting accuracy measured over all 32 videos, 19 of which
-trained the detector, is 33 points higher than on unseen video alone.
