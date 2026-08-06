@@ -171,8 +171,12 @@ def main() -> None:
         # a resize. Building it at the final orientation and resizing, as a first version
         # did, squashed the glyphs into an unreadable smear.
         lab = np.full((24, row.shape[0], 3), 255, np.uint8)
-        cv2.putText(lab, caption, (6, 17), cv2.FONT_HERSHEY_SIMPLEX, 0.55,
-                    (20, 20, 20), 1, cv2.LINE_AA)
+        # Centre on the IMAGERY, not on the row. The row is CROP px of thermal plus a
+        # 22 px label bar, and centring across the whole 154 px puts the text 11 px below
+        # where the eye reads the middle of the picture.
+        (tw, _th), _bl = cv2.getTextSize(caption, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 1)
+        cv2.putText(lab, caption, (max((CROP - tw) // 2, 2), 17),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (20, 20, 20), 1, cv2.LINE_AA)
         lab = cv2.rotate(lab, cv2.ROTATE_90_COUNTERCLOCKWISE)
         rows_img.append(cv2.hconcat([lab, row]))
         print(f"[ok] {caption}: {video} trk{tid}, {len(strip)} panels", flush=True)
