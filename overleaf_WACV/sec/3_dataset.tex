@@ -11,23 +11,32 @@ most. \Cref{tab:dataset} summarizes the corpus.
 
 \begin{table}[t]
 \centering\small
-\begin{tabular}{lrr}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
 \toprule
-Site & Videos & Unique deer \\
+Split & Videos & Frames & With deer & Empty & Boxes \\
 \midrule
-SHB & 8 & 132 \\
-TON & 8 & 51 \\
-SHW & 8 & 38 \\
-MAS & 8 & 15 \\
+Train & 19 & 12,852 & 5,013 & 7,839 & 7,547 \\
+Val   &  4 &  2,337 &   935 & 1,402 & 2,564 \\
+Test  &  9 &  3,725 & 1,490 & 2,235 & 2,792 \\
 \midrule
-\textbf{Total} & \textbf{32} & \textbf{236} \\
+\textbf{Total} & \textbf{32} & \textbf{18,914} & \textbf{7,438} & \textbf{11,476} & \textbf{12,903} \\
 \bottomrule
 \end{tabular}
-\caption{\textbf{Corpus composition.} 521,930 frames, 21,646 annotated boxes,
-$640\times512$ at 60\,fps, single class. One site (SHB) holds 56\% of all animals; MAS holds
-15, so per-site results for MAS are noisy and we report them as such.}
+\caption{\textbf{Dataset composition.} 32 thermal road-transect videos from four Illinois
+sites, $640\times512$ at 60\,fps, single class. 18,914 annotated frames are used for
+detector training and evaluation, of which 7,438 contain at least one deer and 11,476 are
+explicit negatives --- background frames matter, since a survey system must not fire on warm
+rocks or structures. Splits are by video and site-stratified. One site (SHB) holds 56\% of
+all animals, so per-site results for the smallest site are noisy and we report them as
+such.}
 \label{tab:dataset}
 \end{table}
+
+The 236 animals are unevenly distributed across the four sites: SHB contributes 132
+(56\% of the corpus), TON 51, SHW 38 and MAS 15. That imbalance is not incidental --- SHB
+is the dense-group site where most of our counting error concentrates (\cref{sec:counting}),
+and MAS is small enough that its per-site figures should be read as indicative only.
 
 Every individual deer is annotated in CVAT as a distinct \emph{track}. This is the property
 the paper depends on: one track is one animal, so the same annotation simultaneously serves
@@ -45,38 +54,20 @@ also has a consequence we did not anticipate and report in \cref{sec:analysis}: 
 training split contains no box above 96 pixels, and the detector fails on the handful of
 animals that appear larger than that.
 
-\subsection{Annotation quality is itself a result}
+\subsection{Annotation protocol}
 \label{sec:annotation}
 
-Video annotation is normally produced by keyframing and interpolation, and the resulting
-label noise is normally left unquantified. We measured it, because it turns out to be worth
-roughly a third of our apparent detection accuracy.
+Annotation follows the standard video workflow: a human places boxes on selected frames and
+the tool interpolates between them. The resulting label noise is normally left
+unquantified, and we measure it instead, because on a moving camera at 60\,fps an animal
+travels a median 2.28 box-widths between the frames a human actually labelled --- far enough
+that a linearly interpolated box can sit entirely off the animal.
 
-\begin{table}[t]
-\centering\small
-\begin{tabular}{lr}
-\toprule
-Quantity & Value \\
-\midrule
-Total ground-truth boxes & 21,646 \\
-\textbf{Human-placed keyframes} & \textbf{1,295 (6.0\%)} \\
-\textbf{Interpolated} & \textbf{20,351 (94.0\%)} \\
-Median gap between keyframes & 15 frames \\
-Median centre travel between keyframes & \textbf{2.28 box-widths} \\
-Segments where the deer moves $>$1 box-width & 79\% \\
-\bottomrule
-\end{tabular}
-\caption{\textbf{94\% of frame-level ground truth is interpolation.} With a moving camera
-at 60\,fps, an animal travels a median 2.28 box-widths between the frames a human actually
-labelled, so linear interpolation cannot track the true path and mid-gap boxes can sit
-entirely off the animal.}
-\label{tab:annotation}
-\end{table}
-
-\Cref{tab:annotation} gives the measurement. The consequence is bidirectional: interpolated
-boxes inject label noise at training time \emph{and} penalize correct detections at
-evaluation time. \Cref{sec:detection} quantifies the evaluation half by scoring the same
-weights against human-placed keyframes only.
+The consequence is bidirectional: it injects label noise at training time \emph{and}
+penalises correct detections at evaluation time. \Cref{sec:gtquality} quantifies the
+evaluation half by scoring identical weights against human-placed frames only, and finds
+that roughly a third of the apparent detection error is an annotation artefact rather than
+a detector failure.
 
 \subsection{Splits}
 
