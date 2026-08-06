@@ -2,8 +2,8 @@
 \label{sec:protocol}
 
 Before reporting any number we have to fix what counts as correct, and for this task the
-default answer is wrong in two independent ways. This section states both, because they
-change the conclusions rather than the decimal places.
+default answer is wrong, and in a way that changes the conclusions rather than the decimal
+places.
 
 \subsection{Matching criterion: IoU is the wrong question}
 \label{sec:criterion}
@@ -19,13 +19,6 @@ deliberately permissive: it asks only whether the predicted box touches the anim
 We are explicit about the trade: this quantity must be reported as \emph{presence} or
 \emph{counting recall} and never as mAP, and we report the strict criterion alongside it
 everywhere.
-
-\subsection{Ground truth: keyframes versus interpolation}
-
-Following \cref{sec:annotation}, we score every model twice --- once against all 21,646
-boxes, and once against only the 1,295 boxes a human actually placed (182 images, 361
-boxes). The second is the honest measurement of detector quality; the first is what a
-practitioner would compute by default.
 
 \subsection{Decomposing counting error}
 \label{sec:decomposition}

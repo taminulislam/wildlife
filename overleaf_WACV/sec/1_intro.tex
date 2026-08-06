@@ -67,9 +67,9 @@ detector trained on inflates it by 33 points.
 \item \textbf{Evidence that improving candidate generation degrades counting}, replicated
 across four independent interventions, and evidence across three protocols that learned
 confirmation does not beat a three-parameter rule at this data scale.
-\item \textbf{Two measurement findings with consequences beyond this dataset:} the
-IoU$\geq$0.50 criterion re-ranks detectors relative to a counting-appropriate criterion, and
-94\%-interpolated video ground truth costs roughly a third of apparent detection accuracy.
+\item \textbf{A measurement finding with consequences beyond this dataset:} the
+IoU$\geq$0.50 criterion re-ranks detectors relative to a counting-appropriate criterion, so
+selecting a detector by its detection metric does not select the model that counts best.
 \item \textbf{A quantified resolution limit for individual re-identification} at this pixel
 scale, and the diagnosis of a training-distribution hole that makes the detector fail on
 \emph{large} animals.

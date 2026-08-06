@@ -66,35 +66,9 @@ and letting a downstream stage filter --- and what makes the results of \cref{se
 surprising.
 
 \paragraph{Localization, not detection, is the weak axis.} AP@0.50 is 0.459 against AP@0.75
-of 0.097 for the same model. That is the fingerprint of imprecise ground truth, which
-\cref{sec:gtquality} confirms directly.
-
-\subsection{Ground-truth quality accounts for a third of the error}
-\label{sec:gtquality}
-
-\begin{table}[t]
-\centering\small
-\begin{tabular}{lccc}
-\toprule
-Model & full GT (94\% interp.) & human keyframes & $\Delta$ \\
-\midrule
-YOLOv10m & 0.498 & \textbf{0.670} & +35\% \\
-YOLOv9m & 0.498 & \textbf{0.640} & +29\% \\
-YOLO11m & 0.466 & \textbf{0.636} & +37\% \\
-\bottomrule
-\end{tabular}
-\caption{\textbf{mAP50 against interpolated versus human-placed ground truth.} Identical
-weights, images, and code --- only the ground truth changes. Roughly a third of the apparent
-detection error is interpolation drift, not detector failure.}
-\label{tab:keyframe}
-\end{table}
-
-Scoring the same weights against human-placed keyframes only raises mAP50 by 29--37\%
-(\cref{tab:keyframe}). True detector quality is $\approx$0.64--0.67 mAP50 at the strict
-criterion. We recommend reporting both numbers for any video corpus annotated by
-keyframe-and-interpolate, and we note the actionable consequence: denser keyframes on
-fast-moving animals would improve measured accuracy more than any architecture change we
-tested.
+of 0.097 for the same model. The models find the animals; they place the boxes loosely. That
+gap is the first sign that a strict-IoU metric is answering the wrong question here, which
+\cref{sec:criterion} takes up.
 
 \subsection{The criterion re-ranks the models}
 
@@ -109,14 +83,13 @@ tested.
 \end{figure}
 
 \Cref{fig:criterion} compares each model's F1 under IoU$\geq$0.50 against the any-overlap
-criterion on human-keyframe ground truth. The top two are stable, but the middle of the
-field reshuffles: five of twelve models move at least two places and YOLOv10m falls five.
+criterion on the held-out test split. The top two are stable, but the middle of the
+field reshuffles: eight of twelve models move at least two places and YOLOv10m falls seven.
 The practical implication is direct --- a practitioner selecting a detector for a counting
 pipeline using the standard metric will not select the model that counts best.
 
-Under the counting criterion at confidence 0.25, YOLO11m reaches
-$P=0.942$, $R=0.634$, $F_1=0.758$. We adopt it as the production detector for all counting
-experiments.
+Under the counting criterion at confidence 0.25 YOLO11m has the best F1 of the roster, and
+we adopt it as the production detector for every counting experiment that follows.
 
 \subsection{Resolution is architecture-dependent}
 

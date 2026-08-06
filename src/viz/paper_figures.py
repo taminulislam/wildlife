@@ -119,7 +119,7 @@ def fig_criterion(out: str, table_csv: str) -> None:
     """Slope chart: the reader's job is RANK CHANGE between two criteria, which a slope
     shows directly and a grouped bar hides."""
     rows = [r for r in csv.DictReader(open(table_csv))
-            if r["gt_set"] == "keyframe" and r["conf"] == "0.25"]
+            if r["gt_set"] == "full" and r["conf"] == "0.25"]
     per: dict[str, dict] = {}
     for r in rows:
         per.setdefault(r["model"], {})[r["criterion"]] = float(r["f1"])
@@ -171,7 +171,7 @@ def fig_criterion(out: str, table_csv: str) -> None:
     ax.set_xticks([0, 1])
     ax.set_xticklabels(["IoU $\\geq$ 0.50\n(standard)", "any overlap\n(counting)"],
                        fontsize=8)
-    ax.set_xlim(-0.12, 1.55); ax.set_ylabel("F1 (human-keyframe GT, conf 0.25)")
+    ax.set_xlim(-0.12, 1.55); ax.set_ylabel("F1 (test split, conf 0.25)")
     ax.set_title(f"IoU$\\geq$0.50 rank does not predict counting rank\n"
                  f"{n_moved} of {len(models)} models shift $\\geq$2 places",
                  loc="left", fontsize=9.5)

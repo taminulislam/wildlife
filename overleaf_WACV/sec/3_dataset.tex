@@ -28,7 +28,7 @@ most. \Cref{fig:dataset} shows representative frames with their annotation, and
 \end{tabular}
 \caption{\textbf{Dataset examples.} Top row: raw thermal frames as the sensor delivers
 them, after the CLAHE normalization the detector is trained and evaluated with. Bottom row:
-the same frames with human-placed ground-truth boxes. Showing both is the point --- the
+the same frames with their ground-truth boxes. Showing both is the point --- the
 annotation looks unambiguous once drawn, but the top row is what a detector actually
 receives, and in (c) and (d) the animals are a few dozen pixels of slightly warmer texture
 against a background of thermal clutter. These panels deliberately show the \emph{large}
@@ -83,9 +83,8 @@ detector never trained on}, containing 83 of the 236 deer. \Cref{sec:counting} s
 this distinction is not pedantic: counting accuracy measured over all 32 videos, 19 of which
 trained the detector, is 33 points higher than on unseen video alone.
 
-\subsection{Two properties that shape every later result}
+\subsection{Object scale}
 
-\paragraph{Object scale.}
 The animals are small and the distribution is one-sided: median box $29\times24$ pixels
 ($\sqrt{\text{area}}=26.8$), 71\% below the COCO~\cite{lin2014coco} small-object threshold
 of $32^2$, and \emph{zero} boxes in the COCO-large category. Resolution is therefore the
@@ -93,17 +92,3 @@ strongest single accuracy lever, which motivates the ablation in \cref{sec:detec
 also has a consequence we did not anticipate and report in \cref{sec:analysis}: the
 training split contains no box above 96 pixels, and the detector fails on the handful of
 animals that appear larger than that.
-
-\paragraph{Annotation protocol.}
-\label{sec:annotation}
-Annotation follows the standard video workflow: a human places boxes on selected frames and
-the tool interpolates between them. The resulting label noise is normally left
-unquantified, and we measure it instead, because on a moving camera at 60\,fps an animal
-travels a median 2.28 box-widths between the frames a human actually labelled --- far enough
-that a linearly interpolated box can sit entirely off the animal.
-
-The consequence is bidirectional: it injects label noise at training time \emph{and}
-penalises correct detections at evaluation time. \Cref{sec:gtquality} quantifies the
-evaluation half by scoring identical weights against human-placed frames only, and finds
-that roughly a third of the apparent detection error is an annotation artefact rather than
-a detector failure.
