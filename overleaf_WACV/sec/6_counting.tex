@@ -45,40 +45,46 @@ of unseen animals counted}, with a bias of $-1.92$. The system under-counts syst
 and over-counts almost never, which for management purposes is the safe direction --- a
 survey that never inflates its estimate is preferable to one that occasionally does.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llrrrrr}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llrrrrrrrr}
 \toprule
-Video & Site & GT & Reach & Prim. & Count & Err \\
+& & \multicolumn{3}{c}{Boxes (per frame)} & \multicolumn{5}{c}{Animals (per individual)} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-10}
+Video & Site & GT & Matched & Rec. & GT & Reach & Prim. & Count & Err \\
 \midrule
-NShelbyRd (blue) & SHB & 27 & 22 & 16 & 20 & $-7$ \\
-GolfDr & SHB & 12 & 12 & 10 & 14 & $+2$ \\
-NWolfCreek (orange) & SHB & 9 & 9 & 9 & 5 & $-4$ \\
-GiantCityRd & TON & 8 & 7 & 7 & 3 & $-5$ \\
-Robinson & SHW & 7 & 7 & 7 & 7 & $0$ \\
-Melvin & SHW & 5 & 5 & 5 & 1 & $-4$ \\
-AquaCultureRd & TON & 3 & 1 & 1 & 0 & $-3$ \\
-N25thBlue & MAS & 3 & 3 & 3 & 3 & $0$ \\
-NMarseilles & MAS & 3 & 3 & 3 & 1 & $-2$ \\
-OikosRd & TON & 2 & 2 & 2 & 1 & $-1$ \\
-TouchofNature & TON & 2 & 1 & 1 & 0 & $-2$ \\
-ChipsRd & TON & 1 & 1 & 1 & 1 & $0$ \\
-SIron & SHW & 1 & 1 & 1 & 2 & $+1$ \\
+NShelbyRd (blue) & SHB & 2,114 & 1,457 & 69\% & 27 & 22 & 16 & 20 & $-7$ \\
+GolfDr & SHB & 3,118 & 2,027 & 65\% & 12 & 12 & 10 & 14 & $+2$ \\
+NWolfCreek (orange) & SHB & 501 & 341 & 68\% & 9 & 9 & 9 & 5 & $-4$ \\
+GiantCityRd & TON & 487 & 239 & 49\% & 8 & 7 & 7 & 3 & $-5$ \\
+Robinson & SHW & 574 & 406 & 71\% & 7 & 7 & 7 & 7 & $0$ \\
+Melvin & SHW & 437 & 125 & 29\% & 5 & 5 & 5 & 1 & $-4$ \\
+AquaCultureRd & TON & 485 & 20 & 4\% & 3 & 1 & 1 & 0 & $-3$ \\
+N25thBlue & MAS & 94 & 39 & 41\% & 3 & 3 & 3 & 3 & $0$ \\
+NMarseilles & MAS & 105 & 57 & 54\% & 3 & 3 & 3 & 1 & $-2$ \\
+OikosRd & TON & 120 & 78 & 65\% & 2 & 2 & 2 & 1 & $-1$ \\
+TouchofNature & TON & 140 & 53 & 38\% & 2 & 1 & 1 & 0 & $-2$ \\
+ChipsRd & TON & 169 & 61 & 36\% & 1 & 1 & 1 & 1 & $0$ \\
+SIron & SHW & 47 & 11 & 23\% & 1 & 1 & 1 & 2 & $+1$ \\
 \midrule
-\textbf{Total} & & \textbf{83} & \textbf{74} & \textbf{66} & \textbf{58} & $\mathbf{-25}$ \\
+\textbf{Total} & & \textbf{8,391} & \textbf{4,914} & \textbf{59\%} & \textbf{83} & \textbf{74} & \textbf{66} & \textbf{58} & $\mathbf{-25}$ \\
 \bottomrule
 \end{tabular}
-\caption{\textbf{Per-video breakdown on the 13 held-out videos.} GT is the annotated number
-of individual animals; Reach and Prim.\ are the decomposition of \cref{sec:decomposition};
-Count is the number the pipeline reports and Err its signed error. Reading a row left to
-right attributes that video's loss to a stage. NShelbyRd loses 5 animals to detection
-(27$\to$22) and a further 6 to association (22$\to$16), the largest tracking failure in the
-corpus and the reason dense-group video dominates the error. GolfDr and SIron are the only
-videos that over-count, and both do so while their reach and primary counts are complete ---
-the error there is confirmation accepting spurious tracks, not missing animals.}
+\caption{\textbf{Per-video breakdown on the 13 held-out videos}, at the counting operating
+point (confidence 0.10 with orphan recovery, not the 0.25 of \cref{tab:detectors}). The left
+block counts ground-truth \emph{boxes} and how many are matched by a prediction on the same
+frame; the right block counts \emph{individual animals} through the decomposition of
+\cref{sec:decomposition}. The two blocks differ in scale by two orders of magnitude, and
+that is the point: 8,391 boxes reduce to 83 animals, and a video can match a minority of its
+boxes while still recovering most of its animals --- GiantCityRd matches 49\% of boxes and
+reaches 7 of 8 animals. Reading a row left to right attributes its loss to a stage.
+NShelbyRd loses 5 animals to detection and a further 6 to association, the largest tracking
+failure in the corpus. GolfDr and SIron are the only videos that over-count, and both do so
+with complete reach and primary counts, so their error is confirmation accepting spurious
+tracks rather than anything upstream.}
 \label{tab:pervideo}
-\end{table}
+\end{table*}
 
 \Cref{tab:pervideo} gives the breakdown per video. The error concentrates in dense-group
 footage: SHB contributes 9 of the 25 net missing animals from three videos, and its
