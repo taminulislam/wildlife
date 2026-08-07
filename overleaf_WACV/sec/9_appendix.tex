@@ -207,3 +207,33 @@ predicting 102 animals where 83 exist.}
   never saw.}
   \label{fig:qualitative}
 \end{figure}
+
+\subsection{Candidate pools}
+
+\Cref{tab:pools} repeats the four candidate-generation configurations of
+\cref{sec:inversion} with the ceiling column made explicit: \primaryq as a percentage of
+the 83 held-out animals, which is the most a confirmation stage emitting one count per track
+could reach on that pool.
+
+\begin{table*}[t]
+\centering\small
+\begin{tabular}{llrccccc}
+\toprule
+Pool & Intervention & Candidates & \reachedq & \primaryq & \countedq & MAE & Ceiling \\
+\midrule
+C & Orphan recovery, conf 0.10 (operating point) & 7,008 & 74/83 & 66/83 & \textbf{55/83 = 66.3\%} & \textbf{2.38} & 79.5\% \\
+E & \quad + track-initialization gate removed, conf 0.02 & 18,349 & 79/83 & 69/83 & 54/83 = 65.1\% & 2.54 & 83.1\% \\
+F & \quad + NMS IoU $0.50\!\to\!0.90$ & 90,239 & 79/83 & 70/83 & 41/83 = 49.4\% & 3.46 & 84.3\% \\
+G & \quad + appearance re-identification & 27,679 & \textbf{82/83 = 98.8\%} & \textbf{73/83 = 88.0\%} & 52/83 = 62.7\% & 2.69 & \textbf{88.0\%} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Every improvement to candidate generation degrades the count.} Pool G
+reaches 82 of 83 unseen animals and gives 73 their own track --- the best pool we built, at
+less than a third of pool F's candidate count --- yet counts fewer animals than pool C, which
+reaches only 74. ``Ceiling'' is \primaryq/83, the maximum a one-count-per-track confirmation
+stage could achieve. \reachedq and \primaryq are counted per animal; \countedq is the
+per-video capped aggregate defined in \cref{sec:protocol}, which is the figure the
+counting literature reports. Its per-animal equivalent is lower --- 47, 47, 37 and 47
+respectively --- and is discussed below.}
+\label{tab:pools}
+\end{table*}
