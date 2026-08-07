@@ -1168,3 +1168,43 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 - **2026-07-25** — Created. Roster @640 results (§3); size-stratified + domain metrics;
   annotation-quality analysis (§1.1) and keyframe-only evaluation (§4.2, key result);
   counting-criterion framework (§4.3); pipeline fixes (§2); dataset corrected to 32 videos.
+
+### 6.12 Leave-one-site-out — attempted, not usable, ABANDONED (2026-08-06)
+
+Job `20886104` (Delta, 4h27m). Trains on three sites, tests on the fourth, all four
+rotations. Intended as the cross-domain generalisation result. **Not reported in the paper:
+three of four folds failed and there was no time to re-run.**
+
+| fold | epochs | final mAP50 | outcome |
+|---|---|---|---|
+| SHB | 3 | 0 | CUDA OOM, collapsed |
+| TON | 0 | — | died before epoch 1 |
+| **SHW** | **40** | **0.458** | **trained cleanly** |
+| MAS | 32 | 0.075 | degraded |
+
+**Root cause: GPU isolation failed.** The four folds were launched with
+`CUDA_VISIBLE_DEVICES=$i`, but `src/detect/train.py` defaults `--device` to `"0"` and passes
+it through to Ultralytics, and re-invokes itself as a subprocess (line 151) where the
+environment variable does not survive. All four landed on physical GPU 0 — the OOM trace
+shows three processes holding 18.7, 3.6 and 17.1 GB of one 39.5 GB card. **The fix is to
+pass `--device $i` explicitly rather than relying on the environment variable.**
+
+**A second bug, independent of the first.** The in-job summary scored each fold against all
+32 videos and all 235 animals rather than the held-out site's, so every printed figure in
+`wild_loso_20886104.out` is wrong — e.g. "reached 120/235 = 51.1%" for a fold that only
+processed SHB's 8 videos. The counting itself was correct; only the scoring was scoped
+wrongly. Anyone re-running this must restrict `count_eval` and `pool_coverage` to the
+held-out site.
+
+**What the one good fold suggests.** Scoring SHW correctly (8 videos, 38 animals):
+
+| | LOSO, SHW held out | pooled split (paper) |
+|---|---|---|
+| MAE | 2.38 | 2.38 |
+| counted | 30/38 = 78.9\% | 55/83 = 66.3\% |
+| reached | 36/38 = 94.7\% | 74/83 = 89.2\% |
+
+Identical MAE and *better* coverage than the pooled split. That is a single fold on the
+easiest site — SHW has 38 animals and little grouping — so it is not evidence of anything,
+but it is not the collapse a cross-site transfer failure would look like either. Worth
+re-running if the paper ever needs a generalisation result; not worth blocking on.
