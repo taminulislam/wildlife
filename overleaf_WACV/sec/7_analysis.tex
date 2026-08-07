@@ -153,3 +153,18 @@ turned out to be the real constraint.
 \Cref{fig:qualitative} shows representative held-out frames. Group scenes --- the hardest
 case for counting, and the one where per-frame detection metrics are least informative ---
 are resolved into distinct individuals.
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{\linewidth}
+    \includegraphics[width=\linewidth]{figures/qualitative/NShelbyRdblue_SHB_12.11.2025_LS__f8544_6deer.jpg}
+  \end{subfigure}\\[2pt]
+  \begin{subfigure}{\linewidth}
+    \includegraphics[width=\linewidth]{figures/qualitative/GolfDr_SHB_12.11.2025__f3652_5deer.jpg}
+  \end{subfigure}
+  \caption{\textbf{Group scenes on held-out video.} Animals standing close together are
+  resolved as distinct tracked individuals rather than merged. Labels give track ID and
+  detector confidence; colour is stable per track. Both frames are from videos the detector
+  never saw.}
+  \label{fig:qualitative}
+\end{figure}
