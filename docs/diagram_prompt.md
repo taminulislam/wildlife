@@ -1,99 +1,60 @@
 # Prompt for generating the pipeline / architecture figure
 
-Copy everything below the line into Gemini. It is written to be self-contained: every
-number, threshold and model name is stated, so the generator does not have to guess.
+Copy everything below the line into Gemini.
 
 ---
 
-Create a clean, publication-quality **system architecture diagram** for a computer-vision
-paper submitted to WACV. The figure will span two text columns of a double-column paper, so
-design it **wide and short** — roughly a 3.5:1 aspect ratio. It must be legible when printed
-at about 7 inches wide and 2 inches tall, in grayscale as well as colour.
+Create a **minimal, modern architecture diagram** for a computer-vision paper. Wide and
+short, roughly 4:1, to span two text columns. Almost no text — the figure should be readable
+as a picture, with short labels only. Flat vector style, thin lines, generous white space,
+no 3D, no shadows, no gradients.
 
-## What the system does
+## The visual story, left to right
 
-It counts individual white-tailed deer in nocturnal thermal video shot from a moving
-vehicle. The goal is not "find deer in frames" but "report how many distinct animals exist
-in this video."
+Five blocks connected by thin arrows. Each block shows a small **picture of what that stage
+produces**, with a one- or two-word label beneath it. The pictures matter more than the
+labels.
 
-## Main flow — left to right, five stages
+**Block 1 — a stack of three overlapping video frames**, dark grey, slightly rotated like a
+deck of cards, suggesting a video sequence. Inside the top frame, one small pale animal
+shape. Label: *Thermal video*.
 
-**1. INPUT**
-FLIR thermal video, 640 x 512 grayscale, 60 fps. Vehicle-mounted, moving 25–90 km/h, so the
-whole frame translates continuously. Show a small dark-grey video-frame icon with a faint
-deer silhouette.
+**Block 2 — the same single frame, now higher contrast**, the animal clearly brighter
+against the background. An arrow from block 1. Label: *CLAHE*.
 
-**2. PREPROCESSING — CLAHE**
-Contrast-limited adaptive histogram equalization, clip limit 2.0, 8 x 8 tiles. Applied
-identically at training and inference. Annotate: "test mAP50 0.519 with, 0.299 without".
+**Block 3 — the same frame with two thin green rectangles** drawn around animal shapes.
+Label: *Detection*.
 
-**3. DETECTION — YOLO11m @ 640 px**
-Single class, confidence threshold 0.10, NMS IoU 0.50. Emits per-frame bounding boxes.
-Annotate: "median animal 29 x 24 px, 71% COCO-small".
+**Block 4 — three small frames side by side in a row**, each with a coloured box on the same
+animal, the boxes linked left to right by a thin dotted line to show identity persisting
+through time. Use two different colours for two different animals. Label: *Tracking*.
 
-**4. TRACKING & ASSOCIATION — BoT-SORT**
-Kalman motion model plus **sparse optical-flow global motion compensation** (label this
-clearly; it is required because the camera moves). Emits **candidate tracks**.
-This stage has a **side branch** feeding back into it, drawn as a small box beneath or
-beside it:
-  - **Orphan recovery**: detections the tracker returns with no track identity are linked
-    into pseudo-tracks by temporal gap and scale-normalised distance. Annotate "+17 animals".
-Optionally note that an appearance-embedding term can be enabled here.
-Output annotation: "7,008 candidate tracks".
+**Block 5 — a short vertical list of four small track icons**, two marked with a green
+check and two with a grey cross, showing that some candidate tracks are accepted and some
+rejected. Label: *Confirmation*.
 
-**5. CONFIRMATION — 3-parameter rule**
-Accept a candidate track if **all three** hold:
-  - persists for at least 20 frames
-  - spans at least 0 seconds
-  - mean of its five highest per-frame detector confidences is at least 0.65
-Show these as three small stacked conditions inside the stage box.
+**Final output — a single large numeral** to the right of the last arrow, e.g. a big
+"5", with a very small deer glyph beside it. Label: *Count*.
 
-**6. OUTPUT**
-Three items, drawn as a small stack:
-  - the count for the video
-  - a calibrated confidence per counted animal (annotate "92.1% at >= 0.80")
-  - an evidence contact sheet per animal for human audit
+## One extra element, kept subtle
 
-## The second, essential element — the evaluation decomposition
+Under blocks 3, 4 and 5, draw a thin horizontal band containing a simple **three-step
+descending funnel or three descending bars**, shrinking left to right, with only three short
+labels: *detected*, *own track*, *counted*. No numbers. Connect it to the blocks above with
+two or three faint dotted lines. This band should be visually quiet — light grey, thin — so
+it reads as a secondary layer beneath the pipeline rather than part of it.
 
-Below the main flow, draw a **separate horizontal band** labelled *Evaluation decomposition*.
-This is the paper's main contribution and must be visually distinct from the pipeline itself
-— use a different background tint or a dashed enclosing border, and connect it upward to the
-stages it measures with thin dotted lines.
+## Colour and type
 
-It has three nested stages, shown as a **funnel or descending bar chart** over 83 ground-truth
-animals in held-out video:
+- One muted accent colour for the pipeline blocks. Green only for the detection boxes and
+  the accept checks. Grey for everything secondary.
+- The thermal frames should look like real thermal imagery: grey, low contrast, slightly
+  grainy, animals as pale warm shapes. Not colourful, not rainbow-mapped.
+- Sans-serif, small, all horizontal. Labels only — no sentences, no parameter values, no
+  numbers anywhere except the single output numeral.
 
-| Quantity | Value | Measures | Connects up to |
-|---|---|---|---|
-| REACHED | 74 / 83 | animal touched by at least one candidate | Detection + Tracking |
-| PRIMARY | 66 / 83 | animal's best-covering candidate is not also best for another animal | Association |
-| COUNTED | 55 / 83 | confirmation accepted a candidate covering it | Confirmation |
+## Do not include
 
-Label the two gaps explicitly, since they are the paper's finding:
-  - 74 → 66: "8 animals share a track with a neighbour"
-  - 66 → 55: "11 animals rejected by the confirmation rule"
-
-Add a short caption strip under the band: **"Detection is not the bottleneck."**
-
-## Style requirements
-
-- Flat, modern, academic. No 3D, no drop shadows, no gradients, no skeuomorphic icons.
-- Rounded rectangles for stages, thin arrows, generous white space.
-- One restrained accent colour for the pipeline stages (a muted blue or teal) and a second,
-  warmer accent used **only** for the decomposition band, so the two layers never blur.
-- Sans-serif type throughout. Stage titles bold, parameter annotations in a smaller regular
-  weight, all annotations horizontal — never rotated or vertical.
-- Every number listed above must appear as a label. Do not invent numbers, model names,
-  thresholds or extra stages.
-- No deep-learning layer diagrams, no convolution stacks, no neural-network cartoons — this
-  is a systems diagram, not an architecture-of-a-network diagram.
-- Do not add a training loop, a loss function, or a dataset-construction branch. The figure
-  shows inference and evaluation only.
-- Leave the figure untitled; the caption is set in LaTeX.
-
-## What the reader should take away in five seconds
-
-Thermal video flows left to right through five stages into a count. Underneath, a funnel
-shows that of 83 animals, 74 are found, 66 get their own track, and only 55 are counted —
-so the loss is concentrated at the end of the pipeline, not at the detector.
+No neural-network layer stacks, no convolution blocks, no matrix or tensor illustrations.
+No training loop, no loss, no dataset branch. No legend, no title, no caption text, no
+arrows looping backwards. No photographic or realistic deer — simple pale silhouettes only.
