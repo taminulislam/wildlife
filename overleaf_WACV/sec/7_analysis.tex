@@ -6,24 +6,9 @@ Having established \emph{where} the animals are lost, we ask \emph{which} animal
 
 \subsection{Where the 36 missed animals go}
 
-\begin{table}[t]
-\centering\small
-\begin{tabular}{lrrrr}
-\toprule
-Outcome & $n$ & Median box & GT frames & Cand.\ conf \\
-\midrule
-Counted & 47 & 38.1\,px & 102 & 0.76 \\
-\textbf{Rejected by the rule} & \textbf{27} & 28.0\,px & 47 & 0.52 \\
-Never detected & 9 & 19.9\,px & 47 & --- \\
-\bottomrule
-\end{tabular}
-\caption{\textbf{Fate of the 83 unseen animals.} The detector finds 74 of 83; the
-confirmation rule then discards 27 of them. Missed animals are smaller and shorter-lived
-than counted ones.}
-\label{tab:missed}
-\end{table}
 
-\Cref{tab:missed} decomposes the outcome per animal. The detector never fires on 9 animals
+The outcome decomposes per animal as follows; \cref{tab:missed} in the appendix gives the
+per-group statistics. The detector never fires on 9 animals
 (median 20\,px --- at the sensor's limit). The rule then rejects 27 animals the detector
 \emph{did} find. Of those 27, \textbf{26 failed the confidence test} and only one failed
 purely on track length: they are faint, distant animals whose detector confidence never

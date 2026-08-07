@@ -1,0 +1,33 @@
+\clearpage
+\appendix
+\section{Additional Results}
+\label{sec:appendix}
+
+This appendix holds material that supports the main text without being needed to follow it.
+Every number here is also stated in the section that cites it.
+
+\subsection{Fate of the missed animals}
+
+\Cref{sec:analysis} reports that of the 83 animals in the held-out videos, 9 are never
+detected, 27 are found but rejected by the confirmation rule, and 47 are covered by an
+accepted track. \Cref{tab:missed} gives the per-group statistics behind that split: missed
+animals are smaller and shorter-lived than counted ones, and the rejected group sits between
+the other two on every measure --- which is precisely why a threshold on any single one of
+them cannot separate it.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+Outcome & $n$ & Median box & GT frames & Cand.\ conf \\
+\midrule
+Counted & 47 & 38.1\,px & 102 & 0.76 \\
+\textbf{Rejected by the rule} & \textbf{27} & 28.0\,px & 47 & 0.52 \\
+Never detected & 9 & 19.9\,px & 47 & --- \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Fate of the 83 unseen animals.} The detector finds 74 of 83; the
+confirmation rule then discards 27 of them. Missed animals are smaller and shorter-lived
+than counted ones.}
+\label{tab:missed}
+\end{table}
