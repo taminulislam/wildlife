@@ -31,3 +31,33 @@ confirmation rule then discards 27 of them. Missed animals are smaller and short
 than counted ones.}
 \label{tab:missed}
 \end{table}
+
+\subsection{Complete list of ablations}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llc}
+\toprule
+Ablation & Range tested & Effect \\
+\midrule
+CLAHE normalization & on / off & 0.519 vs 0.299 mAP50 \\
+Input resolution & 640 / 1280 & best detector counts worse \\
+Detector architecture & 12 models & 0.365--0.510 AP$_{50}$ \\
+Matching criterion & 4 rules & re-ranks 7/11 models \\
+Detector confidence & 0.10/0.05/0.02 & 0 extra animals \\
+Track-init threshold & 0.15 / 0.05 & $+5$ \primaryq \\
+Orphan recovery & on / off & $+17$ animals \\
+NMS IoU & 0.50 / 0.90 & $+4$ \primaryq, $-14$ \countedq \\
+Appearance ReID & on / off & $+7$ \primaryq, $-3$ \countedq \\
+Confirmer capacity & 3--60k params & monotone degradation \\
+ReID cue & 7 variants & size dominates \\
+Track splitting & threshold sweep & $+3$ for 4k cands \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Every ablation run.} Twelve families spanning preprocessing, detector
+choice, resolution, evaluation protocol, tracking, association and confirmation. Those that
+change the end-to-end count are quantified in \cref{tab:ablationmain}; the remainder are
+measured at the detection stage and are reported in the sections cited.}
+\label{tab:families}
+\end{table}
