@@ -4,57 +4,106 @@ Copy everything below the line into Gemini.
 
 ---
 
-Create a **minimal, modern architecture diagram** for a computer-vision paper. Wide and
-short, roughly 4:1, to span two text columns. Almost no text — the figure should be readable
-as a picture, with short labels only. Flat vector style, thin lines, generous white space,
-no 3D, no shadows, no gradients.
+Create a **neural-network architecture diagram** for a computer-vision paper, in the style
+used in object-detection papers: labelled blocks for network components, arrows for tensor
+flow, feature-map sizes annotated on the connections. Flat vector, thin lines, no 3D, no
+shadows. Wide layout to span two text columns of a double-column paper.
 
-## The visual story, left to right
+The system counts individual animals in thermal video. It has **three sequential modules**.
+Draw them as three horizontally arranged groups, each inside its own light bounding box with
+the module name on top, connected left to right by thick arrows.
 
-Five blocks connected by thin arrows. Each block shows a small **picture of what that stage
-produces**, with a one- or two-word label beneath it. The pictures matter more than the
-labels.
+---
 
-**Block 1 — a stack of three overlapping video frames**, dark grey, slightly rotated like a
-deck of cards, suggesting a video sequence. Inside the top frame, one small pale animal
-shape. Label: *Thermal video*.
+## MODULE 1 — Detector (YOLO11m, anchor-free, single class)
 
-**Block 2 — the same single frame, now higher contrast**, the animal clearly brighter
-against the background. An arrow from block 1. Label: *CLAHE*.
+Input: a thermal frame, `640 x 512 x 1`, replicated to 3 channels.
 
-**Block 3 — the same frame with two thin green rectangles** drawn around animal shapes.
-Label: *Detection*.
+Draw the standard three-part detector layout:
 
-**Block 4 — three small frames side by side in a row**, each with a coloured box on the same
-animal, the boxes linked left to right by a thin dotted line to show identity persisting
-through time. Use two different colours for two different animals. Label: *Tracking*.
+**Backbone** — a descending column of blocks, each smaller than the last, showing
+progressive downsampling:
+- `Conv` stem, stride 2
+- alternating `Conv` / `C3k2` blocks at strides 4, 8, 16, 32
+- `SPPF` (spatial pyramid pooling, fast) near the bottom
+- `C2PSA` (cross-stage partial with attention) as the final backbone block
 
-**Block 5 — a short vertical list of four small track icons**, two marked with a green
-check and two with a grey cross, showing that some candidate tracks are accepted and some
-rejected. Label: *Confirmation*.
+Tap three feature maps out of the backbone, labelled **P3 (stride 8)**, **P4 (stride 16)**,
+**P5 (stride 32)**, with sizes `80x64`, `40x32`, `20x16` written on the tap arrows.
 
-**Final output — a single large numeral** to the right of the last arrow, e.g. a big
-"5", with a very small deer glyph beside it. Label: *Count*.
+**Neck** — a PAN-FPN drawn as the usual two-pass lattice beside the backbone:
+- top-down pass: `Upsample` + `Concat` + `C3k2`, from P5 down to P3
+- bottom-up pass: `Conv` stride 2 + `Concat` + `C3k2`, from P3 back up to P5
+Draw the skip connections between backbone taps and neck nodes as thin diagonal arrows.
 
-## One extra element, kept subtle
+**Head** — three parallel **decoupled detection heads**, one per scale, each a small pair of
+branches labelled `cls` and `reg (DFL)`. Anchor-free. Their outputs merge into a single
+`NMS` block (IoU 0.50, confidence 0.10).
 
-Under blocks 3, 4 and 5, draw a thin horizontal band containing a simple **three-step
-descending funnel or three descending bars**, shrinking left to right, with only three short
-labels: *detected*, *own track*, *counted*. No numbers. Connect it to the blocks above with
-two or three faint dotted lines. This band should be visually quiet — light grey, thin — so
-it reads as a secondary layer beneath the pipeline rather than part of it.
+Module output, labelled on the outgoing arrow: **per-frame boxes**.
 
-## Colour and type
+---
 
-- One muted accent colour for the pipeline blocks. Green only for the detection boxes and
-  the accept checks. Grey for everything secondary.
-- The thermal frames should look like real thermal imagery: grey, low contrast, slightly
-  grainy, animals as pale warm shapes. Not colourful, not rainbow-mapped.
-- Sans-serif, small, all horizontal. Labels only — no sentences, no parameter values, no
-  numbers anywhere except the single output numeral.
+## MODULE 2 — Tracker (BoT-SORT)
+
+This module is not a neural network; draw it as a **small dataflow graph of labelled
+operational blocks**, visually distinct from the conv blocks — use rectangles with square
+corners, or a different fill, so a reader does not mistake them for layers.
+
+Blocks and connections:
+- **Kalman filter** — constant-velocity state prediction per track
+- **Global motion compensation** — sparse optical flow between consecutive frames, producing
+  an affine camera-motion estimate that is applied to every predicted track state before
+  matching. Draw this as a side block feeding into the Kalman prediction, and label it
+  clearly; the camera is on a moving vehicle, so this is essential rather than optional.
+- **Two-stage association** — draw as two sequential matching blocks: first matching
+  high-confidence detections, then a second pass over the remaining low-confidence ones. Each
+  uses an **IoU cost matrix** into **Hungarian matching**.
+- **Appearance embedding** — a small optional block feeding an extra term into the cost
+  matrix; draw it with a **dashed border** to mark it as ablated rather than always on.
+- **Orphan recovery** — a side block taking detections that received no track identity and
+  linking them into pseudo-tracks by temporal gap and scale-normalised distance. Its output
+  merges back into the track set.
+
+Module output, labelled on the outgoing arrow: **candidate tracks**.
+
+---
+
+## MODULE 3 — Confirmation
+
+Draw as a single decision block fed by three small feature nodes computed per track:
+- `track length` (number of detections)
+- `span` (duration in seconds)
+- `top-5 mean confidence`
+
+These three feed a block labelled **threshold rule**, whose output is a binary
+accept / reject per track. Show two outgoing arrows: accepted tracks going forward, rejected
+tracks going to a small grey dead-end marker.
+
+Final output: a **count**, drawn as a single large numeral.
+
+---
+
+## Evaluation overlay — keep subtle
+
+Beneath the three modules, draw a thin light-grey band with three descending bars labelled
+**detected**, **own track**, **counted**. Connect each with a faint dotted line up to the
+module it measures: *detected* to Module 1, *own track* to Module 2, *counted* to Module 3.
+No numbers. This band must read as a quiet secondary layer, not as part of the dataflow.
+
+---
+
+## Style
+
+- Muted blue fills for the detector's learned blocks, grey for the tracker's operational
+  blocks, a single warm accent only for the confirmation decision and the output numeral.
+- Feature-map sizes in small monospace type on the arrows; block names in small sans-serif
+  inside the blocks.
+- All text horizontal. No title, no legend, no caption.
 
 ## Do not include
 
-No neural-network layer stacks, no convolution blocks, no matrix or tensor illustrations.
-No training loop, no loss, no dataset branch. No legend, no title, no caption text, no
-arrows looping backwards. No photographic or realistic deer — simple pale silhouettes only.
+No training loop, no loss functions, no optimiser, no dataset or augmentation branch — this
+is inference only. Do not invent layer names, channel counts, or extra stages beyond those
+listed. Do not draw the tracker's blocks as neural layers; it contains no learned weights
+apart from the optional dashed appearance block.
