@@ -5,11 +5,11 @@
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/fig_pipeline.png}
+  \includegraphics[width=\linewidth]{figures/wildlife_pipeline.png}
   \caption{\textbf{Counting pipeline.} Thermal frames are contrast-normalized, detected
   per frame by YOLO11m, associated into candidate tracks by BoT-SORT with global motion
   compensation, and filtered by a three-parameter confirmation rule; the count is the number
-  of accepted tracks. The detector is the only gradient-trained component. The
+  of accepted tracks. The detector is the only gradient-trained component; the
   tracker's Kalman filter, motion compensation and association carry no weights at all; the
   optional appearance term (dashed) is frozen, reusing the detector's backbone features; and
   the confirmation rule has three parameters fitted by grid search rather than by training. The frames shown
