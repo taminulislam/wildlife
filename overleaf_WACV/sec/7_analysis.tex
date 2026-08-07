@@ -58,13 +58,15 @@ Raw thermal crop & 0.493 \\
 \textbf{Box size alone ($w,h$)} & \textbf{0.638} \\
 ImageNet ResNet-50 features & 0.725 \\
 Geometry (size, aspect, intensity) & 0.797 \\
-Trained thermal encoder (ours) & \textbf{0.899} \\
+Trained thermal encoder & \textbf{0.899} \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{Re-identification is dominated by size, not appearance.} All cues scored on
 the same 69 held-out animals. A two-number size descriptor reaches 0.638 and an ImageNet
 backbone scores \emph{below} plain geometry. The trained encoder's 0.899 is largely range
-matching, not identity.}
+matching, not identity. It is a probe for how much identity signal the imagery carries, not
+a component of the counting system: the appearance term in the pipeline uses the detector's
+own backbone features.}
 \label{tab:reid}
 \end{table}
 
@@ -83,9 +85,12 @@ matching \emph{distance}. Appearance in isolation is weak: mean intensity carrie
 chance information, silhouette with scale removed reaches 0.435, and a pretrained CNN lands
 below plain geometry. At a median $29\times24$ pixels there is not enough detail to key an
 identity to, so we describe the system as performing \emph{track association} --- preventing
-double counting within a survey --- and make no individual-identification claim. Appearance
-does help the association stage (\cref{tab:ablationmain}), merging fragments of one animal
-within a video, which is a far easier problem than identifying it across sightings.
+double counting within a survey --- and make no individual-identification claim. Appearance does help the
+\emph{association} stage, which is a far easier problem: enabling it gives the best candidate
+pool in the paper, 82 of 83 animals reached and 73 given their own track
+(\cref{tab:ablationmain}). That pool still counts three fewer animals than the baseline,
+so better association does not translate into a better count --- the same pattern every other
+pool improvement follows.
 
 \subsection{Ablations}
 
