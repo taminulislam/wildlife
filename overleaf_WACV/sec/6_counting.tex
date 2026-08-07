@@ -3,7 +3,23 @@
 
 \subsection{Pipeline}
 
-Detections from YOLO11m at 640\,px are associated by BoT-SORT~\cite{aharon2022botsort} with
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig_pipeline.png}
+  \caption{\textbf{Counting pipeline.} Thermal frames are contrast-normalized, detected
+  per frame by YOLO11m, associated into candidate tracks by BoT-SORT with global motion
+  compensation, and filtered by a three-parameter confirmation rule; the count is the number
+  of accepted tracks. Only the detector is learned --- the tracker carries no trained weights,
+  and the appearance term (dashed) is ablated rather than always enabled. The frames shown
+  are illustrative; animals in the corpus are a median $29\times24$\,px
+  (\cref{fig:dataset}).}
+  \label{fig:pipeline}
+\end{figure*}
+
+
+
+\Cref{fig:pipeline} shows the system. Detections from YOLO11m at 640\,px are associated by
+BoT-SORT~\cite{aharon2022botsort} with
 sparse-optical-flow global motion compensation --- mandatory here, since the whole frame
 translates as the vehicle moves --- producing candidate tracks. A confirmation stage then
 decides which candidates are real, distinct animals. The count is the number of accepted
