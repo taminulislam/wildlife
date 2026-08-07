@@ -9,8 +9,10 @@
   \caption{\textbf{Counting pipeline.} Thermal frames are contrast-normalized, detected
   per frame by YOLO11m, associated into candidate tracks by BoT-SORT with global motion
   compensation, and filtered by a three-parameter confirmation rule; the count is the number
-  of accepted tracks. Only the detector is learned --- the tracker carries no trained weights,
-  and the appearance term (dashed) is ablated rather than always enabled. The frames shown
+  of accepted tracks. The detector is the only gradient-trained component. The
+  tracker's Kalman filter, motion compensation and association carry no weights at all; the
+  optional appearance term (dashed) is frozen, reusing the detector's backbone features; and
+  the confirmation rule has three parameters fitted by grid search rather than by training. The frames shown
   are illustrative; animals in the corpus are a median $29\times24$\,px
   (\cref{fig:dataset}).}
   \label{fig:pipeline}
