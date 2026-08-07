@@ -1,71 +1,71 @@
 # Prompt for generating the pipeline / architecture figure
 
-Copy everything below the line into Gemini.
+Copy everything below the line into Gemini. Attach the three thumbnails listed at the end.
 
 ---
 
-Create a **neural-network architecture diagram** for a computer-vision paper, in the style
-used in object-detection papers: labelled blocks, arrows for tensor flow, feature-map sizes
-on the connections. Flat vector, thin lines, no 3D, no shadows. Wide layout, spanning two
-text columns.
+Create a **pipeline architecture diagram** in the style of a modern computer-vision paper:
+three titled panels side by side, each a rounded light-grey box with its name in bold at the
+top, real image thumbnails embedded at the input and output of each stage, and simple
+rounded-rectangle blocks connected by thin arrows. Wide layout, about 4:1, to span two text
+columns. Flat vector, no 3D, no shadows.
 
-Three modules, left to right, each in its own light bounding box.
-
----
-
-## MODULE 1 — Detector (YOLO11m)
-
-Input `640 x 512`. Draw the standard three-part layout:
-
-- **Backbone**: a descending column of `Conv` and `C3k2` blocks, ending in `SPPF` then
-  `C2PSA`. Tap three feature maps labelled `P3 80x64`, `P4 40x32`, `P5 20x16`.
-- **Neck**: PAN-FPN beside it — a top-down pass of `Upsample`+`Concat`, then a bottom-up
-  pass of `Conv`+`Concat`. Thin diagonal skip arrows from the backbone taps.
-- **Head**: three small parallel heads, one per scale, merging into one `NMS` block.
-
-Output arrow: **boxes**.
+Colour code, shown in a small legend at the bottom right:
+- **blue blocks** = trainable network, marked with a flame icon
+- **grey blocks** = no learned weights, marked with a snowflake icon
+- **pink block** = decision head
 
 ---
 
-## MODULE 2 — Tracker (BoT-SORT)
+## Panel 1 — "Input"
 
-Four plain blocks in a row. Square corners and grey fill, clearly different from the
-detector's blocks, because this module has no learned weights.
+- A thermal video frame thumbnail, low-contrast grey. Caption beneath in small grey text:
+  `640 x 512, 60 fps`.
+- Arrow to a grey block labelled `CLAHE`.
+- Arrow to a second thumbnail of the same frame, visibly higher contrast.
 
-`Kalman` → `Motion compensation` → `Association` → `Tracks`
+## Panel 2 — "Detection and tracking"
 
-One small block below `Association` labelled `Appearance`, drawn with a **dashed** border,
-with an arrow up into it.
+- Arrow in from Panel 1 to a blue block labelled `YOLO11m`. Inside or beneath it, three tiny
+  stacked sub-labels only: `backbone`, `neck`, `head`.
+- Arrow out to a thumbnail of a frame with two green boxes on animals. Small grey caption:
+  `per-frame boxes`.
+- Arrow to a grey block labelled `BoT-SORT`, with two tiny sub-labels: `Kalman`,
+  `motion compensation`.
+- A small grey block labelled `appearance` sits below `BoT-SORT` with a **dashed** border
+  and a dashed arrow up into it.
+- Arrow out to a thumbnail showing three small frames in a row, the same animal boxed in the
+  same colour in each, linked by a thin dotted line. Small grey caption: `candidate tracks`.
 
-Output arrow: **tracks**.
+## Panel 3 — "Counting"
 
----
-
-## MODULE 3 — Confirmation
-
-One block labelled `Rule`, fed by three tiny input nodes labelled `length`, `span`, `conf`.
-Two arrows out: one forward, one short arrow to a small grey cross.
-
-Output: a large numeral, e.g. `5`, labelled **count**.
-
----
-
-## Evaluation overlay
-
-A thin light-grey band beneath the three modules with three descending bars labelled
-`detected`, `own track`, `counted`, each joined by a faint dotted line to the module above
-it. No numbers.
+- Arrow in to a pink block labelled `rule`, fed from the left by three tiny nodes labelled
+  `length`, `span`, `conf`.
+- Two arrows out: one down to a small grey X, and one forward.
+- The forward arrow ends at a large numeral, e.g. `5`, with a small deer glyph. Green caption
+  beneath: `count`.
 
 ---
 
 ## Style
 
-Muted blue for the detector blocks, grey for the tracker, one warm accent for the rule and
-the numeral. Feature sizes in small monospace on the arrows. All text horizontal, short
-labels only — no sentences, no parameter values.
+Short labels only — no sentences anywhere. Small grey annotations under thumbnails, as in
+the reference. All text horizontal. No title, no caption text, no axis labels.
 
 ## Do not include
 
-No training loop, loss, optimiser or dataset branch; inference only. Do not draw the tracker
-as neural layers. Do not invent extra blocks, layer names or channel counts. No title, no
-legend, no caption.
+No training loop, loss, optimiser or dataset branch. No convolution-layer stacks or tensor
+cuboids. Do not draw BoT-SORT in blue or with a flame; it has no learned weights. Do not add
+blocks beyond those listed.
+
+---
+
+## Thumbnails to attach
+
+1. `figures/dataset/p1_raw.jpg` — raw thermal frame, for Panel 1 input
+2. `figures/dataset/p1_gt.jpg` — same frame with boxes, for Panel 2 detection output
+3. `figures/qualitative/GolfDr_SHB_12.11.2025__f3652_5deer.jpg` — multiple tracked animals
+   with coloured IDs, for Panel 2 tracking output
+
+If the thumbnails cannot be used directly, draw simple grey placeholder rectangles with a
+pale animal silhouette in the same positions.
