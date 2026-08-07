@@ -10,9 +10,9 @@ decides which candidates are real, distinct animals. The count is the number of 
 candidates.
 
 The confirmation baseline is a three-parameter rule: accept a candidate if it persists for
-at least $m$ frames, spans at least $s$ seconds, and has top-$k$ mean detector confidence at
-least $c$. Under the held-out protocol (\cref{sec:heldout}) the swept values are
-$m\ge20$, $s\ge0$, $c\ge0.65$.
+at least $m$ frames, spans at least $s$ seconds, and the mean of its five highest
+per-frame detector confidences is at least $c$. Under the held-out protocol
+(\cref{sec:heldout}) the swept values are $m\ge20$, $s\ge0$, $c\ge0.65$.
 
 We additionally recover \emph{orphan} detections --- those the tracker returns without a
 track identity --- by linking detections within a temporal gap and a scale-normalized

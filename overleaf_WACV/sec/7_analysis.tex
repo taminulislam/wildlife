@@ -8,11 +8,12 @@ Having established \emph{where} the animals are lost, we ask \emph{which} animal
 
 The outcome decomposes per animal as follows. The detector never fires on 9 animals
 (median 20\,px --- at the sensor's limit). The rule then rejects 27 animals the detector
-\emph{did} find. Of those 27, \textbf{26 failed the confidence test} and only one failed
-purely on track length: they are faint, distant animals whose detector confidence never
-reaches 0.65, and a scalar threshold cannot separate them from noise. Those 26 animals are
-the entire remaining opportunity, and they are what a learned confirmer would have to
-recover.
+\emph{did} find. Of those 27, \textbf{26 fail the confidence condition} and only one fails
+purely on track length: they are faint, distant animals whose five best detections average
+below 0.65, and a scalar threshold cannot separate them from noise. Five of the 27 do reach
+0.65 in at least one frame, so the failure is one of sustained rather than peak confidence.
+Those 26 animals are the entire remaining opportunity, and they are what a learned confirmer
+would have to recover.
 
 We verified by direct inspection that none of the 36 are annotation errors: each was
 rendered with its ground-truth box at three points in its track and checked. All are real
