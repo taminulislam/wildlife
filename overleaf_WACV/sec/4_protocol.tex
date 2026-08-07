@@ -1,32 +1,22 @@
 \section{Evaluation Protocol}
 \label{sec:protocol}
 
-Before reporting any number we have to fix what counts as correct, and for this task the
-default answer is wrong, and in a way that changes the conclusions rather than the decimal
-places.
-
 \subsection{Matching criterion: IoU is the wrong question}
 \label{sec:criterion}
 
-A detection metric asks whether a predicted box \emph{localizes} an animal well. A survey
-asks whether the animal was \emph{noticed}. On a 27-pixel target these diverge sharply: a
-box offset by six pixels has IoU below 0.5 and is scored as both a false positive and a
-false negative, while for counting purposes it has correctly found the animal.
+A detection metric asks whether a predicted box \emph{localizes} an animal; a survey asks
+whether the animal was \emph{noticed}. On a 27-pixel target these diverge sharply: a box
+offset by six pixels falls below IoU 0.5 and is scored as both a false positive and a false
+negative, while for counting it has correctly found the animal. We therefore evaluate under
+four matching rules --- IoU$\geq$0.50, IoU$\geq$0.30, centre-in-box and \emph{any overlap} ---
+and treat the last as the counting criterion, reporting it as presence or counting recall
+and never as mAP, with the strict criterion alongside it everywhere.
 
-We therefore evaluate under four matching rules --- IoU$\geq$0.50, IoU$\geq$0.30, centre-in-box,
-and \emph{any overlap} --- and treat the last as the counting criterion. Any overlap is
-deliberately permissive: it asks only whether the predicted box touches the animal at all.
-We are explicit about the trade: this quantity must be reported as \emph{presence} or
-\emph{counting recall} and never as mAP, and we report the strict criterion alongside it
-everywhere.
-
-The criterion is validated against \emph{centre-in-box}, an independent counting-oriented
-rule that accepts a prediction only when its centre falls inside the animal and therefore
-rejects oversized boxes outright. The two agree to within 0.032 F1 across all twelve
-models, so the conclusions below rest on the agreement of two criteria rather than the
-choice of one. Precision is reported alongside recall throughout, which additionally
-constrains box quality: a detector inflating boxes to raise presence recall would show it
-immediately in precision.
+The criterion is validated against centre-in-box, an independent counting-oriented rule that
+accepts a prediction only when its centre falls inside the animal and so rejects oversized
+boxes outright. The two agree to within 0.032 F1 across all twelve models, so the
+conclusions rest on two criteria agreeing rather than on one being chosen. Precision is
+reported alongside recall throughout, which additionally constrains box quality.
 
 \subsection{Decomposing counting error}
 \label{sec:decomposition}
@@ -51,22 +41,16 @@ attribute error to the three stages. We report all three for every configuration
 only the last, as is conventional, makes a detection failure and a confirmation failure look
 identical.
 
-One subtlety matters for reproduction. An earlier version of our matching code keyed
-predictions by frame, so a candidate holding several boxes in one frame silently kept only
-the last one read --- discarding 27,655 of 117,978 boxes and making the reported ceiling
-depend on CSV row order. All numbers here use the corrected list-valued matching.
-
 \subsection{Counting metrics}
 
 We report mean absolute error in animals per video (MAE), signed bias, and a
 \emph{counted} fraction. The latter is $\sum_v \min(\hat{c}_v, c_v) / \sum_v c_v$, capped
 per video so that over-counting in one video cannot mask misses in another.
 
-We also report a stricter, identity-matched variant: the fraction of individual animals
-covered by an \emph{accepted} candidate. This is the more faithful quantity --- the capped
-aggregate credits a video for predicting the right \emph{number} even when the accepted
-tracks do not land on the animals --- and \cref{sec:counting} shows it is 10 points lower.
-We give both and are explicit about which is which.
+We also report a stricter identity-matched variant, the fraction of individual animals
+covered by an \emph{accepted} candidate, which \cref{sec:counting} shows is 10 points
+lower; the capped aggregate credits a video for predicting the right \emph{number} even
+when the accepted tracks do not land on the animals.
 
 \subsection{The held-out protocol}
 \label{sec:heldout}
@@ -76,21 +60,6 @@ hand-tuned confirmation rule is conventionally swept on the same videos it is re
 Both leaks inflate the result. Our protocol closes both: \textbf{sweep the rule on the 19
 detector-training videos, freeze it, and report on the 13 unseen videos}. Learned
 confirmers are trained and thresholded under the identical split, so the comparison in
-\cref{sec:counting} is like-for-like. \Cref{tab:leak} shows what the protocol is worth.
+\cref{sec:counting} is like-for-like. The protocol is worth 23 points: counting accuracy
+measured over all 32 videos is 89.0\%, and on the 13 the detector never saw it is 66.3\%.
 
-\begin{table}[t]
-\centering\small
-\begin{tabular}{lccc}
-\toprule
-Evaluation scope & Videos & Deer & Coverage \\
-\midrule
-Detector-training videos & 19 & 153 & 99.3\% \\
-\textbf{Unseen (val + test)} & \textbf{13} & \textbf{83} & \textbf{66.3\%} \\
-All 32 (the default) & 32 & 236 & 89.0\% \\
-\bottomrule
-\end{tabular}
-\caption{\textbf{Why the held-out protocol matters.} Evaluating on all 32 videos, as a
-naive pipeline evaluation would, reports 89\% coverage. On video the detector has never
-seen it is 66.3\%. We report the latter throughout.}
-\label{tab:leak}
-\end{table}

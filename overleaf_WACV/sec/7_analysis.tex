@@ -6,9 +6,7 @@ Having established \emph{where} the animals are lost, we ask \emph{which} animal
 
 \subsection{Where the 36 missed animals go}
 
-
-The outcome decomposes per animal as follows; \cref{tab:missed} in the appendix gives the
-per-group statistics. The detector never fires on 9 animals
+The outcome decomposes per animal as follows. The detector never fires on 9 animals
 (median 20\,px --- at the sensor's limit). The rule then rejects 27 animals the detector
 \emph{did} find. Of those 27, \textbf{26 failed the confidence test} and only one failed
 purely on track length: they are faint, distant animals whose detector confidence never
@@ -138,9 +136,7 @@ pool by a wide margin --- 82 of 83 animals reached and 73 given their own track,
 a third of the loose-NMS candidate volume --- and still counts three fewer animals than the
 baseline. The only row that changes the confirmation stage is also the only place where a
 substantial loss appears without a corresponding pool change, and \cref{tab:confirmers}
-expands that comparison across four methods and two pools. \Cref{tab:families} in the
-appendix lists the full set of ablations run, including those measured at the detection
-stage only.}
+expands that comparison across four methods and two pools.}
 \label{tab:ablationmain}
 \end{table*}
 
@@ -152,20 +148,6 @@ turned out to be the real constraint.
 
 \subsection{Qualitative results}
 
-\begin{figure}[t]
-  \centering
-  \begin{subfigure}{\linewidth}
-    \includegraphics[width=\linewidth]{figures/qualitative/NShelbyRdblue_SHB_12.11.2025_LS__f8544_6deer.jpg}
-  \end{subfigure}\\[2pt]
-  \begin{subfigure}{\linewidth}
-    \includegraphics[width=\linewidth]{figures/qualitative/GolfDr_SHB_12.11.2025__f3652_5deer.jpg}
-  \end{subfigure}
-  \caption{\textbf{Group scenes on held-out video.} Animals standing close together are
-  resolved as distinct tracked individuals rather than merged. Labels give track ID and
-  detector confidence; colour is stable per track. Both frames are from videos the detector
-  never saw.}
-  \label{fig:qualitative}
-\end{figure}
 
 \Cref{fig:qualitative} shows representative held-out frames. Group scenes --- the hardest
 case for counting, and the one where per-frame detection metrics are least informative ---

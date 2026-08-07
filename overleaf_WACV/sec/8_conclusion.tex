@@ -1,51 +1,41 @@
-\section{Discussion and Limitations}
-\label{sec:discussion}
-
-\paragraph{Why the confirmation stage resists learning.}
-The evidence points to supervision scarcity rather than model class. Pool C offers 207
-positive tracks against 6,801 negatives; pool G offers 219 against 27,460. The positives are
-also not cleanly separable: duplicate tracks --- fragments of an animal some other track
-already covers --- sit \emph{between} the positives and the false candidates in every feature
-we measured (median confidence 0.42, against 0.72 for primaries and 0.20 for false
-candidates), so a confirmer receives contradictory supervision on the very examples that
-distinguish counting from detection. This is consistent with the capacity sweep of \cref{sec:learned}, where error grows
-monotonically with parameter count, and with the fact that growing the pool --- which
-multiplies negatives without multiplying positives --- makes every method worse.
-
-\paragraph{What would change the result.}
-More annotated video, specifically more \emph{videos} rather than more frames, since the
-positive count scales with animals and the negative count scales with frames. The capacity trend extrapolates to a
-crossover somewhere in the low thousands of positive tracks --- an order of magnitude beyond
-this corpus, and a concrete target for the next dataset rather than a promise about this
-one.
-
-\paragraph{Limitations.}
-The corpus is 236 animals from four sites in one region and one winter, and one site
-contributes 56\% of the animals; per-site figures for the smallest site (15 animals) are
-noisy. All results are single-species and single-season. Our counting metric is a per-video
-aggregate; we report the stricter identity-matched figure (56.6\%) alongside it, and a
-reader who prefers that definition should use it. Because no individual animal appears in
-more than one video in this corpus, cross-session re-identification could not be evaluated
-at all --- \cref{sec:reid} measures the within-video ceiling only.
-
 \section{Conclusion}
 \label{sec:conclusion}
 
 We set out to build a thermal wildlife counting system and found that the accuracy a
 practitioner would try to buy with a better detector is being lost somewhere else. By
-decomposing counting error into detection, association, and confirmation, we showed that on
-held-out video our pipeline finds 98.8\% of animals, gives 88.0\% a distinct track, and
-counts 62.7\% --- and that four independent improvements to the first two stages each made the
-third worse.
+decomposing counting error into detection, association and confirmation, we showed that on
+held-out video the pipeline finds 98.8\% of animals, gives 88.0\% a distinct track, and
+counts 62.7\% --- and that four independent improvements to the first two stages each made
+the third worse.
 
-The practical guidance is inverted from the field's default. For a counting application on
-data of this scale: do not select a detector by its detection metric, because the counting
-criterion re-ranks the models; do not evaluate on video the detector trained on, because
-that inflates coverage by 33 points; do not assume a larger candidate pool is a better one;
-and do not expect a learned confirmation stage to beat a hand-tuned rule until the corpus is
+The evidence points to supervision scarcity rather than model class as the reason
+confirmation resists learning. Pool C offers 207 positive tracks against 6,801 negatives and
+pool G 219 against 27,460, and the positives are not cleanly separable: duplicate tracks,
+fragments of an animal some other track already covers, sit \emph{between} the positives and
+the false candidates in every feature we measured, at median confidence 0.42 against 0.72
+for primaries and 0.20 for false candidates. A confirmer therefore receives contradictory
+supervision on exactly the examples that distinguish counting from detection, which is
+consistent with error growing monotonically with capacity and with the fact that enlarging
+the pool --- multiplying negatives without multiplying positives --- makes every method worse.
+The capacity trend extrapolates to a crossover in the low thousands of positive tracks, an
+order of magnitude beyond this corpus and a concrete target for the next dataset.
+
+The practical guidance is inverted from the field's default. For a counting application at
+this data scale: do not select a detector by its detection metric, because the counting
+criterion re-ranks the models; do not evaluate on video the detector trained on, which
+inflates coverage by 23 points; do not assume a larger candidate pool is a better one; and
+do not expect a learned confirmation stage to beat a hand-tuned rule until the corpus is
 substantially larger than 236 individuals.
 
-We release the dataset, per-individual annotations, evaluation harness, and the
-decomposition tooling. The gap between 88\% reachable and 63\% counted is, we think, the
-most useful thing we can hand to the next group working on this problem: it is large,
-precisely localized, and entirely open.
+Several limits bound these claims. The corpus is 236 animals from four sites in one region
+and one winter, one site contributes 56\% of them, and per-site figures for the smallest
+site (15 animals) are correspondingly noisy; all results are single-species. Our headline
+counting metric is a per-video aggregate, and the stricter identity-matched figure is 10
+points lower. No individual animal appears in more than one video, so the re-identification
+limit of \cref{sec:reid} is measured within video and cross-session identification could not
+be evaluated at all.
+
+We release the dataset, per-individual annotations, evaluation harness and decomposition
+tooling. The gap between 88\% reachable and 63\% counted is the most useful thing we can
+hand to the next group working on this problem: it is large, precisely localized, and
+entirely open.

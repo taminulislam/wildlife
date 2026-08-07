@@ -61,3 +61,149 @@ change the end-to-end count are quantified in \cref{tab:ablationmain}; the remai
 measured at the detection stage and are reported in the sections cited.}
 \label{tab:families}
 \end{table}
+
+\subsection{Held-out protocol}
+
+Counting accuracy measured over all 32 videos, 19 of which trained the detector, is 89.0\%;
+on the 13 videos the detector never saw it is 66.3\%.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Evaluation scope & Videos & Deer & Coverage \\
+\midrule
+Detector-training videos & 19 & 153 & 99.3\% \\
+\textbf{Unseen (val + test)} & \textbf{13} & \textbf{83} & \textbf{66.3\%} \\
+All 32 (the default) & 32 & 236 & 89.0\% \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Why the held-out protocol matters.} Evaluating on all 32 videos, as a
+naive pipeline evaluation would, reports 89\% coverage. On video the detector has never
+seen it is 66.3\%. We report the latter throughout.}
+\label{tab:leak}
+\end{table}
+
+\subsection{Input resolution}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llcccc}
+\toprule
+Model & res & Precision & Recall & F1 & AP$_{50}$ \\
+\midrule
+YOLOv9m & 640 & 0.704 & 0.448 & 0.547 & 0.498 \\
+\textbf{YOLOv9m} & \textbf{1280} & \textbf{0.757} & \textbf{0.491} & \textbf{0.595} & \textbf{0.523} \\
+YOLOv10m & 640 & 0.674 & 0.455 & 0.543 & 0.498 \\
+YOLOv10m & 1280 & 0.669 & 0.432 & 0.525 & 0.458 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{640 versus 1280\,px.} Higher resolution helps YOLOv9m on every column and
+hurts YOLOv10m on every column: at 640 the two are within 0.004 AP$_{50}$, at 1280 they
+diverge by 0.065. AP-small moves the other way for both (0.128 to 0.119 and 0.117 to 0.093),
+so the small-object deficit is not primarily a resolution deficit.}
+\label{tab:resolution}
+\end{table}
+
+\subsection{Per-video breakdown}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrrr}
+\toprule
+Video & Site & GT & Reach & Prim. & Count & Err \\
+\midrule
+NShelbyRd (blue) & SHB & 27 & 22 & 16 & 20 & $-7$ \\
+GolfDr & SHB & 12 & 12 & 10 & 14 & $+2$ \\
+NWolfCreek (orange) & SHB & 9 & 9 & 9 & 5 & $-4$ \\
+GiantCityRd & TON & 8 & 7 & 7 & 3 & $-5$ \\
+Robinson & SHW & 7 & 7 & 7 & 7 & $0$ \\
+Melvin & SHW & 5 & 5 & 5 & 1 & $-4$ \\
+AquaCultureRd & TON & 3 & 1 & 1 & 0 & $-3$ \\
+N25thBlue & MAS & 3 & 3 & 3 & 3 & $0$ \\
+NMarseilles & MAS & 3 & 3 & 3 & 1 & $-2$ \\
+OikosRd & TON & 2 & 2 & 2 & 1 & $-1$ \\
+TouchofNature & TON & 2 & 1 & 1 & 0 & $-2$ \\
+ChipsRd & TON & 1 & 1 & 1 & 1 & $0$ \\
+SIron & SHW & 1 & 1 & 1 & 2 & $+1$ \\
+\midrule
+\textbf{Total} & & \textbf{83} & \textbf{74} & \textbf{66} & \textbf{58} & $\mathbf{-25}$ \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per-video breakdown on the 13 held-out videos.} GT is the annotated number
+of individual animals; Reach and Prim.\ are the decomposition of \cref{sec:decomposition};
+Count is the number the pipeline reports and Err its signed error. Reading a row left to
+right attributes that video's loss to a stage. NShelbyRd loses 5 animals to detection
+(27$\to$22) and a further 6 to association (22$\to$16), the largest tracking failure in the
+corpus and the reason dense-group video dominates the error. GolfDr and SIron are the only
+videos that over-count, and both do so while their reach and primary counts are complete ---
+the error there is confirmation accepting spurious tracks, not missing animals.}
+\label{tab:pervideo}
+\end{table}
+
+\subsection{Confirmation methods}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{llcc}
+\toprule
+Pool & Confirmer & MAE & Counted \\
+\midrule
+\multirow{4}{*}{C} & \textbf{Hand-tuned rule (3 params)} & \textbf{2.38} & \textbf{55/83} \\
+ & Gradient boosting & 2.85 & --- \\
+ & Logistic regression & 3.00 & --- \\
+ & Temporal transformer ($\sim$60k params) & 2.85 & 49/83 \\
+\midrule
+\multirow{4}{*}{G} & Hand-tuned rule & 2.77 & 50/83 \\
+ & Gradient boosting & 2.92 & --- \\
+ & Logistic regression & 3.15 & --- \\
+ & Temporal transformer & 2.77 & 51/83 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Held-out confirmation comparison.} All methods trained and thresholded on
+the 19 detector-training videos, reported on the 13 unseen. Learned confirmers lose on pool
+C and tie on pool G. Logistic regression on pool G fails in the opposite direction,
+predicting 102 animals where 83 exist.}
+\label{tab:confirmers}
+\end{table}
+
+\subsection{Supporting figures}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig2_inversion.pdf}
+  \caption{\textbf{The inversion.} As candidate generation improves, more animals become
+  reachable and fewer are counted. Both series are animals out of 83 and share one axis.}
+  \label{fig:inversion}
+\end{figure}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.75\linewidth]{figures/evidence_two.jpg}
+  \caption{\textbf{Per-animal evidence, two individuals.} Every counted animal is exported
+  as a contact sheet of its own track, one panel per sampled frame, with the elapsed time
+  and the raw per-frame detector confidence beneath each. A human auditor can therefore
+  verify any individual count against the frames that produced it. Both animals are from
+  videos the detector never trained on. The two rows also show why a per-track score is
+  needed: the raw confidence varies by 0.15 across frames of the same animal (Animal B,
+  0.66--0.81) even when every frame is a clean detection, so no single frame's value
+  characterizes the track.}
+  \label{fig:evidence}
+\end{figure*}
+
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{\linewidth}
+    \includegraphics[width=\linewidth]{figures/qualitative/NShelbyRdblue_SHB_12.11.2025_LS__f8544_6deer.jpg}
+  \end{subfigure}\\[2pt]
+  \begin{subfigure}{\linewidth}
+    \includegraphics[width=\linewidth]{figures/qualitative/GolfDr_SHB_12.11.2025__f3652_5deer.jpg}
+  \end{subfigure}
+  \caption{\textbf{Group scenes on held-out video.} Animals standing close together are
+  resolved as distinct tracked individuals rather than merged. Labels give track ID and
+  detector confidence; colour is stable per track. Both frames are from videos the detector
+  never saw.}
+  \label{fig:qualitative}
+\end{figure}
