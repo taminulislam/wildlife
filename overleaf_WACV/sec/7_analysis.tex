@@ -1,25 +1,9 @@
 \section{Analysis}
 \label{sec:analysis}
 
-Having established \emph{where} the animals are lost, we ask \emph{which} animals and
-\emph{why}.
+Having established \emph{where} the animals are lost, we ask \emph{which} animals and why.
 
-\subsection{Where the 36 missed animals go}
-
-The outcome decomposes per animal as follows. The detector never fires on 9 animals
-(median 20\,px --- at the sensor's limit). The rule then rejects 27 animals the detector
-\emph{did} find. Of those 27, \textbf{26 fail the confidence condition} and only one fails
-purely on track length: they are faint, distant animals whose five best detections average
-below 0.65, and a scalar threshold cannot separate them from noise. Five of the 27 do reach
-0.65 in at least one frame, so the failure is one of sustained rather than peak confidence.
-Those 26 animals are the entire remaining opportunity, and they are what a learned confirmer
-would have to recover.
-
-We verified by direct inspection that none of the 36 are annotation errors: each was
-rendered with its ground-truth box at three points in its track and checked. All are real
-animals.
-
-\subsection{The detector fails at both scale extremes}
+\subsection{Which animals are missed}
 
 \begin{figure}[t]
   \centering
@@ -31,44 +15,35 @@ animals.
   \label{fig:scale}
 \end{figure}
 
-That inspection produced an unexpected finding. Three of the missed animals are not small
-but very \emph{large}: 104, 149 and 157\,px, against a corpus median of 27. One of them, at
-149\,px, was never detected at all --- implausible for a detector that routinely finds
-27-pixel animals.
+Of the 83 held-out animals, the detector never fires on 9 (median 20\,px, at the sensor's
+limit) and the rule rejects 27 that it did find. Of those 27, \textbf{26 fail the confidence
+condition} and one fails purely on track length: their five best detections average below
+0.65, though five do reach 0.65 in a single frame, so the failure is one of sustained rather
+than peak confidence. Those 26 are the entire remaining opportunity. We verified by direct
+inspection that none of the 36 are annotation errors --- each was rendered with its
+ground-truth box at three points in its track --- and all are real animals.
 
-\Cref{fig:scale} gives the likely explanation. The largest box in the training split is
-95.6\,px and the split contains \emph{zero} boxes at or above 100\,px, so all three
-animals sit outside the annotated size distribution. We state this carefully: scale
-augmentation does present enlarged copies during training, so the detector is not strictly
-naive to large objects --- but enlargement is sampled rarely and mosaic augmentation shrinks
-objects at the same time, so large presentations are uncommon. The mirror image of the
-small-object problem the field concentrates on is nonetheless visible here: animals close
-to the road are rare in our data, and the detector performs worst exactly where examples
-are scarcest.
+That inspection produced an unexpected finding. Three of the missed animals are not small but
+very \emph{large}: 104, 149 and 157\,px against a corpus median of 27, and the 149\,px animal
+was never detected at all. \Cref{fig:scale} gives the likely explanation: the largest
+training box is 95.6\,px and the split contains \emph{zero} boxes at or above 100\,px, so all
+three sit outside the annotated size distribution. Scale augmentation does present enlarged
+copies, so the detector is not strictly naive to large objects, but enlargement is sampled
+rarely while mosaic augmentation shrinks objects concurrently. The mirror image of the
+small-object problem is visible here: the detector performs worst where examples are
+scarcest.
 
-The remedy is less straightforward than it first appears, and the attempt is instructive.
-Widening scale augmentation to cover 100--200\,px collapsed training to zero mAP within
-five epochs, because the standard implementation is symmetric: enlarging the sampling range
-also shrinks a 27\,px animal to sub-pixel size, and on a corpus that is 71\% small objects
-those examples are unlearnable. Enlarging the upper tail without destroying the lower one
-requires asymmetric augmentation that common frameworks do not expose. The loss is
-concentrated --- the single video containing these animals counts 3 of 8, and three of its
-five misses are the oversized individuals --- so this is worth roughly 4 points of our
-headline figure. We report the diagnosis and the failed remedy, and note that most
-small-object work does not check the upper tail at all.
+The remedy is less straightforward than it appears. Widening scale augmentation to cover
+100--200\,px collapsed training to zero mAP within five epochs, because the standard
+implementation is symmetric --- enlarging the sampling range also shrinks a 27\,px animal to
+sub-pixel size, and on a corpus that is 71\% small objects those examples are unlearnable.
+Enlarging the upper tail without destroying the lower one requires asymmetric augmentation
+that common frameworks do not expose. The loss is concentrated: the one video containing
+these animals counts 3 of 8, three of its five misses being the oversized individuals, so
+this is worth roughly 4 points of the headline figure.
 
 \subsection{Individual re-identification at 27 pixels}
 \label{sec:reid}
-
-A natural proposal for the association stage is appearance-based individual
-re-identification, keyed on body shape, thermal silhouette, relative size, and movement.
-Because the annotation gives one track per individual, the corpus already contains identity
-labels, and the question can be settled empirically.
-
-We evaluate closed-set re-identification on \textbf{69 animals never seen, in 7 videos never
-seen}: each animal's track is split temporally, the first half forms the gallery and the
-second half the query, and we report rank-1 accuracy. Within-video is the \emph{ceiling} --- both
-halves share range, pose, and thermal calibration --- so a low score here is decisive.
 
 \begin{table}[t]
 \centering\small
@@ -93,24 +68,26 @@ matching, not identity.}
 \label{tab:reid}
 \end{table}
 
-\Cref{tab:reid} is the result. A trained thermal encoder reaches rank-1 0.899, which sounds
-like working re-identification --- until the decomposition. \textbf{Box size alone reaches
-0.638}, and within a single video an animal's range changes slowly, so most of what looks
-like identification is matching \emph{distance}. Appearance in isolation is weak: mean
-intensity carries exactly chance information, silhouette with scale removed reaches 0.435,
-and a pretrained CNN lands below plain geometry.
+A natural proposal for the association stage is appearance-based individual
+re-identification. Because the annotation gives one track per individual, the corpus already
+contains identity labels and the question can be settled empirically. We evaluate closed-set
+re-identification on \textbf{69 animals never seen, in 7 videos never seen}: each track is
+split temporally, the first half forms the gallery and the second half the query. Within
+video is the \emph{ceiling}, since both halves share range, pose and thermal calibration, so
+a low score is decisive.
 
-We therefore describe our system as performing \emph{track association} --- preventing double
-counting within a survey --- and make no individual-identification claim. At a median
-$29\times24$ pixels there is not enough detail on the animal to key an identity to. We
-report this as a measured limit rather than a discarded experiment, because the negative
-result is the useful part: it tells practitioners where the sensor resolution boundary lies.
+A trained thermal encoder reaches rank-1 0.899 (\cref{tab:reid}), which sounds like working
+re-identification until the decomposition. \textbf{Box size alone reaches 0.638}, and within
+a video an animal's range changes slowly, so most of what looks like identification is
+matching \emph{distance}. Appearance in isolation is weak: mean intensity carries exactly
+chance information, silhouette with scale removed reaches 0.435, and a pretrained CNN lands
+below plain geometry. At a median $29\times24$ pixels there is not enough detail to key an
+identity to, so we describe the system as performing \emph{track association} --- preventing
+double counting within a survey --- and make no individual-identification claim. Appearance
+does help the association stage (\cref{tab:ablationmain}), merging fragments of one animal
+within a video, which is a far easier problem than identifying it across sightings.
 
-Adding appearance to the \emph{association} stage does help
-(\cref{tab:ablationmain}, the re-identification row) --- it merges fragments of one animal within a video, which is a
-much easier problem than identifying an individual across sightings.
-
-\subsection{Consolidated ablations}
+\subsection{Ablations}
 
 \begin{table*}[t]
 \centering\small
@@ -141,19 +118,6 @@ expands that comparison across four methods and two pools.}
 \label{tab:ablationmain}
 \end{table*}
 
-\Cref{tab:ablationmain} gives the pipeline ablation with one stage changed per row. One
-entry from the wider set is worth isolating: lowering detector confidence from 0.10 to 0.05 added
-3,807 candidates and recovered \emph{zero} additional animals. That single measurement
-ruled out the detector threshold and pointed us at the tracker's initialization gate, which
-turned out to be the real constraint.
-
-\subsection{Qualitative results}
-
-
-\Cref{fig:qualitative} shows representative held-out frames. Group scenes --- the hardest
-case for counting, and the one where per-frame detection metrics are least informative ---
-are resolved into distinct individuals.
-
 \begin{figure}[t]
   \centering
   \begin{subfigure}{\linewidth}
@@ -168,3 +132,10 @@ are resolved into distinct individuals.
   never saw.}
   \label{fig:qualitative}
 \end{figure}
+
+\Cref{tab:ablationmain} gives the pipeline ablation with one stage changed per row. One entry
+from the wider set is worth isolating: lowering detector confidence from 0.10 to 0.05 added
+3,807 candidates and recovered \emph{zero} additional animals, which ruled out the detector
+threshold and pointed us at the tracker's initialization gate. \Cref{fig:qualitative} shows
+representative held-out frames; group scenes, the hardest case for counting, are resolved
+into distinct individuals.
