@@ -119,6 +119,12 @@ def main() -> None:
                          "(--target primary): the CALIBRATED probability that this track "
                          "is a distinct countable deer, i.e. an ID-correctness score")
     ap.add_argument("--contrast", default="clahe")
+    ap.add_argument("--videos", default="",
+                    help="comma-separated video names to render. Decoding is sequential "
+                         "from frame 0, so restricting to the held-out videos is the "
+                         "difference between minutes and an hour.")
+    ap.add_argument("--min-deer", type=int, default=2,
+                    help="minimum simultaneous distinct tracks for a multi-deer frame")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     import sys
@@ -136,8 +142,11 @@ def main() -> None:
     # frame -> detections, per video
     per_video: dict[str, dict[int, list]] = defaultdict(lambda: defaultdict(list))
     confirmed_per_video: dict[str, set] = defaultdict(set)
+    keep = {v.strip() for v in args.videos.split(",") if v.strip()}
     with open(os.path.join(args.counts_dir, "tracks.csv")) as f:
         for r in csv.DictReader(f):
+            if keep and r["video"] not in keep:
+                continue
             conf_flag = r.get("confirmed", "1") == "1"
             if args.only_confirmed and not conf_flag:
                 continue
@@ -182,7 +191,7 @@ def main() -> None:
         picks, seen_sets = [], []
         for fi, dets in ranked:
             ids = frozenset(d["track_id"] for d in dets)
-            if len(ids) < 2:
+            if len(ids) < args.min_deer:
                 break
             if any(ids == s for s in seen_sets):     # skip near-duplicate frames
                 continue
