@@ -277,27 +277,44 @@ expands that comparison across four methods and two pools.}
 \label{tab:ablationmain}
 \end{table*}
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \begin{subfigure}{\linewidth}
-    \includegraphics[width=\linewidth]{figures/qualitative/NShelbyRdblue_SHB_12.11.2025_LS__f8544_6deer.jpg}
-  \end{subfigure}\\[2pt]
-  \begin{subfigure}{\linewidth}
-    \includegraphics[width=\linewidth]{figures/qualitative/GolfDr_SHB_12.11.2025__f3652_5deer.jpg}
-  \end{subfigure}
-  \caption{\textbf{Group scenes on held-out video.} Animals standing close together are
-  resolved as distinct tracked individuals rather than merged. Labels give track ID and
-  detector confidence; colour is stable per track. Both frames are from videos the detector
-  never saw.}
+  \includegraphics[width=\linewidth]{figures/qualitative.png}
+  \caption{\textbf{Tracking through overlap and low contrast, on held-out video.} Four frames
+  from three transects the detector never saw. Box colour encodes track identity and is
+  stable over time; each label gives the track ID and its calibrated per-track score.
+  \textbf{Top row:} the same scene 0.3\,s apart, five animals tracked and five counted in
+  both frames. Tracks 3035 and 3041 retain their identities across the pair while the camera
+  translates beneath them, and the animals at the right of the frame stand close enough that
+  their boxes overlap without their identities merging. \textbf{Bottom left:} a fourfold
+  range spread inside one frame, from a near animal at 87\,px to a distant one at 22\,px;
+  the per-track score falls with range, so the confidence reports the difficulty rather than
+  concealing it. \textbf{Bottom right:} two animals of 42 and 50\,px against a near-uniform
+  thermal background, overlapping in image space and individually close to indistinguishable,
+  are still carried as two tracks. Overlap and low contrast are the two conditions under
+  which a counting system silently merges individuals into one, and neither does so here.}
   \label{fig:qualitative}
-\end{figure}
+\end{figure*}
 
 \Cref{tab:ablationmain} gives the pipeline ablation with one stage changed per row. One entry
 from the wider set is worth isolating: lowering detector confidence from 0.10 to 0.05 added
 3,807 candidates and recovered \emph{zero} additional animals, which ruled out the detector
-threshold and pointed us at the tracker's initialization gate. \Cref{fig:qualitative} shows
-representative held-out frames; group scenes, the hardest case for counting, are resolved
-into distinct individuals.
+threshold and pointed us at the tracker's initialization gate.
+
+\Cref{fig:qualitative} shows what the association stage does on held-out video under the two
+conditions that make counting fail. The first is overlap. When two animals stand close
+enough that their boxes intersect, a tracker that leans on spatial proximity will hand both
+to one identity, and the pair is counted once; the top row and the bottom-right frame each
+contain such a pair, and in both the animals are carried as separate tracks with separate
+identities. The second is low contrast. In the bottom-right frame the animals are a few tens
+of pixels across against an almost uniform thermal field, close to the point where a human
+reader would hesitate to call them animals at all, and they are still tracked. Persistence
+is visible directly in the top row: the two frames are 0.3\,s apart, the whole scene
+translates between them as the vehicle moves, and the identities survive the translation
+because motion compensation removes the camera's contribution before association. The
+bottom-left frame shows the range spread a single transect frame can contain --- 87\,px and
+22\,px animals simultaneously --- with the calibrated score falling as the animal recedes,
+which is the behaviour a per-track posterior is meant to have.
 
 \subsection{The rule is not the bottleneck}
 \label{sec:learned}
