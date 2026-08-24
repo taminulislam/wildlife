@@ -328,6 +328,138 @@ text(s, M, 6.92, W - 2 * M, 0.34,
      "Manuscript drafted end to end; remaining work is length and final ablations.",
      size=12.5, color=MUTE)
 
+# ══════════════════════════════════════════════════ 10 — roadmap
+s = slide()
+header(s, "What comes next", "Four workstreams")
+items = [
+    ("1", "Counting paper", "Thermal transect detection and counting. Drafted end to end; "
+                            "remaining work is length and final ablations.", "In progress", EMBER),
+    ("2", "Vision–language scene understanding",
+          "Move from a number to a description: how many, how far, what are they doing, "
+          "what is occluding them.", "Proposed", MAROON),
+    ("3", "Edge deployment",
+          "Run the detector on the camera rather than on a cluster, so a trail camera or "
+          "drone reports counts in the field.", "Proposed", MAROON),
+    ("4", "Collaborative grant writing",
+          "Convert the corpus, the pipeline and the evaluation framework into funded, "
+          "multi-institution work.", "Proposed", DEEP),
+]
+y = 1.95
+for n, t, b, status, col in items:
+    bar(s, M, y, 0.05, 1.02, col)
+    text(s, M + 0.26, y - 0.04, 0.5, 0.45, n, size=27, bold=True, color=col)
+    text(s, M + 0.95, y - 0.02, 7.4, 0.34, t, size=17, bold=True)
+    text(s, M + 0.95, y + 0.36, 7.9, 0.66, b, size=13, color=MUTE, spacing=1.26)
+    text(s, 10.9, y + 0.02, 1.7, 0.3, status, size=12.5, bold=True, color=col,
+         align=PP_ALIGN.RIGHT)
+    y += 1.22
+
+# ══════════════════════════════════════════════════ 11 — VLM
+s = slide()
+header(s, "Workstream 2 · proposed", "From a count to an explanation of the scene")
+picture_fit(s, f"{AST}/vlm_scene.png", M, 1.82, 7.2, 4.15)
+text(s, M, 6.06, 7.2, 0.62,
+     "Trail-camera frame, TON11. The same scene our thermal pipeline would reduce to the "
+     "single number 4. Boxes and ranges here illustrate the proposed output.",
+     size=11.5, color=MUTE, spacing=1.25)
+
+X = 8.25
+text(s, X, 1.82, 4.35, 0.3, "Proposed model output", size=15, bold=True, color=MAROON)
+text(s, X, 2.24, 4.35, 2.5,
+     ["\u201cFour white-tailed deer. One adult foraging in the immediate foreground, two "
+      "browsing together at mid-range and partly occluded by saplings, one adult at the "
+      "far right beside a mature oak.",
+      "All four are head-down feeding, none alert, no antlers visible. The group is "
+      "dispersed and stationary rather than travelling.\u201d"],
+     size=13, spacing=1.3, gap=8)
+bar(s, X, 4.62, 4.35, 0.018, RULE)
+text(s, X, 4.82, 4.35, 0.3, "Structured fields alongside the prose", size=13.5, bold=True,
+     color=MAROON)
+for i, (k, v) in enumerate([("count", "4"), ("range per animal", "~4, 14, 16, 19 m"),
+                            ("mask", "per-animal segmentation"),
+                            ("behaviour", "foraging, not alert"),
+                            ("occlusion", "2 of 4 partly hidden")]):
+    yy = 5.22 + i * 0.30
+    text(s, X, yy, 1.85, 0.28, k, size=12, color=MUTE)
+    text(s, X + 1.9, yy, 2.45, 0.28, v, size=12, bold=True)
+text(s, X, 6.82, 4.35, 0.3,
+     "Illustrative — a target capability, not a current result.",
+     size=11, color=MUTE)
+
+# ══════════════════════════════════════════════════ 12 — edge
+s = slide()
+header(s, "Workstream 3 · proposed", "Move the detector onto the camera")
+text(s, M, 1.92, 5.6, 0.3, "Why it is plausible now", size=15, bold=True, color=MAROON)
+text(s, M, 2.34, 5.6, 2.6,
+     ["The production detector is a 40\u2009MB checkpoint running at 640\u2009px on a "
+      "single class. That is a small model by current standards, and the pipeline around "
+      "it — motion compensation, association, the confirmation rule — carries no learned "
+      "weights and negligible compute.",
+      "Nothing in the design assumes a cluster. The counting run is embarrassingly "
+      "parallel across videos because each video is independent."],
+     size=13.5, spacing=1.3, gap=10)
+bar(s, M, 5.05, 5.6, 0.018, RULE)
+text(s, M, 5.25, 5.6, 0.3, "What changes for the survey", size=15, bold=True, color=MAROON)
+text(s, M, 5.67, 5.6, 1.4,
+     "A camera that reports a count instead of storing footage removes the retrieval and "
+     "manual-review step that currently bounds how many sites a survey can cover.",
+     size=13.5, spacing=1.3)
+
+text(s, 7.05, 1.92, 5.55, 0.3, "Plan", size=15, bold=True, color=MAROON)
+steps = [("Export", "TensorRT / ONNX, INT8 and FP16 variants"),
+         ("Measure", "throughput, latency and power on the lab Jetson — "
+                     "no on-device numbers exist yet"),
+         ("Verify", "confirm counting accuracy is unchanged after quantization, "
+                   "using the same held-out protocol"),
+         ("Field", "battery-powered trail-camera unit reporting counts over LTE")]
+y = 2.34
+for i, (t, b) in enumerate(steps):
+    bar(s, 7.05, y + 0.04, 0.035, 0.42, MAROON)
+    text(s, 7.25, y, 1.28, 0.3, t, size=13.5, bold=True, color=MAROON)
+    text(s, 8.6, y - 0.02, 4.0, 0.9, b, size=12.5, spacing=1.26)
+    y += 0.98
+text(s, 7.05, 6.5, 5.55, 0.5,
+     "Quantization is the open question: the animals are already at the sensor's "
+     "resolution limit, so reduced precision may cost recall where it is scarcest.",
+     size=12, color=MUTE, spacing=1.28)
+
+# ══════════════════════════════════════════════════ 13 — collaboration
+s = slide()
+header(s, "Workstream 4 · proposed", "What we can bring to a collaborative proposal")
+assets = [
+    ("A released corpus", "32 annotated thermal transects with per-individual tracks — "
+                          "rare enough that the scarcity is itself a contribution."),
+    ("An evaluation framework", "The reach / own-track / counted decomposition transfers "
+                                "to any survey modality, not just thermal."),
+    ("A negative result worth citing", "Improving candidate generation degrades counting. "
+                                       "That shapes how a funded effort should spend its "
+                                       "money."),
+    ("A deployment path", "Workstreams 2 and 3 turn a measurement into an instrument "
+                          "ecologists can actually operate."),
+]
+y = 1.95
+for t, b in assets:
+    bar(s, M, y + 0.05, 0.035, 0.5, MAROON)
+    text(s, M + 0.2, y, 3.5, 0.32, t, size=14.5, bold=True, color=MAROON)
+    text(s, M + 3.85, y - 0.02, 4.25, 0.95, b, size=12.5, spacing=1.26)
+    y += 1.02
+bar(s, M, 6.15, 7.75, 0.018, RULE)
+text(s, M, 6.35, 7.75, 0.7,
+     "Natural partners span computer vision, wildlife ecology and state agencies; the "
+     "corpus is the piece none of them can produce alone.",
+     size=12.5, color=MUTE, spacing=1.28)
+
+text(s, 9.35, 1.95, 3.25, 0.3, "Funding directions", size=14.5, bold=True, color=MAROON)
+text(s, 9.35, 2.37, 3.25, 3.4,
+     ["Candidate targets to scope, not yet selected:",
+      "· Federal science agencies supporting AI for environmental monitoring",
+      "· Agricultural and natural-resource programmes concerned with deer population "
+      "management",
+      "· State wildlife agencies that already run transect surveys and carry the "
+      "operational need",
+      "· Instrumentation and sensor-development programmes for the edge hardware"],
+     size=12, spacing=1.26, gap=8)
+
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 prs.save(OUT)
 print("saved", OUT, os.path.getsize(OUT), "bytes,", len(prs.slides.__iter__.__self__._sldIdLst), "slides")
