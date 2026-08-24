@@ -54,3 +54,37 @@ for s in ("top", "right"): ax.spines[s].set_visible(False)
 fig.tight_layout(); fig.savefig(f"{OUT}/inversion.png", transparent=True, bbox_inches="tight")
 plt.close(fig)
 print("charts written")
+
+# ---------- 3. dataset composite: raw over ground truth ----------------------
+from PIL import Image
+FIGD = "/work/nvme/bgte/tislam6/wildlife_project/overleaf_WACV/figures/dataset"
+panels = ["p1", "p2", "p3", "p4"]
+raw = [Image.open(f"{FIGD}/{p}_raw.jpg") for p in panels]
+gt  = [Image.open(f"{FIGD}/{p}_gt.jpg")  for p in panels]
+w, h = raw[0].size
+GAP = 10
+W = 4 * w + 3 * GAP
+H = 2 * h + GAP
+sheet = Image.new("RGB", (W, H), (250, 248, 247))
+for i, im in enumerate(raw):
+    sheet.paste(im, (i * (w + GAP), 0))
+for i, im in enumerate(gt):
+    sheet.paste(im, (i * (w + GAP), h + GAP))
+sheet.save(f"{OUT}/dataset_grid.png")
+print("dataset grid", sheet.size)
+
+# ---------- 4. detection composite ------------------------------------------
+DG = "/work/hdd/bgte/tislam6/wildlife_outputs/viz/detect_yolo11m_640"
+picks = [f"{DG}/large/SHB__GolfDr_v1_LS_f3400.jpg",
+         f"{DG}/large/SHB__GolfDr_v1_LS_f3429.jpg",
+         f"{DG}/large/SHB__GolfDr_v1_LS_f3386.jpg",
+         f"{DG}/medium/SHB__NWolfCreekorange_v1_LS_f7300.jpg"]
+ims = [Image.open(p) for p in picks]
+w, h = ims[0].size
+G = 8
+grid = Image.new("RGB", (2 * w + G, 2 * h + G), (250, 248, 247))
+for i, im in enumerate(ims):
+    r, c = divmod(i, 2)
+    grid.paste(im, (c * (w + G), r * (h + G)))
+grid.save(f"{OUT}/detect_grid.png")
+print("detect grid", grid.size)

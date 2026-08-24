@@ -1,0 +1,17 @@
+bucket,frame,n_pred,n_gt,max_conf
+large,SHB__GolfDr_v1_LS_f3405,3,3,0.796
+large,SHB__GolfDr_v1_LS_f3400,3,3,0.814
+large,TON__OikosRd_v1_LS_f4916,1,2,0.734
+large,SHB__GolfDr_v1_LS_f3429,3,3,0.809
+large,SHB__GolfDr_v1_LS_f3386,2,2,0.732
+large,MAS__NMarseilles_v2_LS_f4845,0,1,0.0
+medium,SHW__Melvin_v1_LS_f6441,0,1,0.0
+medium,SHW__Melvin_v1_LS_f6459,0,1,0.0
+medium,SHB__NWolfCreekorange_v1_LS_f7300,1,2,0.616
+medium,SHB__GolfDr_v1_LS_f3725,2,5,0.787
+medium,TON__ChipsRd_v1_LS_f1164,0,1,0.0
+medium,SHW__Melvin_v1_LS_f6347,0,1,0.0
+small,SHB__GolfDr_v1_LS_f4564,1,2,0.555
+small,TON__AquaCultureRd_v1_LS_f18735,0,2,0.0
+small,SHB__GolfDr_v1_LS_f4689,0,2,0.0
+small,TON__TouchofNatureRd_v1_LS_f2778,0,1,0.0

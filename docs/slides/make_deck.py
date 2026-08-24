@@ -84,6 +84,36 @@ def kpi(s, x, y, w, value, label, color=MAROON):
     text(s, x + 0.19, y + 0.62, w, 0.66, label, size=12.5, color=MUTE, spacing=1.15)
 
 
+def table(s, x, y, w, cols, rows, widths, size=12, head_size=11, row_h=0.285,
+          bold_rows=(), right_from=1, head_gap=0.055):
+    """Flat table: a maroon rule under the header, hairlines between rows, no boxes.
+    `widths` are relative and are normalised to `w`."""
+    tot = float(sum(widths))
+    xs, acc = [], 0.0
+    for cw in widths:
+        xs.append(x + acc / tot * w); acc += cw
+    ws = [cw / tot * w for cw in widths]
+
+    for j, (cx, cw, c) in enumerate(zip(xs, ws, cols)):
+        al = PP_ALIGN.LEFT if j < right_from else PP_ALIGN.RIGHT
+        text(s, cx, y, cw, 0.26, c, size=head_size, bold=True, color=MUTE, align=al)
+    bar(s, x, y + 0.27, w, 0.018, MAROON)
+
+    yy = y + 0.27 + head_gap
+    for i, r in enumerate(rows):
+        strong = i in bold_rows
+        for j, (cx, cw, v) in enumerate(zip(xs, ws, r)):
+            al = PP_ALIGN.LEFT if j < right_from else PP_ALIGN.RIGHT
+            text(s, cx, yy + 0.045, cw, row_h, str(v), size=size,
+                 bold=strong, color=INK if strong else INK, align=al)
+        yy += row_h
+        if i < len(rows) - 1 and (i + 1) not in bold_rows:
+            bar(s, x, yy, w, 0.007, RULE)
+        elif i < len(rows) - 1:
+            bar(s, x, yy, w, 0.014, RULE)
+    return yy
+
+
 # ══════════════════════════════════════════════════ 1 — title
 s = slide()
 bar(s, 0, 0, W, 0.11, MAROON)
@@ -118,7 +148,62 @@ for i, (t, b) in enumerate([
     text(s, x, 5.05, cw, 0.32, t, size=15.5, bold=True, color=MAROON)
     text(s, x, 5.44, cw, 1.5, b, size=12.5, color=INK, spacing=1.3)
 
-# ══════════════════════════════════════════════════ 3 — headline numbers
+# ══════════════════════════════════════════════════ 3 — dataset
+s = slide()
+header(s, "Dataset", "32 annotated thermal transects, 236 individually tracked animals")
+picture_fit(s, f"{AST}/dataset_grid.png", M, 1.80, W - 2 * M, 2.42)
+text(s, M, 4.32, W - 2 * M, 0.3,
+     "Top: frames as the detector receives them, after CLAHE normalization.   "
+     "Bottom: the same frames with their annotation.",
+     size=11.5, color=MUTE)
+
+table(s, M, 4.86, 6.35,
+      ["Split", "Videos", "Frames", "With deer", "Empty", "Boxes"],
+      [["Train", "19", "12,852", "5,013", "7,839", "7,547"],
+       ["Val",   "4",  "2,337",  "935",   "1,402", "2,564"],
+       ["Test",  "9",  "3,725",  "1,490", "2,235", "2,792"],
+       ["Total", "32", "18,914", "7,438", "11,476", "12,903"]],
+      widths=[1.5, 1.0, 1.15, 1.25, 1.0, 1.1],
+      size=12.5, bold_rows=(3,))
+
+text(s, 7.55, 4.86, 5.05, 0.3, "What matters here", size=14.5, bold=True, color=MAROON)
+text(s, 7.55, 5.28, 5.05, 1.9,
+     ["11,476 frames are explicit negatives. A survey system must not fire on warm rocks "
+      "or structures, so background frames are annotated, not discarded.",
+      "Splits are by video and site-stratified — no frame from a training video appears "
+      "in evaluation."],
+     size=13, spacing=1.28, gap=9)
+
+# ══════════════════════════════════════════════════ 4 — detection benchmark
+s = slide()
+header(s, "Detection", "Twelve architectures, and very little separates them")
+DET = [["YOLOv8m",  "0.459", "0.780", "0.572", "0.660", "0.727"],
+       ["ATSS R50", "0.380", "0.683", "0.635", "0.658", "0.673"],
+       ["TOOD R50", "0.396", "0.683", "0.621", "0.650", "0.670"],
+       ["YOLO11m",  "0.460", "0.897", "0.503", "0.645", "0.775"],
+       ["RT-DETR-L","0.434", "0.643", "0.605", "0.623", "0.635"],
+       ["YOLO12m",  "0.508", "0.929", "0.452", "0.608", "0.767"],
+       ["YOLOv9m",  "0.506", "0.917", "0.450", "0.604", "0.759"],
+       ["YOLOv10m", "0.510", "0.874", "0.453", "0.597", "0.737"],
+       ["DINO R50", "0.365", "0.560", "0.572", "0.566", "0.562"],
+       ["Faster R-CNN", "0.418", "0.393", "0.723", "0.509", "0.433"],
+       ["RTMDet-m", "0.466", "0.325", "0.779", "0.459", "0.368"]]
+table(s, M, 1.92, 6.0,
+      ["Model", "AP50", "Precision", "Recall", "F1", "F0.5"],
+      DET, widths=[1.75, 0.85, 1.15, 0.9, 0.8, 0.85],
+      size=11.5, head_size=10.5, row_h=0.375, bold_rows=(3,))
+
+picture_fit(s, f"{AST}/detect_grid.png", 7.15, 1.92, 5.45, 2.75)
+text(s, 7.15, 4.80, 5.45, 0.3, "Why YOLO11m", size=14.5, bold=True, color=MAROON)
+text(s, 7.15, 5.22, 5.45, 1.9,
+     ["AP50 spans only 0.365–0.510 across designs as different as Faster R-CNN, DINO and "
+      "YOLO12m — the signature of a data-limited rather than an architecture-limited regime.",
+      "The confirmation stage downstream must reject tens of thousands of false candidates "
+      "against a few hundred true ones, so we select on precision-weighted F0.5, where "
+      "YOLO11m ranks first at 0.775."],
+     size=12.5, spacing=1.26, gap=9)
+
+# ══════════════════════════════════════════════════ 5 — headline numbers
 s = slide()
 header(s, "Results", "Detection is not the bottleneck")
 for i, (v, l, c) in enumerate([
@@ -141,7 +226,42 @@ text(s, 7.15, 6.72, 5.45, 0.3,
      "Held out: rule swept on 19 training videos, frozen, reported on 13 unseen.",
      size=11, color=MUTE)
 
-# ══════════════════════════════════════════════════ 4 — qualitative
+# ══════════════════════════════════════════════════ 6 — per-video breakdown
+s = slide()
+header(s, "Per-video breakdown", "Reading a row left to right attributes that video's loss to a stage")
+PV = [["NShelbyRd (blue)", "SHB", "27", "22", "16", "20", "−7"],
+      ["GolfDr",           "SHB", "12", "12", "10", "14", "+2"],
+      ["NWolfCreek (orange)","SHB","9",  "9",  "9",  "5",  "−4"],
+      ["GiantCityRd",      "TON", "8",  "7",  "7",  "3",  "−5"],
+      ["Robinson",         "SHW", "7",  "7",  "7",  "7",  "0"],
+      ["Melvin",           "SHW", "5",  "5",  "5",  "1",  "−4"],
+      ["AquaCultureRd",    "TON", "3",  "1",  "1",  "0",  "−3"],
+      ["N25thBlue",        "MAS", "3",  "3",  "3",  "3",  "0"],
+      ["NMarseilles",      "MAS", "3",  "3",  "3",  "1",  "−2"],
+      ["OikosRd",          "TON", "2",  "2",  "2",  "1",  "−1"],
+      ["TouchofNature",    "TON", "2",  "1",  "1",  "0",  "−2"],
+      ["ChipsRd",          "TON", "1",  "1",  "1",  "1",  "0"],
+      ["SIron",            "SHW", "1",  "1",  "1",  "2",  "+1"],
+      ["Total",            "",    "83", "74", "66", "58", "−25"]]
+table(s, M, 1.88, 7.15,
+      ["Video", "Site", "Animals", "Detected", "Own track", "Counted", "Error"],
+      PV, widths=[2.35, 0.75, 1.05, 1.05, 1.1, 0.95, 0.8],
+      size=11.5, head_size=10.5, row_h=0.335, right_from=2, bold_rows=(13,))
+
+text(s, 8.55, 1.88, 4.05, 0.3, "How to read it", size=14.5, bold=True, color=MAROON)
+text(s, 8.55, 2.30, 4.05, 4.4,
+     ["Animals is the annotated count. Detected and Own track are the two intermediate "
+      "stages; Counted is what the system reports.",
+      "The error concentrates in dense-group footage. NShelbyRd loses 5 animals to "
+      "detection and a further 6 to association — the largest tracking failure in the "
+      "corpus, and the reason group video dominates the total.",
+      "Only two videos over-count, and both do so with their detection and association "
+      "columns complete. Their error is confirmation accepting spurious tracks, not "
+      "anything upstream.",
+      "MAE 2.38 animals per video; the system under-counts and essentially never inflates."],
+     size=12.5, spacing=1.26, gap=10)
+
+# ══════════════════════════════════════════════════ 7 — qualitative
 s = slide()
 header(s, "Qualitative results", "Tracking holds through overlap and low contrast")
 picture_fit(s, f"{FIG}/qualitative.png", M, 1.85, W - 2 * M, 3.55)
@@ -159,7 +279,7 @@ for i, (t, b) in enumerate([
     text(s, x, 5.86, cw, 0.3, t, size=14.5, bold=True, color=MAROON)
     text(s, x, 6.22, cw, 1.0, b, size=12, color=INK, spacing=1.28)
 
-# ══════════════════════════════════════════════════ 5 — the inversion
+# ══════════════════════════════════════════════════ 8 — the inversion
 s = slide()
 header(s, "Central finding", "Improving candidate generation makes counting worse")
 picture_fit(s, f"{AST}/inversion.png", M - 0.1, 2.0, 6.5, 3.2)
@@ -181,7 +301,7 @@ text(s, 7.35, 5.41, 5.25, 1.8,
      "capacity — the constraint is supervision, not architecture.",
      size=14, spacing=1.32)
 
-# ══════════════════════════════════════════════════ 6 — takeaways
+# ══════════════════════════════════════════════════ 9 — takeaways
 s = slide()
 header(s, "Summary", "What we can claim today")
 rows = [
