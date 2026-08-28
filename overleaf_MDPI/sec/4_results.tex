@@ -76,29 +76,42 @@ the confirmation stage very different amounts.
 \caption{\textbf{The precision--recall split is a threshold choice, not a capability
 limit.} Three sets of weights scored on the same test split under the presence criterion,
 at the conventional reporting threshold of 0.25 and at the 0.10 the counting pipeline
-actually runs the detector at. The two rows per model are the two strongest
-detectors of \cref{tab:detectors}, ordered by the best F1 either threshold achieves. That
-ordering is for reading, not a verdict: F1 weights precision and recall equally, which
-\cref{sec:choosing} argues is the wrong balance for a counting pipeline, and under the
-precision-weighted $F_{0.5}$ we actually select on, YOLO11m leads YOLO12m at 0.775 to
-0.767. Lowering the
+actually runs the detector at. All six detectors we trained under one framework, at
+two thresholds each, ordered by the best F1 either threshold achieves. That ordering is for
+reading, not a verdict: F1 weights precision and recall equally, which \cref{sec:choosing}
+argues is the wrong balance for a counting pipeline, and under the precision-weighted
+$F_{0.5}$ we actually select on, YOLO11m leads at 0.775 against YOLO12m's 0.767. Lowering the
 threshold buys YOLO12m 20 points of recall for 22 of precision, which is one knob on one
 curve. The direction of the trade matters more than its size, because it is not
-symmetric. A quiet detector can be made louder; a loud one has nowhere to go. Scored at
-0.10, the most recall-oriented model in \cref{tab:detectors}, RTMDet-m, emits 155,491 false
-boxes for 2611 true ones --- a precision of 0.017, and not a candidate pool any confirmation
-stage can work with.\label{tab:threshold}}
+symmetric, and the lower rows show it. A detector already operating at high recall has
+nowhere to go: dropping RT-DETR-L to 0.10 buys 231 additional true boxes and costs 7433
+false ones, collapsing precision to 0.187, and RTMDet-m --- omitted here as the extreme case
+--- reaches 155,491 false boxes at the same threshold. Neither is a candidate pool any
+confirmation stage can work with, which is the argument of \cref{sec:inversion} appearing
+one stage earlier.\label{tab:threshold}}
 \centering\small
 \setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{lCCCCCCC}
 \toprule
 \textbf{Model} & \textbf{Conf.} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{TP} & \textbf{FP} & \textbf{FN} \\
 \midrule
-\multirow{2}{*}{YOLO12m} & 0.25 & \textbf{0.929} & 0.452 & 0.608 & 1262 & 96 & 1530 \\
- & 0.10 & 0.711 & \textbf{0.653} & \textbf{0.681} & 1824 & 741 & 968 \\
+\multirow{2}{*}{YOLO12m} & 0.25 & \textbf{0.929} & 0.452 & 0.608 & 1262 & \textbf{96} & 1530 \\
+ & 0.10 & 0.711 & 0.653 & \textbf{0.681} & 1824 & 741 & 968 \\
 \midrule
 \multirow{2}{*}{YOLO11m} & 0.25 & 0.897 & 0.503 & 0.644 & 1404 & 162 & 1388 \\
  & 0.10 & 0.777 & 0.576 & 0.661 & 1608 & 462 & 1184 \\
+\midrule
+\multirow{2}{*}{YOLOv8m} & 0.25 & 0.780 & 0.572 & 0.660 & 1598 & 450 & 1194 \\
+ & 0.10 & 0.361 & \textbf{0.760} & 0.490 & 2121 & 3749 & \textbf{671} \\
+\midrule
+\multirow{2}{*}{YOLOv9m} & 0.25 & 0.917 & 0.450 & 0.604 & 1256 & 114 & 1536 \\
+ & 0.10 & 0.769 & 0.572 & 0.656 & 1596 & 478 & 1196 \\
+\midrule
+\multirow{2}{*}{YOLOv10m} & 0.25 & 0.874 & 0.453 & 0.597 & 1266 & 182 & 1526 \\
+ & 0.10 & 0.661 & 0.615 & 0.637 & 1717 & 882 & 1075 \\
+\midrule
+\multirow{2}{*}{RT-DETR-L} & 0.25 & 0.643 & 0.605 & 0.623 & 1689 & 939 & 1103 \\
+ & 0.10 & 0.187 & 0.688 & 0.293 & 1920 & 8372 & 872 \\
 \bottomrule
 \end{tabularx}
 \end{table}
