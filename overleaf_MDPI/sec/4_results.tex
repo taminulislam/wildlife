@@ -629,31 +629,33 @@ rarely while mosaic augmentation shrinks objects concurrently. The mirror image 
 small-object problem is visible here: the detector performs worst where examples are
 scarcest.
 
-The remedy is less straightforward than it appears, though not for the reason we first
-believed. The obvious fix is to widen scale augmentation until the training distribution
-reaches 100--200\,px. Two attempts to do so collapsed to near-zero mAP within a few epochs,
-and we initially attributed that to the symmetry of the standard implementation: sampling
-from $[1-m,\,1+m]$ means that reaching $2.2\times$ also means sampling $0\times$, which
-drives a 27\,px animal to sub-pixel size on a corpus that is 71\% small objects. On
-re-examination that attribution is not supported. The second run moved three
-hyperparameters at once --- scale $0.5\!\to\!0.6$, mosaic $1.0\!\to\!0.4$ and batch
-$32\!\to\!48$ --- and its mAP@50 fell $0.406\to0.138\to0.001$ over epochs one to three, which
-is where the three-epoch learning-rate warm-up completes. That trajectory is characteristic
-of an optimizer divergence rather than of a gradual augmentation penalty, and a scale of
-0.6 is in any case barely wider than the 0.5 under which the same model trains stably for
-110 epochs. We therefore report the collapse as an observation and not as evidence about
-augmentation.
+The obvious remedy is to widen scale augmentation until the training distribution reaches
+100--200\,px, and we report here that we have not yet established whether it works. Two
+earlier attempts appeared to collapse to near-zero mAP within three epochs, and we
+attributed that to the symmetry of the standard implementation: sampling from
+$[1-m,\,1+m]$ means that reaching $2.2\times$ also means sampling $0\times$, which drives a
+27\,px animal to sub-pixel size on a corpus that is 71\% small objects. That attribution
+was wrong, and so was the premise behind it. Both runs were cancelled after five and ten
+minutes of wall-clock respectively; neither diverged. What they recorded --- mAP@50 of
+0.406, 0.138 and 0.001 across their first three epochs --- is the ordinary transient of this
+training recipe, not a failure of it. The baseline detector, trained with the standard
+symmetric setting, passes through the same trough: 0.429, 0.299, 0.000, 0.000, 0.010, and
+then 0.316 by its sixth epoch, before going on to the result in \cref{tab:detectors}. The
+dip coincides with the end of the three-epoch learning-rate warm-up and it resolves without
+intervention. Read against that curve, the two aborted runs were on an unremarkable
+trajectory when they were stopped.
 
 Two further corrections belong here, because both bear on how reproducible this remedy is.
 Asymmetric scaling is \emph{not} absent from common frameworks: Ultralytics accepts an
 explicit $(\mathrm{lo},\mathrm{hi})$ pair from version 8.4, so enlarging the upper tail
 without touching the lower one needs a configuration change rather than new code. And
-mosaic augmentation does not shrink objects as we previously stated --- the implementation
-composes a $2\times$ canvas and crops it back to the input size, so object pixel dimensions
-are preserved. The interaction we described between mosaic and scale therefore does not
-exist. A controlled experiment isolating the scale parameter, with every other setting
-matched to the baseline run, is the correct test and is the natural next step; we report
-this failure honestly rather than presenting an untested mechanism for it.
+mosaic augmentation does not shrink objects --- the implementation composes a $2\times$
+canvas and crops it back to the input size, so object pixel dimensions are preserved, and
+the interaction we had described between mosaic and scale does not exist. We therefore make
+no claim in either direction about whether widening the scale distribution helps: the
+experiment that would settle it, holding every other hyperparameter at the baseline's
+values and moving only the sampling bounds, is the one that should be run, and reporting an
+untested mechanism in its place would be worse than reporting nothing.
 
 The loss is concentrated regardless of the remedy: the one video containing these animals
 counts 3 of 8, three of its five misses being the oversized individuals, so this is worth
