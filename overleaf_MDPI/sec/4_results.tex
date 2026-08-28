@@ -76,18 +76,18 @@ the confirmation stage very different amounts.
 \caption{\textbf{The precision--recall split is a threshold choice, not a capability
 limit.} Three sets of weights scored on the same test split under the presence criterion,
 at the conventional reporting threshold of 0.25 and at the 0.10 the counting pipeline
-actually runs the detector at. Models are ordered by the best F1 either threshold
-achieves, highest first. That is an ordering for reading the table, not a verdict: F1
-weights precision and recall equally, which \cref{sec:choosing} argues is the wrong balance
-for a counting pipeline, and under the precision-weighted $F_{0.5}$ we actually select on,
-YOLO11m leads YOLO12m at 0.775 to 0.767. The three rows are the two strongest detectors of
-\cref{tab:detectors} together with the most recall-oriented one, so they span the operating
-range rather than sampling it arbitrarily. Lowering the
+actually runs the detector at. The two rows per model are the two strongest
+detectors of \cref{tab:detectors}, ordered by the best F1 either threshold achieves. That
+ordering is for reading, not a verdict: F1 weights precision and recall equally, which
+\cref{sec:choosing} argues is the wrong balance for a counting pipeline, and under the
+precision-weighted $F_{0.5}$ we actually select on, YOLO11m leads YOLO12m at 0.775 to
+0.767. Lowering the
 threshold buys YOLO12m 20 points of recall for 22 of precision, which is one knob on one
-curve. The RTMDet-m rows show why the direction matters: a detector that is quiet can be
-made louder, but a detector that is already loud has nowhere to go --- at 0.10 it emits
-155,491 false boxes for 2611 true ones, and no confirmation stage can recover from
-that.\label{tab:threshold}}
+curve. The direction of the trade matters more than its size, because it is not
+symmetric. A quiet detector can be made louder; a loud one has nowhere to go. Scored at
+0.10, the most recall-oriented model in \cref{tab:detectors}, RTMDet-m, emits 155,491 false
+boxes for 2611 true ones --- a precision of 0.017, and not a candidate pool any confirmation
+stage can work with.\label{tab:threshold}}
 \centering\small
 \setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{lCCCCCCC}
@@ -95,13 +95,10 @@ that.\label{tab:threshold}}
 \textbf{Model} & \textbf{Conf.} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{TP} & \textbf{FP} & \textbf{FN} \\
 \midrule
 \multirow{2}{*}{YOLO12m} & 0.25 & \textbf{0.929} & 0.452 & 0.608 & 1262 & 96 & 1530 \\
- & 0.10 & 0.711 & 0.653 & \textbf{0.681} & 1824 & 741 & 968 \\
+ & 0.10 & 0.711 & \textbf{0.653} & \textbf{0.681} & 1824 & 741 & 968 \\
 \midrule
 \multirow{2}{*}{YOLO11m} & 0.25 & 0.897 & 0.503 & 0.644 & 1404 & 162 & 1388 \\
  & 0.10 & 0.777 & 0.576 & 0.661 & 1608 & 462 & 1184 \\
-\midrule
-\multirow{2}{*}{RTMDet-m} & 0.25 & 0.325 & 0.779 & 0.459 & 2176 & 4513 & 616 \\
- & 0.10 & 0.017 & \textbf{0.935} & 0.033 & 2611 & 155,491 & 181 \\
 \bottomrule
 \end{tabularx}
 \end{table}
