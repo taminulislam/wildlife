@@ -74,13 +74,17 @@ the confirmation stage very different amounts.
 
 \begin{table}[H]
 \caption{\textbf{The precision--recall split is a threshold choice, not a capability
-limit.} The same three sets of weights scored on the same test split under the presence
-criterion, at the conventional reporting threshold of 0.25 and at the 0.10 the counting
-pipeline actually runs the detector at. Lowering the threshold buys YOLO12m 20 points of
-recall for 22 of precision, which is one knob on one curve. The RTMDet-m rows show why the
-direction matters: a detector that is quiet can be made louder, but a detector that is
-already loud has nowhere to go --- at 0.10 it emits 155,491 false boxes for 2611 true ones,
-and no confirmation stage can recover from that.\label{tab:threshold}}
+limit.} Three sets of weights scored on the same test split under the presence criterion,
+at the conventional reporting threshold of 0.25 and at the 0.10 the counting pipeline
+actually runs the detector at. \textbf{Models are ordered by the best F1 either threshold
+achieves, strongest first}; the same ordering follows from precision. The three are the two
+strongest detectors of \cref{tab:detectors} together with the most recall-oriented one, so
+the rows span the operating range rather than sampling it arbitrarily. Lowering the
+threshold buys YOLO12m 20 points of recall for 22 of precision, which is one knob on one
+curve. The RTMDet-m rows show why the direction matters: a detector that is quiet can be
+made louder, but a detector that is already loud has nowhere to go --- at 0.10 it emits
+155,491 false boxes for 2611 true ones, and no confirmation stage can recover from
+that.\label{tab:threshold}}
 \centering\small
 \setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{lCCCCCCC}
