@@ -18,7 +18,9 @@ for every model. The final column is the precision-weighted F-measure
 $F_{0.5}=1.25\,PR/(0.25P+R)$, reported because the confirmation stage downstream is
 constrained by precision rather than recall (\cref{sec:counting}); $\beta$ is fixed at the
 conventional $0.5$ rather than tuned. Twelve architectures were trained; Deformable DETR R50
-is excluded because it did not converge within our compute budget.\label{tab:detectors}}
+is excluded because its training ran out of GPU memory at epoch 5 (batch 8 on a 40\,GB
+A100) and we did not pursue a smaller-batch rerun, so it is a resource limit on our side
+rather than a result about the architecture.\label{tab:detectors}}
 \begin{adjustwidth}{-\extralength}{0cm}
 \centering\small
 \begin{tabularx}{\fulllength}{lCCCCCCCC}
@@ -123,16 +125,17 @@ an animal but cannot recover an animal the detector never fired on.
   re-fitted. The two frameworks record different quantities, so the series differ by family
   and each panel carries its own legend: the Ultralytics models (\textbf{a}--\textbf{g})
   log precision, recall and mAP@50 per epoch, from which F1 is computed, while the
-  mmdetection models (\textbf{h}--\textbf{l}) log the COCO mAP family. Epoch counts differ
-  because runs early-stopped at different points under a fixed compute budget; the
-  $x$-axes are therefore not comparable across panels and the $y$-axes are not shared.
+  mmdetection models (\textbf{h}--\textbf{l}) log the COCO mAP family. Epoch counts differ by
+  framework rather than by budget: the Ultralytics runs stop on a patience criterion,
+  while the mmdetection runs complete fixed schedules of 70 epochs, or 36 for DINO's
+  native schedule, validating every second epoch. The $y$-axes are not shared.
   Two patterns matter for what follows. Precision settles near 0.65--0.70 while recall
   settles near 0.40--0.45 in every Ultralytics panel, which is the operating point
   \cref{sec:choosing} argues the counting stage actually needs; and several models
   (\textbf{c}, \textbf{f}, \textbf{i}) peak early and then decline, so the reported figures
-  come from the best checkpoint rather than the last. Deformable DETR R50 is absent because
-  it reached only two validation epochs within the same budget, which is the exclusion
-  noted in \cref{tab:detectors}.\label{fig:training}}
+  come from the best checkpoint rather than the last. Deformable DETR R50 is absent because its
+  training ran out of GPU memory at epoch 5, so it has no curve to draw
+  (\cref{tab:detectors}).\label{fig:training}}
 \end{figure}
 
 One architectural pattern survives every criterion. The query-based detectors underperform:

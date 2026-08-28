@@ -96,7 +96,10 @@ def load_mmdet(run: str):
                 vals.append(d)
     if not vals:
         return None
-    ep = list(range(1, len(vals) + 1))
+    # "step" on a validation event is the epoch it ran at, and every config validates
+    # every second epoch -- so enumerating the events instead would halve the apparent
+    # length of every mmdet panel against the Ultralytics ones.
+    ep = [v["step"] for v in vals]
     g = lambda k: [v[k] * 100 for v in vals]
     return ep, {"mAP@50 (%)": g("coco/bbox_mAP_50"), "mAP@75 (%)": g("coco/bbox_mAP_75"),
                 "mAP@[.5:.95] (%)": g("coco/bbox_mAP"), "mAP-small (%)": g("coco/bbox_mAP_s")}
