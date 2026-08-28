@@ -46,23 +46,23 @@ PALETTES = {
 }
 MARKERS = ["o", "s", "^", "P"]
 
-# Ten panels: the benchmark roster minus YOLOv8m and DINO R50, plus the 1280 px variant the
-# resolution ablation turns on. Deformable DETR is deliberately absent: it produced two validation
-# epochs before the compute budget ran out, which is not a curve -- that run's absence is
-# the same evidence the table's exclusion note carries.
+# The eight strongest detectors by test AP50, best first:
+#   YOLOv9m@1280 0.516, YOLOv10m 0.510, YOLO12m 0.508, YOLOv9m 0.506,
+#   RTMDet-m 0.466, YOLO11m 0.460, RT-DETR-L 0.434, Faster R-CNN R50 0.418.
+# Dropped: TOOD R50 0.396 and ATSS R50 0.380, plus YOLOv8m and DINO R50 earlier, and
+# Deformable DETR, whose training ran out of memory before it produced a curve. The
+# benchmark table still reports all eleven; this figure shows the top of that list.
 ULTRA = [
-    ("YOLO11m", "yolo11m_640_v3pooled"),
+    ("YOLOv9m @1280", "yolov9m_1280_v3pooled"),
+    ("YOLOv10m", "yolov10m_640_v3pooled"),
     ("YOLO12m", "yolo12m_640_v3pooled"),
     ("YOLOv9m", "yolov9m_640_v3pooled"),
-    ("YOLOv10m", "yolov10m_640_v3pooled"),
+    ("YOLO11m", "yolo11m_640_v3pooled"),
     ("RT-DETR-L", "rtdetr-l_640_v3pooled"),
-    ("YOLOv9m @1280", "yolov9m_1280_v3pooled"),
 ]
 MM = [
-    ("ATSS R50", "atss_r50_v3pooled"),
-    ("TOOD R50", "tood_r50_v3pooled"),
-    ("Faster R-CNN R50", "faster-rcnn_r50_v3pooled"),
     ("RTMDet-m", "rtmdet_m_v3pooled"),
+    ("Faster R-CNN R50", "faster-rcnn_r50_v3pooled"),
 ]
 
 
@@ -141,17 +141,15 @@ def main() -> None:
                          "read against different x ranges.")
     ap.add_argument("--out", default="overleaf_MDPI/figures/fig5_training.pdf")
     ap.add_argument("--width", type=float, default=7.27, help="inches; MDPI \\fulllength")
-    ap.add_argument("--height", type=float, default=7.4)
+    ap.add_argument("--height", type=float, default=4.3)
     args = ap.parse_args()
     colours = PALETTES[args.palette]
 
-    panels = []
-    for name, run in ULTRA:
-        d = load_ultra(run)
-        panels.append((name, d))
-    for name, run in MM:
-        d = load_mmdet(run)
-        panels.append((name, d))
+    loaded = {n: load_ultra(r) for n, r in ULTRA}
+    loaded.update({n: load_mmdet(r) for n, r in MM})
+    RANK = ["YOLOv9m @1280", "YOLOv10m", "YOLO12m", "YOLOv9m",
+            "RTMDet-m", "YOLO11m", "RT-DETR-L", "Faster R-CNN R50"]
+    panels = [(n, loaded.get(n)) for n in RANK]
 
     missing = [n for n, d in panels if d is None]
     if missing:
@@ -163,7 +161,7 @@ def main() -> None:
     # \fulllength page, which is narrower than tall once the axis labels are placed -- the
     # opposite of the wide panels curves against epoch want. Three columns gives ~2.3 in,
     # landscape, with room for the legend to sit off the lines. The last two cells are blank.
-    fig, axes = plt.subplots(4, 3, figsize=(args.width, args.height))
+    fig, axes = plt.subplots(2, 4, figsize=(args.width, args.height))
     # Ten panels over three columns leaves one alone on the last row. Centring it reads as
     # a deliberate layout; flush left reads as a missing panel.
     flat = list(axes.ravel())
@@ -185,8 +183,8 @@ def main() -> None:
         draw(ax, d[0], d[1], colours, args.max_epoch)
         ax.set_title(f"({letter}) {name}", fontsize=7, fontweight="bold", pad=3, y=-0.42)
 
-    fig.subplots_adjust(left=0.062, right=0.995, top=0.988, bottom=0.055,
-                        wspace=0.26, hspace=0.72)
+    fig.subplots_adjust(left=0.055, right=0.996, top=0.985, bottom=0.115,
+                        wspace=0.30, hspace=0.52)
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     fig.savefig(args.out, bbox_inches="tight", pad_inches=0.02)
     png = os.path.splitext(args.out)[0] + ".png"

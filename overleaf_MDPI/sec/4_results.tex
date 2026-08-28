@@ -123,19 +123,20 @@ an animal but cannot recover an animal the detector never fired on.
   \caption{\textbf{Validation curves for every architecture in \cref{tab:detectors}.} One
   panel per detector, drawn from the training logs each run wrote; no curve is smoothed or
   re-fitted. The two frameworks record different quantities, so the series differ by family
-  and each panel carries its own legend: the Ultralytics models (\textbf{a}--\textbf{f})
-  log precision, recall and mAP@50 per epoch, from which F1 is computed, while the
-  mmdetection models (\textbf{g}--\textbf{j}) log the COCO mAP family. All panels are
-  truncated at epoch 70, the length of the mmdetection schedules, so that the curves are read
-  against a common range; YOLO11m alone ran longer, to 110. The $y$-axes are not shared.
-  Two patterns matter for what follows. Precision settles near 0.65--0.70 while recall
-  settles near 0.40--0.45 in every Ultralytics panel, which is the operating point
+  and each panel carries its own legend: the Ultralytics runs (\textbf{a}--\textbf{d},
+  \textbf{f}, \textbf{g}) log precision, recall and mAP@50 per epoch, from which F1 is
+  computed, while the mmdetection ones (\textbf{e}, \textbf{h}) log the COCO mAP family.
+  Panels are ordered by test AP$_{50}$, strongest first, which interleaves the two
+  frameworks. All are truncated at epoch 70, the length of the mmdetection schedules, so the
+  curves are read against a common range; YOLO11m alone ran longer, to 110. The $y$-axes are
+  not shared. Two patterns matter for what follows. Precision settles near 0.65--0.70 while
+  recall settles near 0.40--0.45 in every Ultralytics panel, which is the operating point
   \cref{sec:choosing} argues the counting stage actually needs; and several models
-  (\textbf{b}, \textbf{e}, \textbf{h}) peak early and then decline, so the reported figures
-  come from the best checkpoint rather than the last. Three of the benchmarked models are
-  omitted for space and legibility --- YOLOv8m and DINO R50, whose curves add nothing the
-  others do not show, and Deformable DETR R50, whose training ran out of GPU memory at epoch
-  5 and has no curve to draw (\cref{tab:detectors}).\label{fig:training}}
+  (\textbf{c}, \textbf{e}, \textbf{g}) peak early and then decline, so the reported figures
+  come from the best checkpoint rather than the last. These are the eight strongest detectors
+  of the eleven in \cref{tab:detectors}; ATSS R50, TOOD R50, YOLOv8m and DINO R50 are omitted
+  for legibility, and Deformable DETR R50 produced no curve because its training ran out of
+  GPU memory at epoch 5.\label{fig:training}}
 \end{figure}
 
 One architectural pattern survives every criterion. The query-based detectors underperform:
