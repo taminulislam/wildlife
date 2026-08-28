@@ -98,7 +98,9 @@ def match_kind(gt, det) -> set:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weights", required=True)
-    ap.add_argument("--arch", default="yolo", choices=["yolo", "rtdetr"])
+    ap.add_argument("--arch", default="yolo", choices=["yolo", "rtdetr", "mmdet"])
+    ap.add_argument("--config", default="",
+                    help="mmdet config .py; required when --arch mmdet")
     ap.add_argument("--cvat-dir", default="data/cvat_export")
     ap.add_argument("--source", default="data/raw")
     ap.add_argument("--dataset-root", default="data/dataset/yolo_v3")
@@ -118,8 +120,29 @@ def main() -> None:
     ap.add_argument("--contrast", default="clahe", choices=["clahe", "stretch", "none"])
     args = ap.parse_args()
 
-    from ultralytics import YOLO, RTDETR
-    model = (RTDETR if args.arch == "rtdetr" else YOLO)(args.weights)
+    # Both families reduce to the same thing here -- boxes and scores for one frame --
+    # so the rest of the loop does not care which produced them.
+    if args.arch == "mmdet":
+        if not args.config:
+            raise SystemExit("--arch mmdet requires --config")
+        from mmdet.apis import init_detector, inference_detector
+        _m = init_detector(args.config, args.weights, device=f"cuda:{args.device}")
+
+        def detect(frame):
+            inst = inference_detector(_m, frame).pred_instances
+            keep = inst.scores >= args.conf
+            return (inst.bboxes[keep].cpu().numpy(),
+                    inst.scores[keep].cpu().numpy())
+    else:
+        from ultralytics import YOLO, RTDETR
+        _m = (RTDETR if args.arch == "rtdetr" else YOLO)(args.weights)
+
+        def detect(frame):
+            r = _m.predict(source=frame, imgsz=args.imgsz, conf=args.conf,
+                           device=args.device, verbose=False)[0]
+            if r.boxes is None or not len(r.boxes):
+                return None, None
+            return r.boxes.xyxy.cpu().numpy(), r.boxes.conf.cpu().numpy()
 
     splits = split_map(args.dataset_root)
     os.makedirs(args.out, exist_ok=True)
@@ -170,12 +193,9 @@ def main() -> None:
             if tidx is None:
                 continue
             frame = enhance_contrast(frame, method=args.contrast)
-            r = model.predict(source=frame, imgsz=args.imgsz, conf=args.conf,
-                              device=args.device, verbose=False)[0]
-            if r.boxes is None or not len(r.boxes):
+            dets, dconf = detect(frame)
+            if dets is None or not len(dets):
                 continue
-            dets = r.boxes.xyxy.cpu().numpy()
-            dconf = r.boxes.conf.cpu().numpy()
             gtb = by_frame.get(fi, [])
             for ti in tidx:
                 # GT boxes of THIS track on THIS frame (boxes are stored per-frame, so
