@@ -140,7 +140,7 @@ an animal but cannot recover an animal the detector never fired on.
 
 One architectural pattern survives every criterion. The query-based detectors underperform:
 DINO R50 reaches 0.365 AP$_{50}$ on a full native schedule, below plain Faster R-CNN, and
-Deformable DETR did not converge within budget. RT-DETR-L, which targets that weakness,
+Deformable DETR's training exhausted GPU memory at epoch 5 and was not rerun at a smaller batch. RT-DETR-L, which targets that weakness,
 recovers to 0.434 but still trails the convolutional one-stage models.
 
 \subsection{Choosing a Detector for Counting}
@@ -624,42 +624,19 @@ very \emph{large}: 104, 149 and 157\,px against a corpus median of 27, and the 1
 was never detected at all. \Cref{fig:scale} gives the likely explanation: the largest
 training box is 95.6\,px and the split contains \emph{zero} boxes at or above 100\,px, so all
 three sit outside the annotated size distribution. Scale augmentation does present enlarged
-copies, so the detector is not strictly naive to large objects, but enlargement is sampled
-rarely while mosaic augmentation shrinks objects concurrently. The mirror image of the
+copies, so the detector is not strictly naive to large objects, but under the symmetric
+sampling used here an enlargement beyond $1.5\times$ is never drawn. The mirror image of the
 small-object problem is visible here: the detector performs worst where examples are
 scarcest.
 
-The obvious remedy is to widen scale augmentation until the training distribution reaches
-100--200\,px, and we report here that we have not yet established whether it works. Two
-earlier attempts appeared to collapse to near-zero mAP within three epochs, and we
-attributed that to the symmetry of the standard implementation: sampling from
-$[1-m,\,1+m]$ means that reaching $2.2\times$ also means sampling $0\times$, which drives a
-27\,px animal to sub-pixel size on a corpus that is 71\% small objects. That attribution
-was wrong, and so was the premise behind it. Both runs were cancelled after five and ten
-minutes of wall-clock respectively; neither diverged. What they recorded --- mAP@50 of
-0.406, 0.138 and 0.001 across their first three epochs --- is the ordinary transient of this
-training recipe, not a failure of it. The baseline detector, trained with the standard
-symmetric setting, passes through the same trough: 0.429, 0.299, 0.000, 0.000, 0.010, and
-then 0.316 by its sixth epoch, before going on to the result in \cref{tab:detectors}. The
-dip coincides with the end of the three-epoch learning-rate warm-up and it resolves without
-intervention. Read against that curve, the two aborted runs were on an unremarkable
-trajectory when they were stopped.
-
-Two further corrections belong here, because both bear on how reproducible this remedy is.
-Asymmetric scaling is \emph{not} absent from common frameworks: Ultralytics accepts an
-explicit $(\mathrm{lo},\mathrm{hi})$ pair from version 8.4, so enlarging the upper tail
-without touching the lower one needs a configuration change rather than new code. And
-mosaic augmentation does not shrink objects --- the implementation composes a $2\times$
-canvas and crops it back to the input size, so object pixel dimensions are preserved, and
-the interaction we had described between mosaic and scale does not exist. We therefore make
-no claim in either direction about whether widening the scale distribution helps: the
-experiment that would settle it, holding every other hyperparameter at the baseline's
-values and moving only the sampling bounds, is the one that should be run, and reporting an
-untested mechanism in its place would be worse than reporting nothing.
-
-The loss is concentrated regardless of the remedy: the one video containing these animals
-counts 3 of 8, three of its five misses being the oversized individuals, so this is worth
-roughly 4 points of the headline figure.
+The remedy is straightforward to state, and we do not evaluate it here. Covering the upper
+tail requires sampling the resize factor from an explicit asymmetric range rather than
+symmetrically about unity, so that a 96\,px box can be presented at twice its size without
+the same draw shrinking a 27\,px animal to sub-pixel; Ultralytics supports such a range from
+version 8.4. Whether it recovers these animals is left to future work. The loss is
+concentrated in any case: the one video containing them counts 3 of 8, three of its five
+misses being the oversized individuals, so this is worth roughly 4 points of the headline
+figure.
 
 \subsection{Individual Re-Identification at 27 Pixels}
 \label{sec:reid}
