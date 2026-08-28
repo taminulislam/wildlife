@@ -623,14 +623,35 @@ rarely while mosaic augmentation shrinks objects concurrently. The mirror image 
 small-object problem is visible here: the detector performs worst where examples are
 scarcest.
 
-The remedy is less straightforward than it appears. Widening scale augmentation to cover
-100--200\,px collapsed training to zero mAP within five epochs, because the standard
-implementation is symmetric --- enlarging the sampling range also shrinks a 27\,px animal to
-sub-pixel size, and on a corpus that is 71\% small objects those examples are unlearnable.
-Enlarging the upper tail without destroying the lower one requires asymmetric augmentation
-that common frameworks do not expose. The loss is concentrated: the one video containing
-these animals counts 3 of 8, three of its five misses being the oversized individuals, so
-this is worth roughly 4 points of the headline figure.
+The remedy is less straightforward than it appears, though not for the reason we first
+believed. The obvious fix is to widen scale augmentation until the training distribution
+reaches 100--200\,px. Two attempts to do so collapsed to near-zero mAP within a few epochs,
+and we initially attributed that to the symmetry of the standard implementation: sampling
+from $[1-m,\,1+m]$ means that reaching $2.2\times$ also means sampling $0\times$, which
+drives a 27\,px animal to sub-pixel size on a corpus that is 71\% small objects. On
+re-examination that attribution is not supported. The second run moved three
+hyperparameters at once --- scale $0.5\!\to\!0.6$, mosaic $1.0\!\to\!0.4$ and batch
+$32\!\to\!48$ --- and its mAP@50 fell $0.406\to0.138\to0.001$ over epochs one to three, which
+is where the three-epoch learning-rate warm-up completes. That trajectory is characteristic
+of an optimizer divergence rather than of a gradual augmentation penalty, and a scale of
+0.6 is in any case barely wider than the 0.5 under which the same model trains stably for
+110 epochs. We therefore report the collapse as an observation and not as evidence about
+augmentation.
+
+Two further corrections belong here, because both bear on how reproducible this remedy is.
+Asymmetric scaling is \emph{not} absent from common frameworks: Ultralytics accepts an
+explicit $(\mathrm{lo},\mathrm{hi})$ pair from version 8.4, so enlarging the upper tail
+without touching the lower one needs a configuration change rather than new code. And
+mosaic augmentation does not shrink objects as we previously stated --- the implementation
+composes a $2\times$ canvas and crops it back to the input size, so object pixel dimensions
+are preserved. The interaction we described between mosaic and scale therefore does not
+exist. A controlled experiment isolating the scale parameter, with every other setting
+matched to the baseline run, is the correct test and is the natural next step; we report
+this failure honestly rather than presenting an untested mechanism for it.
+
+The loss is concentrated regardless of the remedy: the one video containing these animals
+counts 3 of 8, three of its five misses being the oversized individuals, so this is worth
+roughly 4 points of the headline figure.
 
 \subsection{Individual Re-Identification at 27 Pixels}
 \label{sec:reid}
