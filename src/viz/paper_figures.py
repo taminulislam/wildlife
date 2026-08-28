@@ -128,8 +128,6 @@ def fig_criterion(out: str, table_csv: str) -> None:
     upward rather than from 0.0: its lightest steps sit near luminance 0.83 and would be
     illegible as thin lines on a white page.
     """
-    import seaborn as sns
-
     # Display names must match tab:detectors exactly. yolov8mfix is the same architecture
     # as yolov8m with a re-selected checkpoint, so including both would double-count one
     # model and put 12 rows in a figure the text describes as eleven.
@@ -153,47 +151,58 @@ def fig_criterion(out: str, table_csv: str) -> None:
     mover = max(models, key=lambda m: rb[m] - ra[m])
     n_moved = sum(1 for m in models if abs(rb[m] - ra[m]) >= 2)
 
-    ordered = sorted(models.items(), key=lambda kv: -kv[1]["touch"])
-    ramp = sns.color_palette("rocket_r", as_cmap=True)
-    cols = {m: ramp(0.25 + 0.72 * i / max(len(ordered) - 1, 1))
-            for i, (m, _v) in enumerate(ordered)}
+    # Plot RANK, not F1. Plotting the values made every line rise, because relaxing the
+    # criterion raises F1 for everyone -- which is arithmetic, not a finding -- and left the
+    # re-ranking to be inferred from crossings. On a rank axis the crossings ARE the content:
+    # a flat line is a model the criterion agrees about, a steep one is a model it does not.
+    #
+    # Colour marks movement rather than rank. A ramp keyed to rank would encode position
+    # twice and say nothing; here the models that shift two or more places carry colour and
+    # the stable ones recede to grey, so the claim in the title is the thing the eye lands on.
+    ordered = sorted(models, key=lambda m: ra[m])
+    ACCENT = ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9", "#8C2D3F"]
+    moved = [m for m in ordered if abs(rb[m] - ra[m]) >= 2]
+    cols = {m: ACCENT[i % len(ACCENT)] for i, m in enumerate(moved)}
 
-    with sns.axes_style("ticks"):
-        fig, ax = plt.subplots(figsize=(5.4, 4.3))
-        for m, v in ordered:
-            hero = m == "YOLO11m" or m == mover
-            ax.plot([0, 1], [v["iou50"], v["touch"]], color=cols[m],
-                    lw=2.6 if hero else 1.4, alpha=1.0 if hero else 0.75,
-                    marker="o", ms=6 if hero else 4,
-                    markeredgecolor="white", markeredgewidth=0.9,
-                    zorder=3 if hero else 2, solid_capstyle="round")
-
-        span = max(v["touch"] for v in models.values()) - min(v["touch"]
-                                                              for v in models.values())
-        MIN_GAP = max(span, 0.01) * 0.075
-        ys: list[float] = []
-        for _m, v in ordered:
-            ys.append(v["touch"] if not ys else min(v["touch"], ys[-1] - MIN_GAP))
-        for (m, v), y in zip(ordered, ys):
-            hero = m == "YOLO11m" or m == mover
-            if abs(y - v["touch"]) > 1e-6:
-                ax.plot([1.0, 1.055], [v["touch"], y], color="#cfcfcf", lw=0.6, zorder=1)
-            tag = m + (f"  {ra[m]+1}\u2192{rb[m]+1}" if m == mover else "")
-            ax.annotate(tag, (1.06, y), textcoords="offset points", xytext=(2, 0),
-                        va="center", fontsize=7.6 if hero else 6.8,
-                        color=cols[m], weight="bold" if hero else "normal")
+    # Plain matplotlib: this figure needed seaborn only for a style context and despine,
+    # both of which are two lines here, and the wildlife env does not carry seaborn.
+    if True:
+        fig, ax = plt.subplots(figsize=(5.6, 4.4))
+        for m in ordered:
+            mv = m in cols
+            c = cols.get(m, "#BFBFBF")
+            ax.plot([0, 1], [ra[m] + 1, rb[m] + 1], color=c,
+                    lw=2.4 if mv else 1.2, alpha=1.0 if mv else 0.9,
+                    marker="o", ms=6 if mv else 4,
+                    markeredgecolor="white", markeredgewidth=1.0,
+                    zorder=3 if mv else 2, solid_capstyle="round")
+            d = rb[m] - ra[m]
+            tag = f"{m}  {'+' if d < 0 else ''}{-d}" if mv else m
+            ax.annotate(f"{ra[m]+1}. {m}", (0, ra[m] + 1), textcoords="offset points",
+                        xytext=(-8, 0), ha="right", va="center",
+                        fontsize=7.4, color=c, weight="bold" if mv else "normal")
+            ax.annotate(tag, (1, rb[m] + 1), textcoords="offset points",
+                        xytext=(8, 0), ha="left", va="center",
+                        fontsize=7.4, color=c, weight="bold" if mv else "normal")
 
         ax.set_xticks([0, 1])
         ax.set_xticklabels(["IoU $\\geq$ 0.50\n(standard)", "any overlap\n(counting)"],
                            fontsize=8.5)
-        ax.set_xlim(-0.1, 1.52)
-        ax.set_ylabel("F1 (test split, conf 0.25)")
+        ax.set_xlim(-0.95, 1.78)
+        ax.set_ylim(len(models) + 0.6, 0.4)          # rank 1 at the top
+        ax.set_yticks(range(1, len(models) + 1))
+        ax.set_ylabel("Rank by F1 (test split, conf 0.25)")
         ax.set_title(f"IoU$\\geq$0.50 rank does not predict counting rank\n"
-                     f"{n_moved} of {len(models)} models shift $\\geq$2 places",
+                     f"{n_moved} of {len(models)} models shift $\\geq$2 places; "
+                     f"coloured lines moved, grey held",
                      loc="left", fontsize=9.5)
-        sns.despine(ax=ax, trim=False)
-        ax.grid(axis="y", color="#e6e6e6", lw=0.5)
+        for side in ("top", "right", "left"):
+            ax.spines[side].set_visible(False)
+        ax.spines["bottom"].set_linewidth(0.8)
+        ax.spines["bottom"].set_color("#9A9AA2")
+        ax.grid(axis="y", color="#ECECEC", lw=0.5)
         ax.grid(axis="x", visible=False)
+        ax.tick_params(axis="y", length=0, labelsize=7.5)
         ax.set_axisbelow(True)
         save(fig, out, "fig3_criterion")
     style()          # sns.axes_style leaves rcParams touched; restore ours for later figures

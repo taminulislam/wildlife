@@ -150,9 +150,14 @@ recovers to 0.434 but still trails the convolutional one-stage models.
   \centering
   \includegraphics[width=0.8\linewidth]{figures/fig3_criterion.pdf}
   \caption{\textbf{Rank under IoU$\geq$0.50 does not predict rank under the counting
-  criterion.} Seven of eleven models shift by two or more places; YOLOv10m falls from 2nd to
-  8th. Choosing a detector for a counting system by its detection metric selects the wrong
-  model.\label{fig:criterion}}
+  criterion.} Each line is one detector, positioned by its rank on F1 under the two matching
+  rules; colour marks the seven models that shift two or more places and grey the four whose
+  rank the criterion agrees about. YOLOv10m falls from 2nd to 8th and ATSS R50 climbs from
+  8th to 2nd, a six-place exchange between a model tuned for precision and one tuned for
+  recall. Rank rather than F1 is plotted because relaxing the criterion raises F1 for every
+  model, which is arithmetic rather than a result; what matters is that the ordering does not
+  survive. Choosing a detector for a counting system by its detection metric selects the
+  wrong model.\label{fig:criterion}}
 \end{figure}
 
 The narrow spread in aggregate scores conceals a substantial difference in operating point.
