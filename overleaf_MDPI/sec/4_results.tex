@@ -17,27 +17,30 @@ rises monotonically as the rule relaxes, and centre-in-box tracks presence to wi
 for every model. The final column is the precision-weighted F-measure
 $F_{0.5}=1.25\,PR/(0.25P+R)$, reported because the confirmation stage downstream is
 constrained by precision rather than recall (\cref{sec:counting}); $\beta$ is fixed at the
-conventional $0.5$ rather than tuned. Twelve architectures were trained; Deformable DETR R50
+conventional $0.5$ rather than tuned. The final column is different in kind from the rest:
+\textbf{Animals Found} is the fraction of the 235 annotated individuals the detector fires on
+in at least one frame, so it counts \emph{animals} where every other column counts boxes. Twelve architectures were trained; Deformable DETR R50
 is excluded because its training ran out of GPU memory at epoch 5 (batch 8 on a 40\,GB
 A100) and we did not pursue a smaller-batch rerun, so it is a resource limit on our side
 rather than a result about the architecture.\label{tab:detectors}}
 \begin{adjustwidth}{-\extralength}{0cm}
-\centering\small
-\begin{tabularx}{\fulllength}{lCCCCCCCC}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\fulllength}{lCCCCCCCCC}
 \toprule
-\textbf{Model} & \textbf{AP$_\mathbf{50}$} & \textbf{F1 (IoU$\geq$.50)} & \textbf{F1 (IoU$\geq$.30)} & \textbf{F1 (Centre)} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{F$_\mathbf{0.5}$} \\
+\textbf{Model} & \textbf{AP$_\mathbf{50}$} & \textbf{F1 (IoU$\geq$.50)} & \textbf{F1 (IoU$\geq$.30)} & \textbf{F1 (Centre)} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{F$_\mathbf{0.5}$} & \textbf{Animals Found} \\
 \midrule
-YOLOv8m & 0.459 & 0.502 & 0.603 & 0.628 & 0.780 & 0.572 & \textbf{0.660} & 0.727 \\
-ATSS R50 & 0.380 & 0.441 & 0.556 & \textbf{0.648} & 0.683 & 0.635 & 0.658 & 0.673 \\
-TOOD R50 & 0.396 & 0.442 & 0.572 & 0.623 & 0.683 & 0.621 & 0.650 & 0.670 \\
-YOLO11m & 0.460 & \textbf{0.535} & \textbf{0.623} & 0.638 & 0.897 & 0.503 & 0.645 & \textbf{0.775} \\
-RT-DETR-L & 0.434 & 0.497 & 0.595 & 0.610 & 0.643 & 0.605 & 0.623 & 0.635 \\
-YOLO12m & 0.508 & 0.506 & 0.583 & 0.595 & \textbf{0.929} & 0.452 & 0.608 & 0.767 \\
-YOLOv9m & 0.506 & 0.527 & 0.581 & 0.592 & 0.917 & 0.450 & 0.604 & 0.759 \\
-YOLOv10m & \textbf{0.510} & 0.527 & 0.575 & 0.583 & 0.874 & 0.453 & 0.597 & 0.737 \\
-DINO R50 & 0.365 & 0.425 & 0.520 & 0.548 & 0.560 & 0.572 & 0.566 & 0.562 \\
-Faster R-CNN R50 & 0.418 & 0.376 & 0.475 & 0.497 & 0.393 & 0.723 & 0.509 & 0.433 \\
-RTMDet-m & 0.466 & 0.339 & 0.411 & 0.437 & 0.325 & \textbf{0.779} & 0.459 & 0.368 \\
+YOLOv8m & 0.459 & 0.502 & 0.603 & 0.628 & 0.780 & 0.572 & \textbf{0.660} & 0.727 & 0.906 \\
+ATSS R50 & 0.380 & 0.441 & 0.556 & \textbf{0.648} & 0.683 & 0.635 & 0.658 & 0.673 & 0.962 \\
+TOOD R50 & 0.396 & 0.442 & 0.572 & 0.623 & 0.683 & 0.621 & 0.650 & 0.670 & 0.979 \\
+YOLO11m & 0.460 & \textbf{0.535} & \textbf{0.623} & 0.638 & 0.897 & 0.503 & 0.645 & \textbf{0.775} & 0.949 \\
+RT-DETR-L & 0.434 & 0.497 & 0.595 & 0.610 & 0.643 & 0.605 & 0.623 & 0.635 & 0.983 \\
+YOLO12m & 0.508 & 0.506 & 0.583 & 0.595 & \textbf{0.929} & 0.452 & 0.608 & 0.767 & 0.864 \\
+YOLOv9m & 0.506 & 0.527 & 0.581 & 0.592 & 0.917 & 0.450 & 0.604 & 0.759 & 0.821 \\
+YOLOv10m & \textbf{0.510} & 0.527 & 0.575 & 0.583 & 0.874 & 0.453 & 0.597 & 0.737 & 0.885 \\
+DINO R50 & 0.365 & 0.425 & 0.520 & 0.548 & 0.560 & 0.572 & 0.566 & 0.562 & 0.983 \\
+Faster R-CNN R50 & 0.418 & 0.376 & 0.475 & 0.497 & 0.393 & 0.723 & 0.509 & 0.433 & 0.970 \\
+RTMDet-m & 0.466 & 0.339 & 0.411 & 0.437 & 0.325 & \textbf{0.779} & 0.459 & 0.368 & \textbf{0.996} \\
 \bottomrule
 \end{tabularx}
 \end{adjustwidth}
@@ -65,6 +68,18 @@ detectors that score around 0.50 box recall find 220 of the 235 annotated deer i
 one frame, and the full pipeline reaches 82 of 83 on held-out video (\cref{sec:counting}).
 The distance between 0.50 and 0.94 is not a discrepancy but two metrics answering different
 questions --- the first sign that detection accuracy is a poor proxy for counting ability.
+
+The last column of \cref{tab:detectors} makes that gap explicit for every model. Measured per
+animal rather than per box, recall runs from 0.821 to 0.996: \emph{every} architecture we
+trained finds between 82\% and 99.6\% of the 235 individuals in at least one frame, including
+models whose box recall sits near 0.45. This is the sharpest statement of the paper's premise
+--- at the level a survey cares about, detection is very nearly solved, and the animals that
+go uncounted are lost after it. It also re-ranks the table a third time. RTMDet-m leads at
+0.996 and every mmdetection model places above every YOLO variant, which is not an argument
+for adopting one: their coverage is bought with false positives that the confirmation stage
+cannot absorb, as \cref{sec:inversion} shows and \cref{sec:choosing} anticipates. What the
+column establishes is that the choice between these detectors is not a choice about which
+animals can be found.
 
 A third pattern belongs to individual rows rather than to the table as a whole, and it is
 what makes an entry like YOLO12m's 0.929 precision against 0.452 recall look
