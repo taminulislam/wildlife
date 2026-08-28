@@ -1,0 +1,51 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Object Detection for Small Targets}
+The one-stage and two-stage families are both represented in our benchmark: Faster
+R-CNN~\cite{ren2015faster} as the two-stage baseline, ATSS~\cite{zhang2020atss} and
+TOOD~\cite{feng2021tood} as anchor-assignment refinements, RTMDet~\cite{lyu2022rtmdet} as a
+modern convolutional one-stage design, and the YOLO
+line~\cite{redmon2016yolo,wang2024yolov9,wang2024yolov10} as the practical default.
+Query-based detectors --- DETR~\cite{carion2020detr}, its accelerated variants, and
+DINO~\cite{zhang2023dino} --- are known to converge slowly and to struggle on very small
+objects, and RT-DETR~\cite{zhao2024rtdetr} targets that gap. Our animals are a median
+$29\times24$ pixels, which is squarely the regime where these differences matter, and
+\cref{sec:detection} reports how each family transfers.
+
+\subsection{Multi-Object Tracking}
+Tracking-by-detection remains dominant: SORT~\cite{bewley2016sort} and
+DeepSORT~\cite{wojke2017deepsort} established the Kalman-plus-association template,
+ByteTrack~\cite{zhang2022bytetrack} showed that associating \emph{low}-confidence detections
+recovers substantial recall, and BoT-SORT~\cite{aharon2022botsort} added camera-motion
+compensation and an appearance term. Our camera is mounted on a vehicle moving at
+25--90\,km/h, so global motion compensation is not optional; we use BoT-SORT with sparse
+optical-flow compensation throughout and ablate its appearance term in
+\cref{sec:inversion}. Critically, MOT benchmarks score association quality (MOTA, IDF1,
+HOTA), not the number of \emph{distinct objects that ever existed} --- which is the quantity
+a survey needs, and the quantity our decomposition measures.
+
+\subsection{Animal Detection and Counting}
+Camera-trap classification at scale~\cite{norouzzadeh2018automatically} and the domain-shift
+benchmarks that followed~\cite{beery2018recognition} established animal imagery as its own
+distribution problem, while aerial and UAV surveys have received the most counting-specific
+attention~\cite{kellenberger2018detecting,corcoran2019automated}, usually with per-image
+counts on sparse stills rather than per-individual identity across continuous video.
+Thermal wildlife datasets with \emph{per-individual track} annotation over long sequences
+remain scarce; that scarcity is what our corpus addresses.
+
+\subsection{Counting as Its Own Task}
+Crowd counting~\cite{zhang2016single} shows what a field looks like when it takes counting
+seriously as a distinct objective --- density regression rather than detection-then-count.
+That approach suits dense scenes with hundreds of overlapping instances; ours is the
+opposite regime, sparse instances that must each be resolved as an individual because
+survey statistics are computed per animal. Our contribution is to show that in this sparse
+regime, the detection-then-count framing is not wrong so much as \emph{mis-attributed}: the
+detector is already near-saturated, and the accuracy that a practitioner would try to buy
+with a better backbone is instead being lost downstream.
+
+\subsection{Animal Re-Identification}
+Individual identification from appearance is established for species with high-contrast,
+high-resolution natural markings. \Cref{sec:reid} tests whether it transfers here: at a
+median 27-pixel animal, appearance carries less identity signal than a two-number size
+descriptor, and an ImageNet backbone scores \emph{below} plain geometry.

@@ -1,0 +1,170 @@
+%=================================================================
+% Journal of Imaging (MDPI) submission.
+% Automated counting of white-tailed deer in vehicle-mounted thermal video.
+%
+% Build:  pdflatex main; bibtex main; pdflatex main; pdflatex main
+% Compiler must be pdfLaTeX (Overleaf: Menu -> Settings -> Compiler).
+%
+% Ported from the WACV two-column draft. Structural differences worth knowing:
+%   * single column, so every \table*/\figure* became \table/\figure with [H]
+%   * wide tables sit in \begin{adjustwidth}{-\extralength}{0cm} with \fulllength
+%   * the WACV appendix has been folded into the main text; only the ablation
+%     catalogue remains in Appendix A, because MDPI imposes no page limit
+%=================================================================
+\documentclass[jimaging,article,submit,moreauthors]{Definitions/mdpi}
+
+%------------------------------------------------------------------
+% MDPI internal commands - do not modify
+%------------------------------------------------------------------
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+\datereceived{ }
+\daterevised{ }
+\dateaccepted{ }
+\datepublished{ }
+
+%------------------------------------------------------------------
+% Extra packages. The MDPI class already loads graphicx, amsmath, amssymb,
+% booktabs, xcolor, multirow, array, tabularx, caption, natbib, hyperref and
+% cleveref, so only xspace is genuinely new -- it is what lets \reachedq and
+% friends be written without a trailing brace pair.
+%------------------------------------------------------------------
+\usepackage{xspace}
+
+% The three quantities the paper is built around. Defined once so a rename never
+% has to be applied by hand across six section files.
+\newcommand{\reachedq}{\textsc{reached}\xspace}
+\newcommand{\primaryq}{\textsc{primary}\xspace}
+\newcommand{\countedq}{\textsc{counted}\xspace}
+
+%------------------------------------------------------------------
+% Title and authors
+%------------------------------------------------------------------
+\Title{Automated Counting of White-Tailed Deer in Vehicle-Mounted Thermal Video: Detector Benchmarking and a Staged Error Decomposition}
+
+\newcommand{\orcidauthorA}{0000-0000-0000-000X}
+
+% TODO before submission: complete the author list, ORCIDs, and affiliations.
+\Author{Taminul Islam $^{1,}$*\orcidA{}}
+
+\AuthorNames{Taminul Islam}
+
+\address{%
+$^{1}$ \quad School of Computing, Southern Illinois University, Carbondale, IL 62901, USA}
+
+\corres{Correspondence: taminul.islam@siu.edu}
+
+%------------------------------------------------------------------
+% Abstract and keywords
+%------------------------------------------------------------------
+\abstract{Wildlife surveys ask how many animals are present, but the computer-vision
+pipelines built to answer that question are optimized as detectors. (1) Background: we test
+whether detection accuracy predicts counting accuracy on thermal road-transect video, and
+localize where the two diverge. (2) Methods: we introduce a corpus of 32 fully annotated
+FLIR thermal transects (521,930 frames, 236 individually tracked white-tailed deer, 21,646
+boxes), benchmark twelve detectors on it, and decompose end-to-end counting
+error into three measurable stages --- whether an animal is detected at all, whether it
+acquires its own candidate track, and whether it is finally counted. The confirmation rule
+is fitted on 19 videos and frozen before evaluation on 13 the detector never trained on. (3) Results: the pipeline detects 98.8\% of held-out animals,
+gives 88.0\% of them a distinct track, and counts 62.7\%, at a mean absolute error of 2.38
+animals per video. Four independent interventions that each demonstrably improve candidate
+generation make the final count worse, and learned confirmation heads all lose to a
+three-parameter hand-tuned rule. (4) Conclusions: detection is not the
+bottleneck in thermal wildlife counting. The confirmation stage is, and at this corpus size
+it is limited by supervision rather than by model capacity.}
+
+\keyword{thermal imaging; wildlife survey; animal counting; object detection; multi-object
+tracking; white-tailed deer; benchmark dataset; error decomposition}
+
+%=================================================================
+\begin{document}
+
+% cleveref names, per the MDPI class instruction to declare these after \begin{document}.
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
+\crefname{figure}{Figure}{Figures}
+\Crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{appendix}{Appendix}{Appendices}
+\Crefname{appendix}{Appendix}{Appendices}
+
+\input{sec/1_intro}
+\input{sec/2_related}
+\input{sec/3_methods}
+\input{sec/4_results}
+\input{sec/5_discussion}
+\input{sec/6_conclusions}
+
+%=================================================================
+% Back matter
+%=================================================================
+\vspace{6pt}
+
+\authorcontributions{TODO before submission --- complete per the CRediT taxonomy.
+Conceptualization, T.I.; methodology, T.I.; software, T.I.; validation, T.I.; formal
+analysis, T.I.; investigation, T.I.; data curation, T.I.; writing---original draft
+preparation, T.I.; writing---review and editing, T.I.; visualization, T.I. All authors have
+read and agreed to the published version of the manuscript.}
+
+\funding{TODO before submission --- state the funding source and grant number, or ``This
+research received no external funding''.}
+
+\institutionalreview{The study is observational and non-invasive: all footage was recorded
+from a public roadway with a vehicle-mounted thermal camera, and no animal was approached,
+handled, captured or otherwise disturbed. TODO before submission --- confirm with the
+institutional IACUC whether a waiver statement or an approval code is required.}
+
+\informedconsent{Not applicable.}
+
+\dataavailability{TODO before submission --- replace with the archive DOI. The corpus, the
+per-individual track annotations, the evaluation harness and the decomposition tooling will
+be released on acceptance; a Zenodo deposit is being prepared, and this statement must cite
+its DOI before the paper is submitted.}
+
+\acknowledgments{TODO before submission --- acknowledge computing allocation and field
+support. This work used the Delta and DeltaAI systems at the National Center for
+Supercomputing Applications.}
+
+\conflictsofinterest{The authors declare no conflicts of interest.}
+
+\abbreviations{Abbreviations}{%
+The following abbreviations are used in this manuscript:\\
+
+\noindent
+\begin{tabular}{@{}ll}
+AP & Average precision\\
+CLAHE & Contrast-limited adaptive histogram equalization\\
+FLIR & Forward-looking infrared\\
+GMC & Global motion compensation\\
+IoU & Intersection over union\\
+MAE & Mean absolute error\\
+NMS & Non-maximum suppression\\
+ReID & Re-identification\\
+RMSE & Root mean square error
+\end{tabular}
+}
+
+%=================================================================
+\appendixtitles{yes}
+\appendixstart
+\appendix
+\input{sec/7_appendix}
+
+%=================================================================
+\begin{adjustwidth}{-\extralength}{0cm}
+
+\reftitle{References}
+
+\bibliographystyle{Definitions/mdpi}
+\bibliography{main}
+
+\end{adjustwidth}
+\end{document}

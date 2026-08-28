@@ -1085,7 +1085,8 @@ videos, 83 animals:
 Deleting the condition **raises coverage 66.3% → 89.2%** — the largest coverage gain
 anywhere in this log, larger than all four candidate-generation interventions of §6.8,
 none of which raised coverage at all. But predicted goes 58 → 111 against 83 true animals:
-~3 duplicates admitted per genuine animal recovered, MAE 2.38 → 3.54, bias flips to +2.15.
++53 accepted tracks, of which 19 are previously-missed animals and 34 are not, i.e. ~2
+duplicates per genuine animal recovered. MAE 2.38 → 3.54, bias flips to +2.15.
 The threshold is doing duplicate suppression, not detection filtering — a fragment on an
 already-counted deer *is* a true detection, so nothing in "is this a deer" separates it.
 

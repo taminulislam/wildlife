@@ -1,0 +1,33 @@
+\section{Complete Ablation Catalogue}
+\label{app:ablations}
+
+\Cref{tab:families} lists every ablation family run over the course of this work, including
+those measured at the detection stage rather than end to end. Families whose effect on the
+final count is quantified appear in \cref{tab:ablationmain} and \cref{tab:pools}; the
+remainder are reported in the sections cited beside them in the main text.
+
+\begin{table}[H]
+\caption{\textbf{Every ablation run.} Thirteen families spanning preprocessing, detector
+choice, resolution, evaluation protocol, tracking, association and
+confirmation.\label{tab:families}}
+\centering
+\begin{tabularx}{\textwidth}{lLL}
+\toprule
+\textbf{Ablation} & \textbf{Range Tested} & \textbf{Effect} \\
+\midrule
+CLAHE normalization & on / off & 0.519 vs.\ 0.299 mAP50 \\
+Input resolution & 640 / 1280 & best detector counts worse \\
+Detector architecture & 12 models & 0.365--0.510 AP$_{50}$ \\
+Matching criterion & 4 rules & re-ranks 7/11 models \\
+Detector confidence & 0.10 / 0.05 / 0.02 & 0 extra animals \\
+Track-init threshold & 0.15 / 0.05 & $+5$ \primaryq \\
+Orphan recovery & on / off & $+17$ animals \\
+NMS IoU & 0.50 / 0.90 & $+4$ \primaryq, $-14$ \countedq \\
+Appearance ReID & on / off & $+7$ \primaryq, $-3$ \countedq \\
+Confirmer capacity & 3--60k params & monotone degradation \\
+Confirmation threshold $c$ & 0.00--0.85, $m,s$ free & $c$ is load-bearing \\
+ReID cue & 7 variants & size dominates \\
+Track splitting & threshold sweep & $+3$ for 4k candidates \\
+\bottomrule
+\end{tabularx}
+\end{table}

@@ -1,0 +1,82 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why Confirmation Resists Learning}
+
+The two negative results of \cref{sec:inversion} and \cref{sec:learned} have a single
+explanation, and it is a property of the data rather than of the methods. The confirmation
+stage receives roughly two hundred positive tracks against 7000--28,000 negatives, and the
+negatives are not a homogeneous class. They divide into false candidates, which are easy,
+and \emph{duplicate} tracks on animals already counted, which are not: a duplicate is a
+correct detection of a real animal, and \cref{tab:missed} shows that duplicates sit between
+the positives and the false candidates on every feature we measured --- box size, track
+length, candidate confidence alike.
+
+A confirmer therefore receives contradictory supervision on exactly the examples that
+distinguish counting from detection. That is why capacity does not help: the capacity trend
+in \cref{sec:learned} degrades monotonically from 13 parameters to $6\times10^4$, and
+shrinking a gradient-boosted model to depth-1 stumps recovers nearly the whole gap. It is
+also why every improvement to candidate generation hurts. Growing the pool grows the
+ambiguous middle of the negative class far faster than it grows the positives, so a rule
+tuned to survive the new ratio must be more aggressive, and aggression costs real animals.
+Extrapolating the capacity trend puts the crossover in the low thousands of positive
+tracks --- an order of magnitude beyond this corpus, and a concrete target for the next
+dataset rather than for a better architecture.
+
+\subsection{Recall and Duplicate Suppression Are Bought with One Parameter}
+
+\Cref{sec:sensitivity} makes the same mechanism visible in a single parameter and is, we
+think, the most transferable observation in the paper. Deleting the confidence condition
+raises held-out coverage by 23 points, more than any other change we made, and simultaneously
+turns a systematic under-count into a systematic over-count, because roughly two duplicates
+are admitted for each genuine animal recovered. The condition is not filtering non-animals.
+It is the only cheap signal separating a first sighting from a re-sighting, and the recall it
+appears to be discarding is the price of that separation.
+
+This reframes what a practitioner should tune. The question is not ``how low can the
+confidence threshold go before false positives appear'' --- the usual detection framing, under
+which $c=0$ looks free, since coverage rises and the extra tracks are all on real animals. It
+is ``at what point does the estimator's bias cross zero'', which is a different quantity with
+a different optimum. \Cref{tab:confsens} locates that crossing at $c\approx0.45$, one full
+MAE point away from the minimum-error setting. Which of the two is correct depends on the
+downstream statistic: a density estimate aggregated over many transects is served by the
+unbiased setting, while a per-transect report is served by the low-variance one. We report
+the low-variance setting as the headline and note that the choice is a modelling decision
+that the counting literature does not usually make explicit.
+
+\subsection{Practical Guidance}
+
+The guidance that follows is inverted from the field's default. For a counting application at
+this data scale: do not select a detector by its detection metric, because the counting
+criterion re-ranks the models (\cref{fig:criterion}) and the best detector by AP$_{50}$
+counts worse than the fourth-best; do not evaluate on video the detector trained on, which
+inflates coverage by 23 points (\cref{tab:leak}); do not assume a larger candidate pool is a
+better one (\cref{tab:pools}); and do not expect a learned confirmation stage to beat a
+hand-tuned rule until the corpus is substantially larger than 236 individuals
+(\cref{tab:confirmers}).
+
+Two positive recommendations survive the same evidence. Contrast normalization is worth more
+than any architectural choice we tested --- 0.519 against 0.299 test mAP50 --- which is a
+larger effect than the entire 0.365--0.510 spread across twelve architectures. And the upper
+tail of the object-scale distribution deserves the attention normally reserved for the lower
+one: three of our misses are animals \emph{larger} than anything in the training split
+(\cref{fig:scale}), a failure mode that a small-object-focused evaluation would never
+surface.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+Several limits bound these claims. The corpus is 236 animals from four sites in one region
+and one winter, one site contributes 56\% of them, per-site figures for the smallest site
+(15 animals) are correspondingly noisy, and all results are single-species. Our headline
+counting metric is a per-video aggregate, and the stricter identity-matched figure is 10
+points lower. Four of the 13 held-out videos are the detector's validation split and so
+influenced checkpoint selection, as \cref{sec:heldout} states; they carry 45 of the 83
+animals. No individual animal appears in more than one video, so the re-identification limit
+of \cref{sec:reid} is measured within video and cross-session identification could not be
+evaluated at all. The annotated size distribution is bounded above at 96\,px, so the three
+held-out animals larger than 100\,px lie outside it (\cref{fig:scale}), and the natural
+remedy is unavailable in the symmetric form the standard augmentation provides. Finally, the
+sensitivity analysis of \cref{sec:sensitivity} varies one parameter of one rule on one
+operating pool; it establishes that the confidence condition is load-bearing here, not that
+0.65 transfers to another sensor or another species.
