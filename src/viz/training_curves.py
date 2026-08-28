@@ -141,7 +141,7 @@ def main() -> None:
                          "read against different x ranges.")
     ap.add_argument("--out", default="overleaf_MDPI/figures/fig5_training.pdf")
     ap.add_argument("--width", type=float, default=7.27, help="inches; MDPI \\fulllength")
-    ap.add_argument("--height", type=float, default=3.9)
+    ap.add_argument("--height", type=float, default=7.4)
     args = ap.parse_args()
     colours = PALETTES[args.palette]
 
@@ -159,8 +159,23 @@ def main() -> None:
 
     plt.rcParams.update({"font.family": "DejaVu Sans", "axes.facecolor": "white",
                          "figure.facecolor": "white", "pdf.fonttype": 42})
-    fig, axes = plt.subplots(2, 5, figsize=(args.width, args.height))
-    for k, (ax, (name, d)) in enumerate(zip(axes.ravel(), panels)):
+    # 3 across, not 5. Ten panels over five columns left each one about 1.4 in wide on a
+    # \fulllength page, which is narrower than tall once the axis labels are placed -- the
+    # opposite of the wide panels curves against epoch want. Three columns gives ~2.3 in,
+    # landscape, with room for the legend to sit off the lines. The last two cells are blank.
+    fig, axes = plt.subplots(4, 3, figsize=(args.width, args.height))
+    # Ten panels over three columns leaves one alone on the last row. Centring it reads as
+    # a deliberate layout; flush left reads as a missing panel.
+    flat = list(axes.ravel())
+    rem = len(panels) % axes.shape[1]
+    if rem == 1:
+        r = len(panels) // axes.shape[1]
+        flat = flat[:r * axes.shape[1]] + [axes[r, 1]]
+        for c in (0, 2):
+            axes[r, c].axis("off")
+    for ax in flat[len(panels):]:
+        ax.axis("off")
+    for k, (ax, (name, d)) in enumerate(zip(flat, panels)):
         letter = chr(ord("a") + k)
         if d is None:
             ax.axis("off")
@@ -170,8 +185,8 @@ def main() -> None:
         draw(ax, d[0], d[1], colours, args.max_epoch)
         ax.set_title(f"({letter}) {name}", fontsize=7, fontweight="bold", pad=3, y=-0.42)
 
-    fig.subplots_adjust(left=0.045, right=0.997, top=0.985, bottom=0.135,
-                        wspace=0.34, hspace=0.62)
+    fig.subplots_adjust(left=0.062, right=0.995, top=0.988, bottom=0.055,
+                        wspace=0.26, hspace=0.72)
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     fig.savefig(args.out, bbox_inches="tight", pad_inches=0.02)
     png = os.path.splitext(args.out)[0] + ".png"
