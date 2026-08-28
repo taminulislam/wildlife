@@ -76,10 +76,13 @@ the confirmation stage very different amounts.
 \caption{\textbf{The precision--recall split is a threshold choice, not a capability
 limit.} Three sets of weights scored on the same test split under the presence criterion,
 at the conventional reporting threshold of 0.25 and at the 0.10 the counting pipeline
-actually runs the detector at. \textbf{Models are ordered by the best F1 either threshold
-achieves, strongest first}; the same ordering follows from precision. The three are the two
-strongest detectors of \cref{tab:detectors} together with the most recall-oriented one, so
-the rows span the operating range rather than sampling it arbitrarily. Lowering the
+actually runs the detector at. Models are ordered by the best F1 either threshold
+achieves, highest first. That is an ordering for reading the table, not a verdict: F1
+weights precision and recall equally, which \cref{sec:choosing} argues is the wrong balance
+for a counting pipeline, and under the precision-weighted $F_{0.5}$ we actually select on,
+YOLO11m leads YOLO12m at 0.775 to 0.767. The three rows are the two strongest detectors of
+\cref{tab:detectors} together with the most recall-oriented one, so they span the operating
+range rather than sampling it arbitrarily. Lowering the
 threshold buys YOLO12m 20 points of recall for 22 of precision, which is one knob on one
 curve. The RTMDet-m rows show why the direction matters: a detector that is quiet can be
 made louder, but a detector that is already loud has nowhere to go --- at 0.10 it emits
