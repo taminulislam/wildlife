@@ -213,7 +213,11 @@ def native_val(model, data, split, imgsz, device, project, name):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weights", required=True)
-    ap.add_argument("--data", default="data/dataset/yolo_v2/data.yaml")
+    # No default. yolo_v2 used to be it, and every number this script produced without an
+    # explicit --data was silently scored on the superseded 2234-image test split instead
+    # of yolo_v3's 3725. Requiring it makes that failure impossible rather than quiet.
+    ap.add_argument("--data", required=True,
+                    help="dataset yaml; the paper uses data/dataset/yolo_v3/data.yaml")
     ap.add_argument("--split", default="test")
     ap.add_argument("--imgsz", type=int, default=640)
     ap.add_argument("--device", default="0")

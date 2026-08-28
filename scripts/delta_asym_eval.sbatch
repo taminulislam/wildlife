@@ -30,6 +30,7 @@ echo "=== job $SLURM_JOB_ID  evaluating $NAME  $(date) ==="
 
 echo "--- detection eval, same harness as the benchmark table"
 python -u src/detect/eval_full.py --weights "$W" --imgsz 640 \
+    --data data/dataset/yolo_v3/data.yaml \
     --tag "${NAME}" --out results/detection_eval || echo "[warn] eval_full failed"
 
 echo "--- per-animal recall: did the 104/149/157 px deer come back?"

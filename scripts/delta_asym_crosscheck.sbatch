@@ -31,7 +31,9 @@ R=/work/hdd/bgte/tislam6/wildlife_outputs/runs
 python -c "import ultralytics; print('ultralytics', ultralytics.__version__)"
 
 python -u src/detect/eval_full.py --weights "$R/yolo11m_640_asymscale/weights/best.pt" \
-    --imgsz 640 --tag yolo11m_640_asymscale_ON_DELTA --out results/detection_eval
+    --imgsz 640 --data data/dataset/yolo_v3/data.yaml \
+    --tag yolo11m_640_asymscale_ON_DELTA --out results/detection_eval
 python -u src/detect/eval_full.py --weights "$R/yolo11m_640_v3pooled/weights/best.pt" \
-    --imgsz 640 --tag yolo11m_640_baseline_RECHECK --out results/detection_eval
+    --imgsz 640 --data data/dataset/yolo_v3/data.yaml \
+    --tag yolo11m_640_baseline_RECHECK --out results/detection_eval
 echo "=== done $(date) ==="
