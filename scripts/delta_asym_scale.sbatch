@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=asym_scale
 #SBATCH --account=bgte-delta-gpu
-#SBATCH --partition=gpuA100x4-preempt,gpuA100x4
+#SBATCH --partition=gpuA100x4,gpuA100x4-preempt,gpuA40x4,gpuA40x4-preempt
 #SBATCH --qos=bgte-delta-gpu
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=16 --gpus-per-node=1 --mem=96G
-#SBATCH --time=10:00:00
+#SBATCH --time=08:00:00
 #SBATCH --requeue
 #SBATCH --mail-user=islamtaminul@gmail.com
 #SBATCH --mail-type=FAIL,END
@@ -30,6 +30,11 @@
 # Here EVERY hyperparameter matches yolo11m_640_v3pooled -- epochs 150, batch 32, SGD
 # lr0 0.01, patience 50, mosaic 1.0, close_mosaic 15, erasing 0.4, seed 0 -- and only
 # `scale` changes. Baseline to beat: AP50 0.460, and pool C MAE 2.38 / 55 of 83 counted.
+#
+# TRAINING ONLY. Evaluation and the counting pipeline moved to delta_asym_eval.sbatch, so
+# that a short walltime backfills sooner and so that a diverged run -- two earlier attempts
+# collapsed by epoch 3 -- costs one training slot rather than also burning the counting
+# pass on a broken checkpoint.
 set -eo pipefail
 module load miniforge3-python
 source /sw/rh9.4/python/miniforge3/etc/profile.d/conda.sh
@@ -47,26 +52,6 @@ python -u src/detect/train.py \
     --scale 0.9,2.2 --mosaic 1.0 --close-mosaic 15 \
     --project "$OUT/runs" --name "$NAME"
 
-W="$OUT/runs/$NAME/weights/best.pt"
-echo "=== detection eval (same harness as Table 1) ==="
-python -u src/detect/eval_full.py --weights "$W" --imgsz 640 \
-    --tag "${NAME}" --out results/detection_eval || echo "[warn] eval_full failed"
-
-echo "=== per-animal recall: did the 104/149/157 px deer come back? ==="
-python -u src/eval/track_recall.py --weights "$W" --conf 0.25 \
-    --out "results/track_recall/roster_conf0.25/${NAME}" || echo "[warn] track_recall failed"
-
-echo "=== end-to-end counting, frozen held-out protocol ==="
-CO="$OUT/counts/asymscale_conf0.10"
-python -u src/track/count_deer.py \
-    --weights "$W" --source data/raw --cvat-dir data/cvat_export \
-    --device 0 --imgsz 640 --conf 0.10 --iou 0.50 --contrast clahe \
-    --dump-min-frames 1 --keep-orphans \
-    --tracker src/track/botsort_deer_recall.yaml --out "$CO/shard0"
-cp "$CO/shard0/counts.csv" "$CO/counts_shard0.csv" 2>/dev/null || true
-python -u src/eval/pool_coverage.py --counts-dir "$CO" \
-    --out results/counting_eval/pool_coverage_asymscale.csv || true
-python -u src/eval/count_eval_heldout.py --counts "$CO" \
-    --out results/counting_eval/heldout_asymscale.csv || true
-
-echo "=== done $(date) ==="
+echo "=== training done $(date) ==="
+tail -3 "$OUT/runs/$NAME/results.csv" 2>/dev/null
+echo "Evaluate with: sbatch scripts/delta_asym_eval.sbatch"
