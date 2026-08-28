@@ -1060,6 +1060,53 @@ detector-training videos — label them as such in any figure.
 
 ---
 
+### 6.13 The confirmation rule's confidence condition is a duplicate suppressor, not a recall filter ★★ (2026-08-28)
+
+`src/eval/conf_sensitivity.py` (CPU only, seconds, no GPU) →
+`results/counting/conf_sensitivity.csv` and `..._frozen.csv`.
+
+The obvious objection to `topk_conf >= 0.65` is that it discards animals the detector
+genuinely found. Two tables settle it, both under the §6.7.1 held-out protocol.
+
+**FROZEN** — publish operating point `m>=20, s>=0` held, only `c` moves. 13 held-out
+videos, 83 animals:
+
+| c | predicted | counted | MAE | bias | over | under |
+|---|---|---|---|---|---|---|
+| 0.00 | 111 | **89.2%** | 3.54 | +2.15 | 37 | 9 |
+| 0.25 | 108 | 85.5% | 3.77 | +1.92 | 37 | 12 |
+| 0.35 | 99 | 80.7% | 3.69 | +1.23 | 32 | 16 |
+| 0.45 | 81 | 72.3% | 3.38 | **-0.15** | 21 | 23 |
+| 0.55 | 70 | 71.1% | 2.69 | -1.00 | 11 | 24 |
+| **0.65** | **58** | 66.3% | **2.38** | -1.92 | 3 | 28 |
+| 0.75 | 24 | 28.9% | 4.54 | -4.54 | 0 | 59 |
+| 0.85 | 0 | 0.0% | 6.38 | -6.38 | 0 | 83 |
+
+Deleting the condition **raises coverage 66.3% → 89.2%** — the largest coverage gain
+anywhere in this log, larger than all four candidate-generation interventions of §6.8,
+none of which raised coverage at all. But predicted goes 58 → 111 against 83 true animals:
+~3 duplicates admitted per genuine animal recovered, MAE 2.38 → 3.54, bias flips to +2.15.
+The threshold is doing duplicate suppression, not detection filtering — a fragment on an
+already-counted deer *is* a true detection, so nothing in "is this a deer" separates it.
+
+**Bias crosses zero at c≈0.45** (bias -0.15, MAE 3.38). If a downstream statistic needs an
+unbiased estimator rather than a minimum-MAE one, that is the setting, at +1.0 MAE.
+
+**REFIT** — `m` and `s` re-fitted on the 19 detector-train videos for each `c`, so the
+condition is not blamed for a stale companion parameter. Held-out MAE at c=0 is 3.69 and
+coverage 60.2%, *below* the frozen variant: the sweep compensates for a lowered `c` by
+tightening span 0 → 1.0 s, which discards short tracks belonging to real animals. Across
+the full 7×6×9 = 378-cell grid only c ∈ {0.55, 0.65} appear among the 12 best cells by fit
+MAE.
+
+**Side finding:** `min_span_s` is **inert** at the operating point — s ∈ {0, 0.1, 0.25} give
+identical fit MAE (1.526), and those are the three best cells in the grid. The published
+"three-parameter" rule is effectively two parameters at its operating point. Keep the third
+anyway: it is what the sweep uses to compensate when `c` is lowered, which is what makes
+the REFIT table informative.
+
+---
+
 ## 7. Open risks for the paper
 
 1. **Dataset scale.** 236 deer / 32 videos is thin for a benchmark contribution, and there
@@ -1122,6 +1169,15 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-08-28** — Added §6.13, the confidence-condition sensitivity analysis
+  (`src/eval/conf_sensitivity.py`). Removing `topk_conf >= 0.65` raises held-out coverage
+  by 23 points and flips the system from under- to over-counting; the condition is a
+  duplicate suppressor, not a recall filter. Also found `min_span_s` is inert at the
+  operating point. Manuscript ported to the MDPI *Journal of Imaging* template in
+  `overleaf_MDPI/` (WACV draft kept in `overleaf_WACV/`), with the appendix folded into
+  the main text and four "the detector never saw" captions corrected to "never trained
+  on" — 4 of the 13 held-out videos are the detector's val split.
 
 - **2026-07-30 (II)** — **All compute is finished; both queues are empty.** Three closures:
   (a) mmdet roster rescored on the any-overlap criterion — YOLO11m holds the detector
