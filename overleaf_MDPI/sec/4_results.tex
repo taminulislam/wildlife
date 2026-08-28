@@ -146,28 +146,15 @@ recovers to 0.434 but still trails the convolutional one-stage models.
 \subsection{Choosing a Detector for Counting}
 \label{sec:choosing}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.8\linewidth]{figures/fig3_criterion.pdf}
-  \caption{\textbf{Rank under IoU$\geq$0.50 does not predict rank under the counting
-  criterion.} Each line is one detector, positioned by its rank on F1 under the two matching
-  rules; colour marks the seven models that shift two or more places and grey the four whose
-  rank the criterion agrees about. YOLOv10m falls from 2nd to 8th and ATSS R50 climbs from
-  8th to 2nd, a six-place exchange between a model tuned for precision and one tuned for
-  recall. Rank rather than F1 is plotted because relaxing the criterion raises F1 for every
-  model, which is arithmetic rather than a result; what matters is that the ordering does not
-  survive. Choosing a detector for a counting system by its detection metric selects the
-  wrong model.\label{fig:criterion}}
-\end{figure}
-
 The narrow spread in aggregate scores conceals a substantial difference in operating point.
 YOLO12m and YOLOv9m sit at 0.929 and 0.917 precision against roughly 0.45 recall, while
 RTMDet-m and Faster R-CNN R50 occupy the opposite end, reaching 0.779 and 0.723 recall at
 0.33 and 0.39 precision. Since a matching criterion determines how errors of each type are
-counted, rank depends on which criterion is applied. \Cref{fig:criterion} plots the shift:
-seven of eleven models move at least two places, YOLOv10m falls from 2nd to 8th, and ATSS
-R50 climbs from 8th to 2nd. Selecting a detector on its detection metric does not select the
-model that counts best.
+counted, rank depends on which criterion is applied. Comparing the two orderings in
+\cref{tab:detectors}, seven of eleven models move at least two places between them: YOLOv10m
+falls from 2nd to 8th and ATSS R50 climbs from 8th to 2nd, a six-place exchange between a
+precision-tuned and a recall-tuned model. Selecting a detector on its detection metric does
+not select the model that counts best.
 
 Both AP$_{50}$ and F1 weight precision and recall equally, which does not reflect the cost
 structure of the stage that consumes these detections. The confirmation step must reject

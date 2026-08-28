@@ -48,7 +48,8 @@ that the counting literature does not usually make explicit.
 
 The guidance that follows is inverted from the field's default. For a counting application at
 this data scale: do not select a detector by its detection metric, because the counting
-criterion re-ranks the models (\cref{fig:criterion}) and the best detector by AP$_{50}$
+criterion re-ranks seven of eleven models by two or more places (\cref{sec:choosing})
+and the best detector by AP$_{50}$
 counts worse than the fourth-best; do not evaluate on video the detector trained on, which
 inflates coverage by 23 points (\cref{tab:leak}); do not assume a larger candidate pool is a
 better one (\cref{tab:pools}); and do not expect a learned confirmation stage to beat a
