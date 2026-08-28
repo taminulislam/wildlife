@@ -12,9 +12,21 @@ already on disk. No new GPU jobs.
 Effort is my time, not yours. "Half a day" means I write the script, render it, and check
 it reads correctly at print size.
 
+**Every image below is a real draft from real data**, produced by `make_previews.py` in this
+folder — not a mockup. They are deliberately unpolished: no caption fitting, no print-size
+tuning, no colour-blind check. That work happens once one is chosen. Rendering them changed
+my recommendation, which is the point of rendering them.
+
+```
+python docs/figure_ideas/make_previews.py
+```
+
 ---
 
 ## 1. Per-animal fate chart — every held-out animal as one row
+
+![idea1_per_animal_fate](idea1_per_animal_fate.png)
+
 
 **What.** 83 rows, one per held-out animal, sorted by median box size. Each row is a
 horizontal strip spanning that animal's time on screen, coloured by fate: counted,
@@ -37,6 +49,9 @@ confirmation decision. Both present.
 
 ## 2. Detector × animal coverage matrix — does everyone miss the *same* deer?
 
+![idea2_coverage_matrix](idea2_coverage_matrix.png)
+
+
 **What.** An 11 × 83 grid. Rows are the detectors of Table 3, columns are held-out animals
 sorted by size, cell filled if that detector found that animal in at least one frame.
 
@@ -53,12 +68,27 @@ the mmdet five. Nothing to run.
 **Effort.** Half a day, and it is the one I would build first. It is a genuinely new result,
 not a redrawing. **Adds to** Section 4.1; nothing to replace.
 
-**Risk worth stating up front:** the result might contradict the paper. That is the point of
-plotting it.
+**It did contradict the paper, and the draft above shows it.** There are no universal
+vertical bands: **zero animals are missed by eight or more of the eleven models**. DINO R50,
+Faster R-CNN and RTMDet-m miss almost nothing at all, while the YOLO family drops scattered
+individuals. So the misses are largely *model-specific*, not a property of the corpus, and
+this figure does **not** support "every architecture fails on the same animals".
+
+What it does support is sharper, and still the paper's argument. The models that miss nothing
+are the recall-heavy ones that buy their coverage with thousands of false positives — RTMDet-m
+finds 99.6% of animals and emits 4513 false boxes at this same threshold. So *which* animals
+you lose is set by where you sit on the precision/recall curve, not by architecture. That is
+the operating-point argument of Section 4.2, shown per-animal instead of asserted.
+
+Using it means rewriting the claim it illustrates. Worth doing, but it is an edit to the
+argument, not a drop-in figure.
 
 ---
 
 ## 3. Size × persistence scatter, with the training distribution behind it
+
+![idea3_size_vs_persistence](idea3_size_vs_persistence.png)
+
 
 **What.** One point per held-out animal: median box size on x, track length on y, coloured
 by fate. Behind it, the training split's size distribution as a shaded band, so the 95.6 px
@@ -76,6 +106,9 @@ statement than "the detector fails at both extremes".
 ---
 
 ## 4. The rule's decision surface
+
+![idea4_rule_surface](idea4_rule_surface.png)
+
 
 **What.** A heatmap of held-out MAE over the confirmation rule's grid — `min_hits` × 
 `conf_track`, faceted by `min_span_s` — with the published operating point marked and the
@@ -95,6 +128,9 @@ the first question a reviewer asks about a hand-tuned rule.
 
 ## 5. Per-video count timelines — where the miscount happens
 
+![idea5_per_video_timeline](idea5_per_video_timeline.png)
+
+
 **What.** 13 small panels, one per held-out video. In each, ground-truth animals are
 horizontal bars on a time axis; confirmed tracks are drawn beneath them. Over-counts show as
 two tracks under one animal, misses as a bar with nothing under it, merges as one track
@@ -112,6 +148,9 @@ the work legible to a wildlife biologist rather than a vision reviewer.
 ---
 
 ## 6. Calibration and count uncertainty
+
+![idea6_calibration](idea6_calibration.png)
+
 
 **What.** Two panels. Left: a reliability diagram of the per-track posterior — predicted
 confidence against observed correctness, with the diagonal. Right: per video, the predicted
@@ -132,13 +171,25 @@ which the paper currently never demonstrates.
 
 ## If you want a shortlist
 
-**Build 2 and 4.** Idea 2 is the only one that produces a new scientific result rather than
-a better rendering, and it directly tests the claim the paper leans on hardest. Idea 4
-retires a table, so it is free on page count and disarms the obvious objection to a
-hand-tuned rule.
+Revised after seeing the drafts.
 
-**Then 1 or 3** depending on whether you want the decomposition or the scale story told
-per-animal — they overlap, and doing both would be redundant.
+**Build 4 first.** It came out best of the six and needs no argument changed. The bright band
+at `conf_track = 0.65` is the answer to "was that threshold tuned or lucky", the three panels
+being near-identical is `min_span_s` being inert made visible, and it retires Table 10 or 11
+so it costs nothing in pages.
 
-5 is the most attractive to a domain audience and the most work. 6 is the smallest and
-supports a claim that is currently unevidenced.
+**Then 3.** The cleanest of the remaining drafts, it replaces the weakest current figure, and
+the joint size/persistence story is one the paper states in prose but never shows.
+
+**Idea 2 is the most interesting and the most expensive.** It is a real finding, but it
+argues against the sentence it was meant to support, so adopting it means rewriting part of
+Section 4.1. Do it if you want the paper's strongest claim properly evidenced; skip it if the
+goal is to finish.
+
+**1 and 5 are honest but ordinary** in draft — 1 is a long ranked bar chart, and 5 reads as
+nine sparse strips because most held-out videos hold only two or three animals. Neither is
+worth a page as rendered.
+
+**6 is worth doing if the calibration claim matters to you.** The reliability panel is thin
+because most tracks sit at the extremes, but Section 3.4 currently asserts calibration with
+no evidence at all.
