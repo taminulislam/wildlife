@@ -74,21 +74,19 @@ the confirmation stage very different amounts.
 
 \begin{table}[H]
 \caption{\textbf{The precision--recall split is a threshold choice, not a capability
-limit.} Three sets of weights scored on the same test split under the presence criterion,
-at the conventional reporting threshold of 0.25 and at the 0.10 the counting pipeline
-actually runs the detector at. All six detectors we trained under one framework, at
-two thresholds each, ordered by the best F1 either threshold achieves. That ordering is for
-reading, not a verdict: F1 weights precision and recall equally, which \cref{sec:choosing}
-argues is the wrong balance for a counting pipeline, and under the precision-weighted
-$F_{0.5}$ we actually select on, YOLO11m leads at 0.775 against YOLO12m's 0.767. Lowering the
-threshold buys YOLO12m 20 points of recall for 22 of precision, which is one knob on one
-curve. The direction of the trade matters more than its size, because it is not
-symmetric, and the lower rows show it. A detector already operating at high recall has
-nowhere to go: dropping RT-DETR-L to 0.10 buys 231 additional true boxes and costs 7433
-false ones, collapsing precision to 0.187, and RTMDet-m --- omitted here as the extreme case
---- reaches 155,491 false boxes at the same threshold. Neither is a candidate pool any
-confirmation stage can work with, which is the argument of \cref{sec:inversion} appearing
-one stage earlier.\label{tab:threshold}}
+limit.} All six detectors we trained under a single framework, scored on the same test
+split under the presence criterion, at the conventional reporting threshold of 0.25 and at
+the 0.10 the counting pipeline actually runs the detector at. Rows are ordered by the best
+F1 either threshold achieves. That ordering is for reading, not a verdict: F1 weights
+precision and recall equally, which \cref{sec:choosing} argues is the wrong balance for a
+counting pipeline, and under the precision-weighted $F_{0.5}$ we actually select on,
+YOLO11m leads at 0.775 against YOLO12m's 0.767. Lowering the threshold buys YOLO12m 20
+points of recall for 22 of precision, which is one knob on one curve. The direction of the
+trade matters more than its size, because it is not symmetric, and the lower rows show it:
+a detector already operating at high recall has nowhere left to go. Dropping RT-DETR-L to
+0.10 buys 231 additional true boxes and costs 7433 false ones, collapsing precision to
+0.187 --- not a candidate pool any confirmation stage can work with, which is the argument
+of \cref{sec:inversion} appearing one stage earlier.\label{tab:threshold}}
 \centering\small
 \setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{lCCCCCCC}
