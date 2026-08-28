@@ -46,12 +46,11 @@ PALETTES = {
 }
 MARKERS = ["o", "s", "^", "P"]
 
-# The eleven models the benchmark table reports, plus the 1280 px variant the resolution
-# ablation turns on. Deformable DETR is deliberately absent: it produced two validation
+# Ten panels: the benchmark roster minus YOLOv8m and DINO R50, plus the 1280 px variant the
+# resolution ablation turns on. Deformable DETR is deliberately absent: it produced two validation
 # epochs before the compute budget ran out, which is not a curve -- that run's absence is
 # the same evidence the table's exclusion note carries.
 ULTRA = [
-    ("YOLOv8m", "yolov8m_640_v3pooled"),
     ("YOLO11m", "yolo11m_640_v3pooled"),
     ("YOLO12m", "yolo12m_640_v3pooled"),
     ("YOLOv9m", "yolov9m_640_v3pooled"),
@@ -62,7 +61,6 @@ ULTRA = [
 MM = [
     ("ATSS R50", "atss_r50_v3pooled"),
     ("TOOD R50", "tood_r50_v3pooled"),
-    ("DINO R50", "dino_r50_v3pooled"),
     ("Faster R-CNN R50", "faster-rcnn_r50_v3pooled"),
     ("RTMDet-m", "rtmdet_m_v3pooled"),
 ]
@@ -105,7 +103,11 @@ def load_mmdet(run: str):
                 "mAP@[.5:.95] (%)": g("coco/bbox_mAP"), "mAP-small (%)": g("coco/bbox_mAP_s")}
 
 
-def draw(ax, ep, series, colours):
+def draw(ax, ep, series, colours, max_ep=None):
+    if max_ep:
+        keep = [i for i, e in enumerate(ep) if e <= max_ep]
+        ep = [ep[i] for i in keep]
+        series = {k: [v[i] for i in keep] for k, v in series.items()}
     # Markers on every epoch would be a solid band at 110 epochs, so thin them to ~22 per
     # line. The shape still does the work of separating series without the clutter.
     every = max(1, len(ep) // 22)
@@ -118,9 +120,11 @@ def draw(ax, ep, series, colours):
     ax.tick_params(labelsize=5.8, length=2, width=0.5, pad=1.5)
     ax.grid(True, color="#e3e3e8", linewidth=0.45)
     ax.set_axisbelow(True)
-    for s in ax.spines.values():
-        s.set_linewidth(0.5)
-        s.set_color("#9a9aa2")
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_linewidth(0.6)
+        ax.spines[side].set_color("#9a9aa2")
     leg = ax.legend(fontsize=5.0, loc="best", frameon=True, handlelength=1.6,
                     borderpad=0.3, labelspacing=0.22, handletextpad=0.4, borderaxespad=0.3)
     leg.get_frame().set_linewidth(0.4)
@@ -131,9 +135,13 @@ def draw(ax, ep, series, colours):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--palette", choices=list(PALETTES), default="mpl")
+    ap.add_argument("--max-epoch", type=int, default=70,
+                    help="truncate every panel here. YOLO11m ran to 110 and the mmdet "
+                         "schedules stop at 70, so without a common cap the panels are "
+                         "read against different x ranges.")
     ap.add_argument("--out", default="overleaf_MDPI/figures/fig5_training.pdf")
     ap.add_argument("--width", type=float, default=7.27, help="inches; MDPI \\fulllength")
-    ap.add_argument("--height", type=float, default=5.6)
+    ap.add_argument("--height", type=float, default=3.9)
     args = ap.parse_args()
     colours = PALETTES[args.palette]
 
@@ -151,7 +159,7 @@ def main() -> None:
 
     plt.rcParams.update({"font.family": "DejaVu Sans", "axes.facecolor": "white",
                          "figure.facecolor": "white", "pdf.fonttype": 42})
-    fig, axes = plt.subplots(3, 4, figsize=(args.width, args.height))
+    fig, axes = plt.subplots(2, 5, figsize=(args.width, args.height))
     for k, (ax, (name, d)) in enumerate(zip(axes.ravel(), panels)):
         letter = chr(ord("a") + k)
         if d is None:
@@ -159,11 +167,11 @@ def main() -> None:
             ax.text(0.5, 0.5, f"({letter}) {name}\nlog not on disk", ha="center",
                     va="center", fontsize=6)
             continue
-        draw(ax, d[0], d[1], colours)
+        draw(ax, d[0], d[1], colours, args.max_epoch)
         ax.set_title(f"({letter}) {name}", fontsize=7, fontweight="bold", pad=3, y=-0.42)
 
-    fig.subplots_adjust(left=0.055, right=0.995, top=0.985, bottom=0.105,
-                        wspace=0.30, hspace=0.78)
+    fig.subplots_adjust(left=0.045, right=0.997, top=0.985, bottom=0.135,
+                        wspace=0.34, hspace=0.62)
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     fig.savefig(args.out, bbox_inches="tight", pad_inches=0.02)
     png = os.path.splitext(args.out)[0] + ".png"
