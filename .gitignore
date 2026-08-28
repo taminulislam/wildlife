@@ -99,3 +99,13 @@ data/dataset/loso_*/
 overleaf_MDPI.zip
 # (gitignore has no quoting -- match the publisher zip by glob instead)
 MDPI_template_ACS*.zip
+
+# LaTeX build artefacts (*.log is already covered above).
+*.aux
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+overleaf_*/main.out
+overleaf_*/main.toc
