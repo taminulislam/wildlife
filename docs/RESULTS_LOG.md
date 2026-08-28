@@ -10,7 +10,7 @@ Last updated: **2026-07-30** (see [Changelog](#changelog))
 
 | What | Value | Where |
 |---|---|---|
-| Best detector (mAP50, test) | **YOLOv9m @1280 — 0.523** | §4.5 |
+| Best detector (mAP50, test) | **YOLOv9m @1280 — 0.516** | §4.5 |
 | Best non-Ultralytics detector | RTMDet-m — 0.466 (DINO only 0.365) | §3.1 |
 | **Detector ranking on the COUNTING criterion** | YOLO11m F1 **0.758**; no mmdet model displaces it | §3.2 ★ |
 | Same model, human-verified GT | 0.640 @640 / see §4.5 for 1280 | §4.2 |
@@ -221,6 +221,31 @@ Findings:
    for the paper, and a hint that an mmdet model could be the better *candidate generator*
    for the counting stage even though it is the worse *detector*. Not pursued: Phase F
    already showed that a larger candidate pool hurts the rule-based counter (§6.8).
+
+---
+
+### 3.3 ⚠ The §3 AP50 column above is superseded (found 2026-08-28)
+
+The Ultralytics table in §3 was scored before the final evaluation harness. Its mAP50
+column (YOLOv9m/YOLOv10m 0.498, YOLO12m 0.473, YOLO11m 0.466, YOLOv8m 0.448) does not
+match `results/detection_eval/*_v3pooled.json`, which is what the paper's Table 1 uses:
+
+| run | §3 above | detection_eval JSON (authoritative) |
+|---|---|---|
+| yolov9m_640 | 0.498 | **0.506** |
+| yolov10m_640 | 0.498 | **0.510** |
+| yolo12m_640 | 0.473 | **0.508** |
+| yolo11m_640 | 0.466 | **0.460** |
+| yolov8m_640 | 0.448 | **0.459** |
+| rtdetr-l_640 | 0.433 | **0.434** |
+| yolov9m_1280 | 0.523 | **0.516** |
+| yolov10m_1280 | 0.458 | **0.469** |
+
+The paper's Table 3 (640 vs 1280) had been carrying the stale column while its P/R/F1 came
+from the JSONs; corrected 2026-08-28. **Always take AP50 from
+`results/detection_eval/<run>.json` → `coco.AP50`, not from §3.** The conclusions are
+unaffected: YOLOv9m @1280 is still the best detector by AP50, and it still counts worse
+than YOLO11m @640.
 
 ---
 
@@ -1170,6 +1195,14 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-08-28 (II)** — ⚠ Found the paper's Table 3 AP50 column was stale (§3.3): it
+  carried the pre-harness §3 values while its P/R/F1 came from `detection_eval/*.json`,
+  so YOLOv9m @640 appeared as 0.498 in Table 3 and 0.506 in Table 1. Corrected in the
+  manuscript, along with the derived claims (1280 spread 0.065 → 0.047, YOLOv9m @1280
+  0.523 → 0.516, "14% advantage" → 12%). No conclusion changes. Also added
+  `src/viz/training_curves.py` — per-epoch validation curves for all twelve detector runs
+  as a 3x4 grid, now Figure 5.
 
 - **2026-08-28** — Added §6.13, the confidence-condition sensitivity analysis
   (`src/eval/conf_sensitivity.py`). Removing `topk_conf >= 0.65` raises held-out coverage

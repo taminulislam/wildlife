@@ -128,31 +128,31 @@ paper uses it.
 \begin{table}[H]
 \caption{\textbf{640 versus 1280\,px.} Higher resolution helps YOLOv9m on every column and
 hurts YOLOv10m on every column: at 640 the two are within 0.004 AP$_{50}$, at 1280 they
-diverge by 0.065. AP-small moves the other way for both (0.128 to 0.119 and 0.117 to 0.093),
+diverge by 0.047. AP-small moves the other way for both (0.128 to 0.119 and 0.117 to 0.093),
 so the small-object deficit is not primarily a resolution deficit.\label{tab:resolution}}
 \centering
 \begin{tabularx}{\textwidth}{lCCCCC}
 \toprule
 \textbf{Model} & \textbf{Resolution} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{AP$_\mathbf{50}$} \\
 \midrule
-YOLOv9m & 640 & 0.704 & 0.448 & 0.547 & 0.498 \\
-\textbf{YOLOv9m} & \textbf{1280} & \textbf{0.757} & \textbf{0.491} & \textbf{0.595} & \textbf{0.523} \\
-YOLOv10m & 640 & 0.674 & 0.455 & 0.543 & 0.498 \\
-YOLOv10m & 1280 & 0.669 & 0.432 & 0.525 & 0.458 \\
+YOLOv9m & 640 & 0.704 & 0.448 & 0.547 & 0.506 \\
+\textbf{YOLOv9m} & \textbf{1280} & \textbf{0.757} & \textbf{0.491} & \textbf{0.595} & \textbf{0.516} \\
+YOLOv10m & 640 & 0.674 & 0.455 & 0.543 & 0.510 \\
+YOLOv10m & 1280 & 0.669 & 0.432 & 0.525 & 0.469 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 Resolution is the one lever that behaves unpredictably. \Cref{tab:resolution} shows
 1280\,px helping YOLOv9m on every metric and hurting YOLOv10m on every one; at 640 the two
-are within 0.004 AP$_{50}$, at 1280 they diverge by 0.065. AP-small falls for both, so the
+are within 0.004 AP$_{50}$, at 1280 they diverge by 0.047. AP-small falls for both, so the
 extra resolution buys overall precision and recall rather than the smallest animals.
 
 That gain does not survive the pipeline. YOLOv9m at 1280\,px is the strongest detector in
-this section by AP$_{50}$ (0.523 against YOLO11m's 0.460), so we ran it through the complete
+this section by AP$_{50}$ (0.516 against YOLO11m's 0.460), so we ran it through the complete
 counting pipeline under the protocol of \cref{sec:heldout}. It counts \emph{fewer} animals:
 MAE 2.54 and 54 of 83 held-out animals, against 2.38 and 55 of 83 for YOLO11m at 640\,px.
-A 14\% advantage in detection accuracy becomes a small deficit in counting accuracy, which
+A 12\% advantage in detection accuracy becomes a small deficit in counting accuracy, which
 is why the production detector is not the one this section ranks highest, and the first
 direct evidence for the divergence the rest of the paper characterizes.
 
