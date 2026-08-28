@@ -59,6 +59,16 @@ def _make_eta_logger():
     return cb
 
 
+def _scale(v: str):
+    """'0.5' -> 0.5 (symmetric); '0.9,2.2' -> (0.9, 2.2) (asymmetric)."""
+    if "," in str(v):
+        lo, hi = (float(x) for x in str(v).split(","))
+        if not 0 < lo <= hi:
+            raise SystemExit(f"--scale lo,hi must satisfy 0 < lo <= hi, got {v}")
+        return (lo, hi)
+    return float(v)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="weights/yolo11m.pt")
@@ -89,7 +99,13 @@ def main() -> None:
     ap.add_argument("--copy-paste", type=float, default=0.0,
                     help="paste deer from other imgs to boost positive instances")
     ap.add_argument("--mixup", type=float, default=0.0)
-    ap.add_argument("--scale", type=float, default=0.5)
+    ap.add_argument("--scale", default="0.5",
+                    help="symmetric magnitude (0.5 -> [0.5, 1.5]), or an asymmetric "
+                         "'lo,hi' pair (0.9,2.2 -> never shrink below 0.9x, enlarge to "
+                         "2.2x). The training split holds no box above 95.6 px while three "
+                         "held-out animals sit at 104-157 px, and the symmetric form "
+                         "cannot cover that end without pushing the 27 px median toward "
+                         "sub-pixel. Ultralytics >=8.4 accepts the pair directly.")
     ap.add_argument("--translate", type=float, default=0.1)
     ap.add_argument("--degrees", type=float, default=0.0)
     ap.add_argument("--warmup-epochs", type=float, default=3.0)
@@ -128,7 +144,7 @@ def main() -> None:
             hsv_h=0.0, hsv_s=0.0, hsv_v=0.3, fliplr=0.5, flipud=0.0,
             plots=True, exist_ok=True, verbose=True, optimizer=args.optimizer,
             mosaic=args.mosaic, close_mosaic=args.close_mosaic,
-            copy_paste=args.copy_paste, mixup=args.mixup, scale=args.scale,
+            copy_paste=args.copy_paste, mixup=args.mixup, scale=_scale(args.scale),
             translate=args.translate, degrees=args.degrees,
             warmup_epochs=args.warmup_epochs, warmup_bias_lr=args.warmup_bias_lr,
         )
