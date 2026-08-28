@@ -44,7 +44,11 @@ RTMDet-m & 0.466 & 0.339 & 0.411 & 0.437 & 0.325 & \textbf{0.779} & 0.459 & 0.36
 \Cref{tab:detectors} shows first how little separates them: AP$_{50}$ spans 0.365--0.510,
 with the top three within 0.004, across designs as different as Faster R-CNN, DINO and
 YOLO12m. That narrow spread is the signature of a data-limited rather than an
-architecture-limited regime.
+architecture-limited regime, and \cref{fig:training} shows it is not an artefact of any
+model being under-trained: within the budget each run either plateaus or passes its peak,
+and the plateaus sit on top of one another. The one genuinely unsettled curve is DINO R50,
+which is still oscillating between 0.15 and 0.30 mAP@50 at the point its budget expires ---
+the slow convergence the query-based literature reports, visible directly.
 
 The absolute values are low for two reasons, neither of them a model failure. The first is
 geometric: for axis-aligned boxes of side $s$ offset by $d$ pixels,
@@ -59,6 +63,28 @@ detectors that score around 0.50 box recall find 220 of the 235 annotated deer i
 one frame, and the full pipeline reaches 82 of 83 on held-out video (\cref{sec:counting}).
 The distance between 0.50 and 0.94 is not a discrepancy but two metrics answering different
 questions --- the first sign that detection accuracy is a poor proxy for counting ability.
+
+\begin{figure}[H]
+\begin{adjustwidth}{-\extralength}{0cm}
+  \centering
+  \includegraphics[width=\fulllength]{figures/fig5_training.pdf}
+\end{adjustwidth}
+  \caption{\textbf{Validation curves for every architecture in \cref{tab:detectors}.} One
+  panel per detector, drawn from the training logs each run wrote; no curve is smoothed or
+  re-fitted. The two frameworks record different quantities, so the series differ by family
+  and each panel carries its own legend: the Ultralytics models (\textbf{a}--\textbf{g})
+  log precision, recall and mAP@50 per epoch, from which F1 is computed, while the
+  mmdetection models (\textbf{h}--\textbf{l}) log the COCO mAP family. Epoch counts differ
+  because runs early-stopped at different points under a fixed compute budget; the
+  $x$-axes are therefore not comparable across panels and the $y$-axes are not shared.
+  Two patterns matter for what follows. Precision settles near 0.65--0.70 while recall
+  settles near 0.40--0.45 in every Ultralytics panel, which is the operating point
+  \cref{sec:choosing} argues the counting stage actually needs; and several models
+  (\textbf{c}, \textbf{f}, \textbf{i}) peak early and then decline, so the reported figures
+  come from the best checkpoint rather than the last. Deformable DETR R50 is absent because
+  it reached only two validation epochs within the same budget, which is the exclusion
+  noted in \cref{tab:detectors}.\label{fig:training}}
+\end{figure}
 
 One architectural pattern survives every criterion. The query-based detectors underperform:
 DINO R50 reaches 0.365 AP$_{50}$ on a full native schedule, below plain Faster R-CNN, and
@@ -227,13 +253,14 @@ per-video capped aggregate defined in \cref{sec:decomposition}, which is the fig
 counting literature reports. Its per-animal equivalent is lower --- 47, 47, 37 and 47
 respectively.\label{tab:pools}}
 \begin{adjustwidth}{-\extralength}{0cm}
-\centering\small
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llrccccc}
 \toprule
 \textbf{Pool} & \textbf{Intervention} & \textbf{Candidates} & \textbf{\reachedq} & \textbf{\primaryq} & \textbf{\countedq} & \textbf{MAE} & \textbf{Ceiling} \\
 \midrule
 C & Orphan recovery, conf 0.10 (operating point) & 7008 & 74/83 & 66/83 & \textbf{55/83 = 66.3\%} & \textbf{2.38} & 79.5\% \\
-E & \quad + track-initialization gate removed, conf 0.02 & 18,349 & 79/83 & 69/83 & 54/83 = 65.1\% & 2.54 & 83.1\% \\
+E & \quad + track-init gate removed, conf 0.02 & 18,349 & 79/83 & 69/83 & 54/83 = 65.1\% & 2.54 & 83.1\% \\
 F & \quad + NMS IoU $0.50\!\to\!0.90$ & 90,239 & 79/83 & 70/83 & 41/83 = 49.4\% & 3.46 & 84.3\% \\
 G & \quad + appearance re-identification & 27,679 & \textbf{82/83 = 98.8\%} & \textbf{73/83 = 88.0\%} & 52/83 = 62.7\% & 2.69 & \textbf{88.0\%} \\
 \bottomrule
@@ -246,7 +273,7 @@ does what it was designed to do:
 
 \begin{itemize}[leftmargin=*,labelsep=4.5mm]
 \item \textbf{Lowering detector confidence} 0.10$\to$0.02 and \textbf{removing the tracker's
-track-initialization gate} raised \reachedq from 74 to 79. Lowering confidence \emph{alone}
+track-ini\-tial\-i\-za\-tion gate} raised \reachedq from 74 to 79. Lowering confidence \emph{alone}
 recovered zero additional animals: the gate, not the threshold, was the binding constraint
 --- BoT-SORT will extend a track from a low-confidence detection but will not \emph{start}
 one, so faint animals were invisible to counting regardless of detector threshold.
@@ -279,16 +306,17 @@ also the only place where a substantial loss appears without a corresponding poo
 and \cref{tab:confirmers} expands that comparison across four methods and two
 pools.\label{tab:ablationmain}}
 \begin{adjustwidth}{-\extralength}{0cm}
-\centering\small
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llrrrrr}
 \toprule
 \textbf{Stage} & \textbf{Configuration} & \textbf{Candidates} & \textbf{\reachedq} & \textbf{\primaryq} & \textbf{\countedq} & \textbf{MAE} \\
 \midrule
---- & \textbf{Full pipeline} (YOLO11m@640, orphan recovery, 3-param rule) & 7008 & 74/83 & 66/83 & \textbf{55/83} & \textbf{2.38} \\
+--- & \textbf{Full pipeline} (YOLO11m@640, orphans, 3-param rule) & 7008 & 74/83 & 66/83 & \textbf{55/83} & \textbf{2.38} \\
 \midrule
 Detection & \quad detector $\to$ YOLOv9m @1280\,px (best AP$_{50}$) & 1496 & 67/83 & 62/83 & 54/83 & 2.54 \\
 Tracking & \quad $-$ orphan recovery & 711 & 66/83 & 59/83 & 52/83 & 2.46 \\
-Tracking & \quad $+$ track-initialization gate removed, conf 0.02 & 18,349 & 79/83 & 69/83 & 54/83 & 2.54 \\
+Tracking & \quad $+$ track-init gate removed, conf 0.02 & 18,349 & 79/83 & 69/83 & 54/83 & 2.54 \\
 Detection & \quad $+$ NMS IoU $0.50 \to 0.90$ & 90,239 & 79/83 & 70/83 & 41/83 & 3.46 \\
 Association & \quad $+$ appearance re-identification & 27,679 & \textbf{82/83} & \textbf{73/83} & 52/83 & 2.69 \\
 Confirmation & \quad rule $\to$ temporal transformer & 7008 & 74/83 & 66/83 & 49/83 & 2.85 \\
