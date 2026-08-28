@@ -64,6 +64,52 @@ one frame, and the full pipeline reaches 82 of 83 on held-out video (\cref{sec:c
 The distance between 0.50 and 0.94 is not a discrepancy but two metrics answering different
 questions --- the first sign that detection accuracy is a poor proxy for counting ability.
 
+A third pattern belongs to individual rows rather than to the table as a whole, and it is
+what makes an entry like YOLO12m's 0.929 precision against 0.452 recall look
+self-contradictory. It is not. The two numbers describe one conservative operating point:
+of YOLO12m's errors at confidence 0.25, 1530 are missed boxes and 96 are false ones, so
+\textbf{94\% of its error is silence rather than mistake}. A model that is quiet is not a
+model that is wrong, and the distinction matters downstream, because the two failures cost
+the confirmation stage very different amounts.
+
+\begin{table}[H]
+\caption{\textbf{The precision--recall split is a threshold choice, not a capability
+limit.} The same three sets of weights scored on the same test split under the presence
+criterion, at the conventional reporting threshold of 0.25 and at the 0.10 the counting
+pipeline actually runs the detector at. Lowering the threshold buys YOLO12m 20 points of
+recall for 22 of precision, which is one knob on one curve. The RTMDet-m rows show why the
+direction matters: a detector that is quiet can be made louder, but a detector that is
+already loud has nowhere to go --- at 0.10 it emits 155,491 false boxes for 2611 true ones,
+and no confirmation stage can recover from that.\label{tab:threshold}}
+\centering\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{lCCCCCCC}
+\toprule
+\textbf{Model} & \textbf{Conf.} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{TP} & \textbf{FP} & \textbf{FN} \\
+\midrule
+\multirow{2}{*}{YOLO12m} & 0.25 & \textbf{0.929} & 0.452 & 0.608 & 1262 & 96 & 1530 \\
+ & 0.10 & 0.711 & 0.653 & \textbf{0.681} & 1824 & 741 & 968 \\
+\midrule
+\multirow{2}{*}{YOLO11m} & 0.25 & 0.897 & 0.503 & 0.644 & 1404 & 162 & 1388 \\
+ & 0.10 & 0.777 & 0.576 & 0.661 & 1608 & 462 & 1184 \\
+\midrule
+\multirow{2}{*}{RTMDet-m} & 0.25 & 0.325 & 0.779 & 0.459 & 2176 & 4513 & 616 \\
+ & 0.10 & 0.017 & \textbf{0.935} & 0.033 & 2611 & 155,491 & 181 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\Cref{tab:threshold} gives the sensitivity. At 0.10 the same YOLO12m weights score 0.711
+precision and 0.653 recall, so the low recall in \cref{tab:detectors} is a property of the
+reporting threshold rather than of the model. This also means the figure in
+\cref{tab:detectors} is not the operating point of the system this paper describes:
+\textbf{the counting pipeline runs the detector at confidence 0.10}, where recall is 20
+points higher, and 0.25 is reported only because it is the conventional threshold for a
+detection table. Recall is further understated by the matching rule --- relaxing IoU$\geq$0.50
+to presence cuts YOLO12m's false positives from 307 to 96 while its misses fall only from
+1741 to 1530, because a looser criterion can credit a box that was placed a few pixels off
+an animal but cannot recover an animal the detector never fired on.
+
 \begin{figure}[H]
 \begin{adjustwidth}{-\extralength}{0cm}
   \centering
