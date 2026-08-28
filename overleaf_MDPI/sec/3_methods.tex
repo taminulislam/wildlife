@@ -128,7 +128,13 @@ one, and is far less often checked.
 \Cref{fig:pipeline} shows the system. Detections from YOLO11m at 640\,px are associated by
 BoT-SORT~\cite{aharon2022botsort} with sparse-optical-flow global motion compensation ---
 mandatory here, since the whole frame translates as the vehicle moves --- producing candidate
-tracks. A confirmation stage then decides which candidates are real, distinct animals. The
+tracks. The detector is not the one with the best AP$_{50}$, and the choice is deliberate:
+\cref{sec:choosing} selects on the precision-weighted $F_{0.5}$ instead, because the
+confirmation stage that consumes these detections must reject tens of thousands of false
+candidates against roughly two hundred true ones and therefore pays far more for a false
+positive than for a false negative. That section also verifies the choice end to end, running
+the highest-AP$_{50}$ model through this same pipeline and finding that it counts fewer
+animals. A confirmation stage then decides which candidates are real, distinct animals. The
 count is the number of accepted candidates.
 
 The confirmation baseline is a three-parameter rule: accept a candidate if it persists for
