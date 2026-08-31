@@ -1,31 +1,18 @@
 \section{Conclusions}
 \label{sec:conclusion}
 
-We set out to build a thermal wildlife counting system --- TRACT --- and found that the
-accuracy a practitioner would try to buy with a better detector is being lost somewhere else. By
-decomposing counting error into detection, association and confirmation, we showed that on
-held-out video the pipeline finds 98.8\% of animals, gives 88.0\% a distinct track, and
-counts 62.7\% --- and that four independent improvements to the first two stages each made
-the third worse. Learned confirmers of three capacities lose to a three-parameter rule under
-three evaluation protocols, and the rule's confidence condition turns out to be doing
-duplicate suppression rather than the recall filtering it resembles: removing it recovers 23
-points of coverage and costs two duplicates for every animal it returns.
-
-The evidence points to supervision scarcity rather than model class as the reason
-confirmation resists learning. The pools offer roughly two hundred positive tracks against
-tens of thousands of negatives, and duplicate tracks sit \emph{between} the positives and
-the false candidates in every feature we measured, so a confirmer receives contradictory
-supervision on exactly the examples that distinguish counting from detection. The capacity
-trend extrapolates to a crossover in the low thousands of positive tracks, an order of
-magnitude beyond this corpus and a concrete target for the next dataset.
-
-For a survey rather than a per-transect report, the confirmation threshold should be moved:
-at the setting where signed bias crosses zero the same pipeline recovers 81 of the 83
-held-out animals in aggregate, against 58 at the minimum-error setting
-(\cref{sec:operating}). The under-count is an operating-point choice, not a limit of the
-system.
-
-We release the dataset, per-individual annotations, evaluation harness and decomposition
-tooling. The gap between 88\% reachable and 63\% counted is the most useful thing we can
-hand to the next group working on this problem: it is large, precisely localized, and
-entirely open.
+TRACT counts white-tailed deer from thermal road transects, and decomposing its error shows
+that the accuracy a practitioner would try to buy with a better detector is being lost
+somewhere else: on held-out video the pipeline reaches $98.8\pm5.3\%$ of animals, gives
+$88.0\pm8.7\%$ a distinct track and counts $62.7\pm10.7\%$, while four independent
+improvements to the first two stages each made the third worse. The cause is supervision
+rather than model class. The pools offer roughly two hundred positive tracks, and duplicate
+tracks on animals already counted sit \emph{between} the positives and the false candidates
+in every feature we measured, so learned confirmers of three capacities lose to a
+three-parameter rule whose confidence condition turns out to be performing duplicate
+suppression rather than the recall filtering it resembles. Moving that threshold to where
+signed bias crosses zero recovers 81 of the 83 held-out animals in aggregate
+(\cref{sec:operating}), which makes the under-count an operating-point choice rather than a
+limit of the system. We release the dataset, per-individual annotations, evaluation harness
+and decomposition tooling: the gap between what is reachable and what is counted is large,
+precisely localized and entirely open.
