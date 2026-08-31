@@ -14,6 +14,17 @@ rewarded for finding animals in \emph{frames}. A survey needs the number of dist
 tracks, deciding which tracks are real, deciding which are duplicates of an animal already
 counted --- that no detection metric scores and that, we find, dominates the error.
 
+That distinction also fixes the yardstick we use throughout. A survey does not need a box
+placed precisely on an animal; it needs the animal noticed once. We therefore score the
+detection stage \emph{per animal} --- over the whole of an animal's track, asking whether any
+frame produced a box touching it --- and report it alongside the conventional per-box metrics
+rather than in place of them. The two disagree sharply, and the disagreement is the paper's
+starting point: \textbf{every one of the twelve architectures we train finds between 82\% and
+99.6\% of the 235 annotated individuals in at least one frame, while none exceeds
+AP$_\mathbf{50}$ 0.510 on the same images.} Per-box mAP is not wrong here. It is answering a
+question the survey does not ask, and a reader who judges these detectors by it will conclude
+that detection is the problem when the measurements say it is very nearly solved.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.86\linewidth]{figures/fig1_funnel.pdf}
@@ -67,9 +78,11 @@ detector trained on inflates it by 15.5 points.
 \item \textbf{Evidence that improving candidate generation degrades counting}, replicated
 across four independent interventions, and evidence across three protocols that learned
 confirmation does not beat a three-parameter rule at this data scale.
-\item \textbf{A measurement finding with consequences beyond this dataset:} the
-IoU$\geq$0.50 criterion re-ranks detectors relative to a counting-appropriate criterion, so
-selecting a detector by its detection metric does not select the model that counts best.
+\item \textbf{A measurement finding with consequences beyond this dataset:} scored per
+animal rather than per box, detection is close to solved on this corpus while per-box mAP
+suggests it is not, and the IoU$\geq$0.50 criterion re-ranks detectors relative to a
+counting-appropriate one --- so selecting a detector by its detection metric does not select
+the model that counts best.
 \item \textbf{A parameter-sensitivity analysis of the confirmation rule} showing that its
 confidence condition is not an arbitrary constant but the component that separates counting
 from detection: removing it raises held-out coverage by 23 points while turning a
