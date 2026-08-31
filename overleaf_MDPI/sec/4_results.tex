@@ -71,8 +71,8 @@ requires a single detection. The 11,476 background frames contribute nothing eit
 since precision, recall and F1 have no true-negative term. Counted per animal, the same
 detectors that score around 0.50 box recall find 220 of the 235 annotated deer in at least
 one frame, and the full pipeline reaches 82 of 83 on held-out video (\cref{sec:counting}).
-The distance between 0.50 and 0.94 is not a discrepancy but two metrics answering different
-questions --- the first sign that detection accuracy is a poor proxy for counting ability.
+The distance between 0.50 and 0.94 reflects two metrics answering different
+questions --- the first sign that detection accuracy does not predict counting ability.
 
 The last column of \cref{tab:detectors} makes that gap explicit for every model. Measured
 over 235 animals these are tighter than the counting figures --- YOLO11m's 98.7\% carries a
@@ -130,12 +130,10 @@ to presence cuts YOLO12m's false positives from 307 to 96 while its misses fall 
 an animal but cannot recover an animal the detector never fired on.
 
 The ordering of \cref{tab:threshold} is for reading rather than a verdict, because F1 weights
-precision and recall equally --- the balance \cref{sec:choosing} argues is wrong for a counting
-pipeline. Under the precision-weighted $F_{0.5}$ we actually select on, YOLO11m leads at 0.775
+precision and recall equally --- the balance \cref{sec:choosing} argues is ill-suited to a counting pipeline. Under the precision-weighted $F_{0.5}$ we actually select on, YOLO11m leads at 0.775
 against YOLO12m's 0.767. What matters more than the size of the trade is its direction, which
 is not symmetric: a detector already operating at high recall has nowhere left to go. Dropping
-RT-DETR-L to 0.10 buys 231 additional true boxes and costs 7433 false ones, collapsing
-precision to 0.187 --- not a candidate pool any confirmation stage can work with, which is the
+RT-DETR-L to 0.10 buys 231 additional true boxes and costs 7433 false ones, reducing precision to 0.187 --- not a candidate pool any confirmation stage can work with, which is the
 argument of \cref{sec:inversion} arriving one stage earlier.
 
 \begin{figure}[H]
@@ -151,8 +149,7 @@ argument of \cref{sec:inversion} arriving one stage earlier.
 
 One architectural pattern survives every criterion. The query-based detectors underperform:
 DINO R50 reaches 0.365 AP$_{50}$ on a full native schedule, below plain Faster R-CNN, and
-Deformable DETR's training exhausted GPU memory at epoch 5 and was not rerun at a smaller batch. RT-DETR-L, which targets that weakness,
-recovers to 0.434 but still trails the convolutional one-stage models.
+Deformable DETR's training exhausted GPU memory at epoch 5 and was not rerun at a smaller batch. RT-DETR-L, which targets exactly this, recovers to 0.434 but still trails the convolutional one-stage models.
 
 \subsection{Choosing a Detector for Counting}
 \label{sec:choosing}
@@ -171,8 +168,7 @@ Both AP$_{50}$ and F1 weight precision and recall equally, which does not reflec
 structure of the stage that consumes these detections. The confirmation step must reject
 tens of thousands of false candidates against roughly two hundred true ones
 (\cref{sec:counting}), so a false positive and a false negative are not equally expensive to
-it, and \cref{sec:inversion} shows that enlarging the candidate pool degrades the final
-count rather than improving it. We therefore summarize with the precision-weighted
+it, and \cref{sec:inversion} shows that enlarging the candidate pool lowers the final count rather than raising it. We therefore summarize with the precision-weighted
 $F_{0.5}$ in the last column of \cref{tab:detectors}, fixing $\beta$ at its conventional
 value rather than selecting it, so $F_{0.5}=1.25\,PR/(0.25P+R)$. YOLO11m ranks first at
 0.775, ahead of YOLO12m at 0.767 and YOLOv9m at 0.759. That margin of 0.008 makes the top three effectively equivalent; the
@@ -181,8 +177,7 @@ substantive separation is from the recall-oriented models at 0.368--0.433. We ad
 paper uses it.
 
 \begin{table}[H]
-\caption{\textbf{640 versus 1280\,px.} Higher resolution helps YOLOv9m on every column and
-hurts YOLOv10m on every column: at 640 the two are within 0.004 AP$_{50}$, at 1280 they
+\caption{\textbf{640 versus 1280\,px.} Higher resolution raises YOLOv9m on every column and lowers YOLOv10m on every column: at 640 the two are within 0.004 AP$_{50}$, at 1280 they
 diverge by 0.047. AP-small moves the other way for both (0.128 to 0.119 and 0.117 to 0.093),
 so the small-object deficit is not primarily a resolution deficit.\label{tab:resolution}}
 \centering
@@ -198,8 +193,7 @@ YOLOv10m & 1280 & 0.669 & 0.432 & 0.525 & 0.469 \\
 \end{tabularx}
 \end{table}
 
-Resolution is the one lever that behaves unpredictably. \Cref{tab:resolution} shows
-1280\,px helping YOLOv9m on every metric and hurting YOLOv10m on every one; at 640 the two
+Resolution is the one lever that behaves unpredictably. \Cref{tab:resolution} shows 1280\,px raising YOLOv9m on every metric and lowering YOLOv10m on every one; at 640 the two
 are within 0.004 AP$_{50}$, at 1280 they diverge by 0.047. AP-small falls for both, so the
 extra resolution buys overall precision and recall rather than the smallest animals.
 
@@ -282,8 +276,8 @@ reaches 1. Both are \emph{detection} failures --- the animals are at the sensor'
 the 20\,px median of the never-detected group in \cref{sec:analysis} --- and not confirmation
 failures, so no adjustment to the counting rule recovers them. They also show why a per-video
 error of 3 and 2 animals understates how these rows read: on a transect holding three animals,
-missing all three is a complete failure, and the mean absolute error of 2.38 animals per video
-in \cref{tab:counting} conceals that a small-count transect can be wrong by 100\% while
+missing all three leaves the count at zero, and the mean absolute error of 2.38 animals per video
+in \cref{tab:counting} conceals that a small-count transect can be off by 100\% while
 contributing little to the mean. This is the strongest argument in the paper for reporting the
 decomposition per video rather than only in aggregate.
 
@@ -459,8 +453,7 @@ change in this paper --- larger than all four candidate-generation interventions
 discarded, and they really do come back.
 
 Second, \textbf{they do not come back alone}. The pipeline predicts 111 animals where 83
-exist. Over-counts rise from 3 to 37 while under-counts fall only from 28 to 9, so MAE
-degrades from 2.38 to 3.54 and the bias flips from $-1.92$ to $+2.15$. In animals: 53
+exist. Over-counts rise from 3 to 37 while under-counts fall only from 28 to 9, so MAE rises from 2.38 to 3.54 and the bias flips from $-1.92$ to $+2.15$. In animals: 53
 additional tracks are accepted, of which 19 are animals that were previously missed and 34
 are not, so the pipeline buys each recovered animal at the price of roughly two duplicates.
 
@@ -468,8 +461,7 @@ Third, and this is the substantive point, \textbf{the condition is a duplicate s
 rather than a detector threshold}. A fragment sitting on an animal that has already been
 counted is a true detection --- an animal really is there --- so nothing in the question
 ``is this a deer?'' separates it from a first sighting. Sustained high confidence across a
-track is the cheapest signal available that does separate them, because a duplicate fragment
-is typically short and weakly scored where the animal's primary track is neither. That is
+track is the cheapest signal available that does separate them, because a duplicate fragment is typically short and low-scoring where the animal's primary track is neither. That is
 why $c$ cannot be relaxed to recover recall: recall and duplicate suppression are being
 bought with the same parameter.
 
@@ -486,7 +478,7 @@ detector-training videos for \emph{each} value of $c$, so the confidence conditi
 blamed for a companion parameter left at a stale value. The conclusion strengthens rather
 than softens. Given the freedom to compensate, the grid search responds to a lowered $c$ by
 tightening the span constraint from 0 to 1\,s --- buying precision with duration instead ---
-and the substitution is a poor one: at $c=0$ the held-out MAE is 3.69 against 2.38, and
+and the substitution does not pay: at $c=0$ the held-out MAE is 3.69 against 2.38, and
 coverage falls to 60.2\%, \emph{below} the frozen variant, because a one-second minimum
 discards short tracks belonging to real animals. Across the full $7\times6\times9=378$-cell
 grid only two values of $c$, 0.55 and 0.65, appear among the twelve best cells by fit MAE.
@@ -536,16 +528,14 @@ gradient boosting and the temporal transformer both at 2.85 MAE, logistic regres
 reject additional candidates rather than recovering the animals the rule discards.
 
 Two further protocols agree. Under 8-fold cross-validation over videos the rule again wins
-(1.88 MAE), and the pattern across that sweep is diagnostic: performance degrades
-monotonically with model capacity --- logistic regression at 13 parameters reaches 3.41,
+(1.88 MAE), and the pattern across that sweep is diagnostic: performance declines monotonically with model capacity --- logistic regression at 13 parameters reaches 3.41,
 gradient boosting at $10^3$ reaches 2.41--2.66, and the transformer at $6\times10^4$ reaches
 2.81 --- while shrinking a gradient-boosted model to depth-1 stumps ($\sim$40 effective
 parameters) recovers nearly the whole gap and achieves the best RMSE of any method. This is
 a variance limit, not an architectural one.
 
 We also trained directly on the counting objective, letting fragments share probability mass
-so the loss is $|\sum_i p_i - c|$ rather than per-track cross-entropy. It was the worst
-variant tested, which rules out ``the rule wins because it optimizes MAE directly'' as the
+so the loss is $|\sum_i p_i - c|$ rather than per-track cross-entropy. It ranked last of the variants tested, which rules out ``the rule wins because it optimizes MAE directly'' as the
 explanation.
 
 Having established \emph{where} the animals are lost, we ask \emph{which} animals and why.
@@ -583,10 +573,9 @@ very \emph{large}: 104, 149 and 157\,px against a corpus median of 27, and the 1
 was never detected at all. \Cref{fig:scale} gives the likely explanation: the largest
 training box is 95.6\,px and the split contains \emph{zero} boxes at or above 100\,px, so all
 three sit outside the annotated size distribution. Scale augmentation does present enlarged
-copies, so the detector is not strictly naive to large objects, but under the symmetric
+copies, so the detector is not strictly unexposed to large objects, but under the symmetric
 sampling used here an enlargement beyond $1.5\times$ is never drawn. The mirror image of the
-small-object problem is visible here: the detector performs worst where examples are
-scarcest.
+small-object problem is visible here: detector performance tracks example density, and is lowest where examples are scarcest.
 
 The remedy is straightforward to state, and we do not evaluate it here. Covering the upper
 tail requires sampling the resize factor from an explicit asymmetric range rather than
@@ -640,7 +629,7 @@ A trained thermal encoder reaches rank-1 $0.899 \pm 0.093$ (\cref{tab:reid}), wh
 like working re-identification until the decomposition. \textbf{Box size alone reaches
 $0.638 \pm 0.118$}, and within
 a video an animal's range changes slowly, so most of what looks like identification is
-matching \emph{distance}. Appearance in isolation is weak: mean intensity carries exactly
+matching \emph{distance}. Appearance in isolation carries little signal: mean intensity carries exactly
 chance information, silhouette with scale removed reaches 0.435, and a pretrained CNN lands
 below plain geometry. At a median $29\times24$ pixels there is not enough detail to key an
 identity to, so we describe the system as performing \emph{track association} --- preventing

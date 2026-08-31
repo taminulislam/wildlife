@@ -18,12 +18,12 @@ That distinction also fixes the yardstick we use throughout. A survey does not n
 placed precisely on an animal; it needs the animal noticed once. We therefore score the
 detection stage \emph{per animal} --- over the whole of an animal's track, asking whether any
 frame produced a box touching it --- and report it alongside the conventional per-box metrics
-rather than in place of them. The two disagree sharply, and the disagreement is the paper's
-starting point: \textbf{every one of the twelve architectures we train finds between 82\% and
+rather than in place of them. The two measure different things, and that difference is the
+paper's starting point: every one of the twelve architectures we train finds between 82\% and
 99.6\% of the 235 annotated individuals in at least one frame, while none exceeds
-AP$_\mathbf{50}$ 0.510 on the same images.} Per-box mAP is not wrong here. It is answering a
-question the survey does not ask, and a reader who judges these detectors by it will conclude
-that detection is the problem when the measurements say it is very nearly solved.
+AP$_{50}$ 0.510 on the same images. Per-box mAP remains a valid measure of localization. It
+answers a question the survey does not ask, and read as a survey metric it would place the
+difficulty in detection, where these measurements show it is very nearly solved.
 
 \begin{figure}[H]
   \centering
@@ -58,11 +58,11 @@ pool. Each one makes the final count worse or no better. We then replace the han
 confirmation rule with learned alternatives of varying capacity, under three evaluation
 protocols, and every one of them loses to three hand-tuned parameters.
 
-That pair of negative results is not a failure to find a method; it is the finding. The
-confirmation stage is starved not of capacity but of supervision: roughly 200 positive
+Neither outcome is a gap in the search for a method; together they are the finding. The
+confirmation stage is bounded by supervision rather than by capacity: roughly 200 positive
 tracks against 7,000--28,000 negatives, with the positives not linearly separable from
 the duplicates in any feature we measured. Growing the candidate pool grows the negatives
-far faster than the positives, which is exactly why every pool improvement hurts.
+far faster than the positives, which is exactly why a richer pool returns a lower count.
 
 \subsection{Contributions}
 
@@ -72,10 +72,10 @@ videos, 521,930 frames, 236 individually tracked deer, with per-individual ident
 makes detection, tracking, and counting evaluable on one corpus. Released with the
 evaluation harness.
 \item \textbf{A decomposition that localizes counting error} into detection, association,
-and confirmation (\reachedq/\primaryq/\countedq), and a held-out protocol that prevents the
-optimism we found in the naive evaluation --- reporting counting accuracy on videos the
-detector trained on inflates it by 15.5 points.
-\item \textbf{Evidence that improving candidate generation degrades counting}, replicated
+and confirmation (\reachedq/\primaryq/\countedq), and a held-out protocol that removes the
+optimism of in-sample evaluation --- reporting counting accuracy on videos the detector
+trained on inflates it by 15.5 points.
+\item \textbf{Evidence that counting accuracy moves opposite to candidate quality}, replicated
 across four independent interventions, and evidence across three protocols that learned
 confirmation does not beat a three-parameter rule at this data scale.
 \item \textbf{A measurement finding with consequences beyond this dataset:} scored per
@@ -87,8 +87,8 @@ the model that counts best.
 confidence condition is not an arbitrary constant but the component that separates counting
 from detection: removing it raises held-out coverage by 23 points while turning a
 systematic under-count into a systematic over-count.
-\item \textbf{Evidence that appearance re-identification fails at this pixel scale}, and is
+\item \textbf{Evidence that appearance re-identification is not viable at this pixel scale}, and is
 not used in our system: box size alone out-performs a pretrained appearance backbone, so what
 looks like identification is range matching. Also the diagnosis of a training-distribution
-hole that makes the detector fail on \emph{large} animals.
+gap that limits the detector on \emph{large} animals.
 \end{enumerate}

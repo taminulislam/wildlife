@@ -13,10 +13,8 @@ between the positives and the false candidates on every feature we measured --- 
 track length, candidate confidence alike.
 
 A confirmer therefore receives contradictory supervision on exactly the examples that
-distinguish counting from detection. That is why capacity does not help: the capacity trend
-in \cref{sec:learned} degrades monotonically from 13 parameters to $6\times10^4$, and
-shrinking a gradient-boosted model to depth-1 stumps recovers nearly the whole gap. It is
-also why every improvement to candidate generation hurts. Growing the pool grows the
+distinguish counting from detection. That is why capacity does not help: the capacity trend in \cref{sec:learned} declines monotonically from 13 parameters to $6\times10^4$, and
+shrinking a gradient-boosted model to depth-1 stumps recovers nearly the whole gap. It is also why every improvement to candidate generation costs count. Growing the pool grows the
 ambiguous middle of the negative class far faster than it grows the positives, so a rule
 tuned to survive the new ratio must be more aggressive, and aggression costs real animals.
 Extrapolating the capacity trend puts the crossover in the low thousands of positive
@@ -51,8 +49,7 @@ A survey ecologist and a per-transect report want different things from this sys
 confirmation threshold is where the difference is settled.
 
 Our headline rule minimises mean absolute error per video, and it under-counts: 58 animals
-predicted where 83 exist across the 13 held-out transects, a shortfall of 25. For an
-abundance estimate that is the wrong quantity to optimise. Setting $c=0.45$ instead ---
+predicted where 83 exist across the 13 held-out transects, a shortfall of 25. For an abundance estimate that is not the quantity to optimise. Setting $c=0.45$ instead ---
 the point at which signed bias crosses zero in \cref{tab:confsens} --- the same pipeline
 predicts \textbf{81 animals against 83}, an aggregate error of 2.4\%. Individual transects are
 less accurate, with mean absolute error rising from 2.38 to 3.38 animals per video, but the
@@ -69,8 +66,7 @@ is the one an abundance study should use.
 
 This distinction is obscured by our own headline metric. The capped fraction of
 \cref{sec:decomposition} deliberately prevents an over-count in one video from offsetting a
-miss in another, which is right when measuring a per-video counter and wrong when estimating a
-population total, where that cancellation is the point. Under the capped metric $c=0.45$ scores
+miss in another, which suits a per-video counter but not a population total, where that cancellation is the point. Under the capped metric $c=0.45$ scores
 72.3\%; under the aggregate it recovers 97.6\% of the animals present.
 
 One route we expected to work does not. The standard remedy for a known undercount is a

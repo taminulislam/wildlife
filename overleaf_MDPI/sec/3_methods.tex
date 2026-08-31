@@ -98,8 +98,7 @@ The animals are small and the distribution is one-sided: median box $29\times24$
 of $32^2$, and \emph{zero} boxes in the COCO-large category. Resolution is therefore the
 strongest single accuracy lever, which motivates the ablation in \cref{sec:detection}. The
 one-sidedness has a second consequence, developed in \cref{sec:analysis}: no box in the
-training split exceeds 96 pixels, and detector performance degrades on the few animals that
-appear larger --- the upper tail of the scale distribution is as under-served as the lower
+training split exceeds 96 pixels, and detector performance falls on the few animals that appear larger --- the upper tail of the scale distribution is as under-served as the lower
 one, and is far less often checked.
 
 \subsection{Counting Pipeline}
@@ -216,8 +215,7 @@ count per track; this measures \textbf{association}.
 
 The three are nested, $\countedq \le \primaryq \le \reachedq \le |G|$, and the gaps
 attribute error to the three stages. We report all three for every configuration; reporting
-only the last, as is conventional, makes a detection failure and a confirmation failure look
-identical.
+only the last, as is conventional, makes a detection miss and a confirmation miss look identical.
 
 We report mean absolute error in animals per video (MAE), signed bias, and a \emph{counted}
 fraction. The latter is $\sum_v \min(\hat{c}_v, c_v) / \sum_v c_v$, capped per video so that
@@ -248,8 +246,7 @@ confirmers are trained and thresholded under the identical split, so the compari
 \cref{sec:learned} is like-for-like.
 
 \begin{table}[H]
-\caption{\textbf{Why the held-out protocol matters.} Evaluating on all 32 videos, as a naive
-pipeline evaluation would, reports 81.8\% coverage. On video the detector never trained on
+\caption{\textbf{Why the held-out protocol matters.} Evaluating on all 32 videos, as an in-sample pipeline evaluation would, reports 81.8\% coverage. On video the detector never trained on
 it is 66.3\%. Both figures use the capped per-video fraction of \cref{sec:decomposition}; the
 uncapped ratio of predicted to true animals reads 89.0\% and 69.9\% respectively, and is the
 more flattering of the two because over-counting one video offsets misses in another.\label{tab:leak}}
