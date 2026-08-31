@@ -10,16 +10,20 @@ the counting error any choice of backbone could account for.
 
 \begin{table}[H]
 \caption{\textbf{Detection on the held-out test split} (3725 images, 2792 boxes) at
-640\,px and confidence 0.25, ordered by F1; best per column in bold. The matching rules are
-defined in \cref{sec:criterion}. \textbf{Animals Found} is different in kind from the other
-columns: it counts \emph{animals} rather than boxes, the fraction of the 235 annotated
-individuals the detector fires on in at least one frame.\label{tab:detectors}}
+640\,px and confidence 0.25, ordered by F1; best per column in bold. The column groups are
+three different questions, not three views of one. The strict criteria ask whether a box
+\emph{localizes} an animal, any overlap asks whether it \emph{touches} one, and the last
+column asks whether the \emph{animal} was found at all in any frame of its track. Only the
+last is the quantity a survey depends on, and it is the one on which the twelve models are
+indistinguishable.\label{tab:detectors}}
 \begin{adjustwidth}{-\extralength}{0cm}
 \centering\footnotesize
 \setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\fulllength}{lCCCCCCCCC}
 \toprule
-\textbf{Model} & \textbf{AP$_\mathbf{50}$} & \textbf{F1 (IoU$\geq$.50)} & \textbf{F1 (IoU$\geq$.30)} & \textbf{F1 (Centre)} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{F$_\mathbf{0.5}$} & \textbf{Animals Found} \\
+& & \multicolumn{3}{c}{\textbf{F1, strict criteria}} & \multicolumn{4}{c}{\textbf{Any overlap}} & \textbf{Per animal} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-9}\cmidrule(lr){10-10}
+\textbf{Model} & \textbf{AP$_\mathbf{50}$} & IoU$\geq$.50 & IoU$\geq$.30 & Centre & P & R & F1 & F$_{0.5}$ & \textbf{Animals found} \\
 \midrule
 YOLOv8m & 0.459 & 0.502 & 0.603 & 0.628 & 0.780 & 0.572 & \textbf{0.660} & 0.727 & 0.906 \\
 ATSS R50 & 0.380 & 0.441 & 0.556 & \textbf{0.648} & 0.683 & 0.635 & 0.658 & 0.673 & 0.962 \\
