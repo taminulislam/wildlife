@@ -28,13 +28,17 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt                                        # noqa: E402
+import matplotlib.patheffects as pe                                    # noqa: E402
 import numpy as np                                                     # noqa: E402
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_HERE, "..", "temporal"))
 
-BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
-INK, INK2, GRID = "#0b0b0b", "#52514e", "#d8d7d2"
+# Muted palette. The two pipeline stages are one hue at two lightnesses (they are ordered
+# quantities, so a sequential pair reads as a sequence), and the outcome is a warm accent --
+# a cool/warm split, which is the one contrast that survives every common colour deficiency.
+BLUE, ORANGE, AQUA, YELLOW = "#5C7FA0", "#C58164", "#A7BFD4", "#D8B382"
+INK, INK2, GRID = "#2F3437", "#6B7378", "#E7EAEC"
 
 # Held-out (13 unseen videos, 83 deer). reached/primary are per-animal; `counted` is the
 # per-video capped aggregate sum_v min(pred_v, gt_v) / sum_v gt_v, which is the figure the
@@ -54,9 +58,12 @@ N_GT = 83
 def style() -> None:
     plt.rcParams.update({
         "figure.dpi": 200, "savefig.dpi": 300, "savefig.bbox": "tight",
-        "font.size": 9, "axes.titlesize": 10, "axes.labelsize": 9,
-        "axes.edgecolor": INK2, "axes.linewidth": 0.6,
-        "axes.grid": True, "grid.color": GRID, "grid.linewidth": 0.5,
+        # Sized so the PDF is placed at ~1.0 \linewidth rather than scaled down: every
+        # point of downscaling in LaTeX comes straight off the label height.
+        "font.size": 11, "axes.titlesize": 12.5, "axes.labelsize": 11,
+        "xtick.labelsize": 10.5, "ytick.labelsize": 10.5,
+        "axes.edgecolor": GRID, "axes.linewidth": 0.8,
+        "axes.grid": True, "grid.color": GRID, "grid.linewidth": 0.7,
         "axes.axisbelow": True, "xtick.color": INK2, "ytick.color": INK2,
         "text.color": INK, "axes.labelcolor": INK,
         "legend.frameon": False, "figure.facecolor": "white",
@@ -74,24 +81,40 @@ def save(fig, out: str, name: str) -> None:
 def fig_funnel(out: str) -> None:
     """Grouped bars, not a literal funnel: the reader's job is COMPARING three magnitudes
     across four pools, and a funnel shape would encode the same numbers less precisely."""
-    fig, ax = plt.subplots(figsize=(6.4, 3.1))
-    x = np.arange(len(POOLS)); w = 0.26
-    series = [("Detected (reached)", 3, BLUE),
-              ("Own track (primary)", 4, AQUA),
+    fig, ax = plt.subplots(figsize=(7.2, 4.0))
+    x = np.arange(len(POOLS)); w = 0.25
+    series = [("Detected (reached)", 3, AQUA),
+              ("Own track (primary)", 4, BLUE),
               ("Counted", 5, ORANGE)]
     for i, (lab, idx, col) in enumerate(series):
         vals = [p[idx] for p in POOLS]
-        b = ax.bar(x + (i - 1) * w, vals, w * 0.92, label=lab, color=col,
-                   edgecolor="white", linewidth=0.8)
-        ax.bar_label(b, fmt="%d", padding=1.5, fontsize=7, color=INK2)
-    ax.axhline(N_GT, color=INK2, lw=0.8, ls=(0, (4, 3)))
-    ax.text(len(POOLS) - 0.42, N_GT + 1.2, f"all {N_GT} deer", fontsize=7, color=INK2,
-            ha="right")
-    ax.set_xticks(x); ax.set_xticklabels([p[1] for p in POOLS], fontsize=8)
-    ax.set_ylabel("deer (of 83 unseen)"); ax.set_ylim(0, N_GT + 9)
-    ax.set_title("Detection is not the bottleneck — confirmation is", loc="left")
-    ax.legend(ncol=3, fontsize=8, loc="lower center", bbox_to_anchor=(0.5, -0.30))
-    ax.spines[["top", "right"]].set_visible(False)
+        b = ax.bar(x + (i - 1) * w, vals, w * 0.9, label=lab, color=col,
+                   edgecolor="white", linewidth=1.0, zorder=3)
+        # Labels sit on the bar in ink, not in grey above it: at print size the grey
+        # numerals were the first thing to disappear.
+        lbl = ax.bar_label(b, fmt="%d", padding=3, fontsize=10, color=INK)
+        # A white halo lets the two labels that sit at the 83-deer reference line punch
+        # through it instead of being crossed out by the dashes.
+        for t in lbl:
+            t.set_path_effects([pe.withStroke(linewidth=2.6, foreground="white")])
+
+    # The reference line sits above every bar label, so the "82" for pool G no longer
+    # collides with it, and the annotation is parked on the left where no bar reaches.
+    ax.axhline(N_GT, color=INK2, lw=0.9, ls=(0, (5, 4)), zorder=2)
+    ax.text(-0.45, N_GT + 1.0, f"all {N_GT} deer present", fontsize=10, color=INK2,
+            ha="left", va="bottom")
+
+    ax.set_xticks(x); ax.set_xticklabels([p[1] for p in POOLS])
+    ax.set_ylabel("deer (of 83 unseen)")
+    ax.set_ylim(0, N_GT + 9)
+    ax.set_yticks(np.arange(0, N_GT + 1, 20))
+    ax.set_title("Detection is not the bottleneck — confirmation is", loc="left",
+                 color=INK, pad=26)
+    ax.legend(ncol=3, fontsize=10.5, loc="lower left", bbox_to_anchor=(-0.01, 1.005),
+              handlelength=1.5, handleheight=1.0, columnspacing=1.6, borderaxespad=0)
+    ax.grid(axis="x", visible=False)
+    ax.tick_params(length=0)
+    ax.spines[["top", "right", "left"]].set_visible(False)
     save(fig, out, "fig1_funnel")
 
 
@@ -101,13 +124,14 @@ def fig_inversion(out: str) -> None:
     fig, ax = plt.subplots(figsize=(5.4, 3.2))
     order = sorted(POOLS, key=lambda p: p[2])
     cand = [p[2] for p in order]
-    for lab, idx, col, mk in (("Own track (primary)", 4, AQUA, "o"),
+    for lab, idx, col, mk in (("Own track (primary)", 4, BLUE, "o"),
                               ("Counted", 5, ORANGE, "s")):
         ax.plot(cand, [p[idx] for p in order], marker=mk, color=col, lw=2,
                 ms=7, label=lab, markeredgecolor="white", markeredgewidth=1.2)
     for p in order:
-        ax.annotate(p[0], (p[2], p[4]), textcoords="offset points", xytext=(0, 9),
-                    ha="center", fontsize=7.5, color=INK2)
+        ax.annotate(p[0], (p[2], p[4]), textcoords="offset points", xytext=(0, 10),
+                    ha="center", fontsize=10, color=INK)
+    ax.margins(y=0.14)          # headroom so the pool letters clear the top spine
     ax.set_xscale("log")
     ax.set_xlabel("candidate tracks generated (log)")
     ax.set_ylabel("deer (of 83 unseen)")
