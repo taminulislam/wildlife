@@ -36,8 +36,8 @@ track), whether it is \primaryq (some candidate covers it better than it covers 
 animal, so a one-count-per-track decision \emph{could} count it), and whether it is finally
 \countedq. The gaps between these three numbers attribute error to detection, to
 association, and to confirmation respectively. \Cref{fig:funnel} gives the result: on
-held-out video the pipeline reaches 98.8\% of animals, gives 88.0\% their own track, and
-counts 62.7\%.
+held-out video the pipeline reaches $98.8 \pm 5.3\%$ of animals, gives $88.0 \pm 8.7\%$ their
+own track, and counts $62.7 \pm 10.7\%$ (95\% Wilson intervals over the 83 animals).
 
 Having localized the loss, we attack it. We improve candidate generation four independent
 ways --- lowering detector confidence from 0.10 to 0.02, removing the tracker's
@@ -63,7 +63,7 @@ evaluation harness.
 \item \textbf{A decomposition that localizes counting error} into detection, association,
 and confirmation (\reachedq/\primaryq/\countedq), and a held-out protocol that prevents the
 optimism we found in the naive evaluation --- reporting counting accuracy on videos the
-detector trained on inflates it by 23 points.
+detector trained on inflates it by 15.5 points.
 \item \textbf{Evidence that improving candidate generation degrades counting}, replicated
 across four independent interventions, and evidence across three protocols that learned
 confirmation does not beat a three-parameter rule at this data scale.
@@ -74,7 +74,8 @@ selecting a detector by its detection metric does not select the model that coun
 confidence condition is not an arbitrary constant but the component that separates counting
 from detection: removing it raises held-out coverage by 23 points while turning a
 systematic under-count into a systematic over-count.
-\item \textbf{A quantified resolution limit for individual re-identification} at this pixel
-scale, and the diagnosis of a training-distribution hole that makes the detector fail on
-\emph{large} animals.
+\item \textbf{Evidence that appearance re-identification fails at this pixel scale}, and is
+not used in our system: box size alone out-performs a pretrained appearance backbone, so what
+looks like identification is range matching. Also the diagnosis of a training-distribution
+hole that makes the detector fail on \emph{large} animals.
 \end{enumerate}

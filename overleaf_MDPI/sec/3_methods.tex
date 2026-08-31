@@ -13,7 +13,11 @@ thermal camera across four sites in southern Illinois, eight videos per site. Fr
 $640\times512$ single-channel thermal at 60\,fps; the vehicle travels at 25--90\,km/h, so
 the background translates continuously and the same animal is visible for a few seconds at
 most. \Cref{fig:dataset} shows representative frames with their annotation, and
-\cref{tab:dataset} summarizes the corpus.
+\cref{tab:dataset} summarizes the corpus. Showing the raw and annotated rows together is the
+point: the annotation looks unambiguous once drawn, but the top row is what a detector
+actually receives, and in its third and fourth panels the animals are a few dozen pixels of
+slightly warmer texture against thermal clutter. The median animal is $29\times24$\,px,
+approximately the smallest box in the third panel.
 
 Thermal transects carry low and drifting global contrast, so every frame is normalized with
 CLAHE~\cite{zuiderveld1994clahe} before use, identically at training and inference and for
@@ -23,41 +27,31 @@ is why the figures in this paper show normalized rather than raw frames: they ar
 the detectors actually consume.
 
 \begin{figure}[H]
-\begin{adjustwidth}{-\extralength}{0cm}
 \centering
 \setlength{\tabcolsep}{1.5pt}
 \renewcommand{\arraystretch}{0.6}
 \begin{tabular}{cccc}
-\includegraphics[width=0.243\fulllength]{figures/dataset/p1_raw.jpg} &
-\includegraphics[width=0.243\fulllength]{figures/dataset/p2_raw.jpg} &
-\includegraphics[width=0.243\fulllength]{figures/dataset/p3_raw.jpg} &
-\includegraphics[width=0.243\fulllength]{figures/dataset/p4_raw.jpg} \\
-\includegraphics[width=0.243\fulllength]{figures/dataset/p1_gt.jpg} &
-\includegraphics[width=0.243\fulllength]{figures/dataset/p2_gt.jpg} &
-\includegraphics[width=0.243\fulllength]{figures/dataset/p3_gt.jpg} &
-\includegraphics[width=0.243\fulllength]{figures/dataset/p4_gt.jpg} \\[2pt]
+\includegraphics[width=0.228\textwidth]{figures/dataset/p1_raw.jpg} &
+\includegraphics[width=0.228\textwidth]{figures/dataset/p2_raw.jpg} &
+\includegraphics[width=0.228\textwidth]{figures/dataset/p3_raw.jpg} &
+\includegraphics[width=0.228\textwidth]{figures/dataset/p4_raw.jpg} \\
+\includegraphics[width=0.228\textwidth]{figures/dataset/p1_gt.jpg} &
+\includegraphics[width=0.228\textwidth]{figures/dataset/p2_gt.jpg} &
+\includegraphics[width=0.228\textwidth]{figures/dataset/p3_gt.jpg} &
+\includegraphics[width=0.228\textwidth]{figures/dataset/p4_gt.jpg} \\[2pt]
 \small (\textbf{a}) two ranges & \small (\textbf{b}) close approach &
 \small (\textbf{c}) group, three ranges & \small (\textbf{d}) mid-range pair \\
 \end{tabular}
-\end{adjustwidth}
-\caption{\textbf{Dataset examples.} Top row: raw thermal frames as the sensor delivers
-them, after the CLAHE normalization the detector is trained and evaluated with. Bottom row:
-the same frames with their ground-truth boxes. Showing both is the point --- the annotation
-looks unambiguous once drawn, but the top row is what a detector actually receives, and in
-(\textbf{c}) and (\textbf{d}) the animals are a few dozen pixels of slightly warmer texture
-against a background of thermal clutter. The panels show the \emph{large} end of the corpus
-for legibility at print scale; the median animal is $29\times24$\,px, approximately the
-smallest box in (\textbf{c}).\label{fig:dataset}}
+\caption{\textbf{Dataset examples.} Top row: raw thermal frames after the CLAHE
+normalization the detector is trained and evaluated with. Bottom row: the same frames with
+their ground-truth boxes. Panels show the \emph{large} end of the corpus for legibility at
+print scale.\label{fig:dataset}}
 \end{figure}
 
 \begin{table}[H]
 \caption{\textbf{Dataset composition.} 32 thermal road-transect videos from four Illinois
-sites, $640\times512$ at 60\,fps, single class. 18,914 annotated frames are used for
-detector training and evaluation, of which 7,438 contain at least one deer and 11,476 are
-explicit negatives --- background frames matter, since a survey system must not fire on warm
-rocks or structures. Splits are by video and site-stratified. One site (SHB) holds 56\% of
-all animals, so per-site results for the smallest site are noisy and we report them as
-such.\label{tab:dataset}}
+sites, $640\times512$ at 60\,fps, a single annotated class. Splits are by video and
+site-stratified.\label{tab:dataset}}
 \centering
 \begin{tabularx}{\textwidth}{lRRRRR}
 \toprule
@@ -72,7 +66,9 @@ Test  &  9 &  3725 & 1490 & 2235 & 2792 \\
 \end{tabularx}
 \end{table}
 
-The 236 animals are unevenly distributed across the four sites: SHB contributes 132
+Of the 18,914 annotated frames, 7438 contain at least one deer and 11,476 are explicit
+negatives; background frames matter, since a survey system must not fire on warm rocks or
+structures. The 236 animals are unevenly distributed across the four sites: SHB contributes 132
 (56\% of the corpus), TON 51, SHW 38 and MAS 15. That imbalance is not incidental --- SHB
 is the dense-group site where most of our counting error concentrates
 (\cref{sec:counting}), and MAS is small enough that its per-site figures should be read as
@@ -92,7 +88,7 @@ near-duplicate frames across the boundary. The result is 19 training videos (12,
 Throughout the paper, \textbf{``held out'' means the 13 validation and test videos the
 detector never trained on}, containing 83 of the 236 deer. \Cref{sec:counting} shows why
 this distinction is not pedantic: counting accuracy measured over all 32 videos, 19 of which
-trained the detector, is 23 points higher than on held-out video alone.
+trained the detector, is 15.5 points higher than on held-out video alone.
 
 \subsection{Object Scale}
 \label{sec:scale}
@@ -114,21 +110,25 @@ one, and is far less often checked.
   \centering
   \includegraphics[width=\fulllength]{figures/wildlife_pipeline.png}
 \end{adjustwidth}
-  \caption{\textbf{Counting pipeline.} Thermal frames are contrast-normalized, detected
-  per frame by YOLO11m, associated into candidate tracks by BoT-SORT with global motion
-  compensation, and filtered by a three-parameter confirmation rule; the count is the number
-  of accepted tracks. The detector is the only gradient-trained component; the tracker's
-  Kalman filter, motion compensation and association carry no weights at all; the optional
-  appearance term (dashed) is frozen, reusing the detector's backbone features; and the
-  confirmation rule has three parameters fitted by grid search rather than by training. The
-  frames shown are illustrative; animals in the corpus are a median $29\times24$\,px
-  (\cref{fig:dataset}).\label{fig:pipeline}}
+  \caption{\textbf{The TRACT counting pipeline.} Thermal frames are contrast-normalized,
+  detected per frame, associated into candidate tracks, and filtered by a three-parameter
+  confirmation rule; the count is the number of accepted tracks. Dashed components were
+  ablated and are not used. Frames are illustrative.\label{fig:pipeline}}
 \end{figure}
 
-\Cref{fig:pipeline} shows the system. Detections from YOLO11m at 640\,px are associated by
+\Cref{fig:pipeline} shows the system, which we refer to as \textbf{TRACT} (Thermal
+Road-transect Animal Counting and Tracking). The name denotes a composition rather than an
+architecture: every component is standard, and the assembly --- contrast normalisation,
+detection, motion-compensated tracking, orphan recovery and a calibrated confirmation rule ---
+is what is arranged for counting rather than for detection. Detections from YOLO11m at
+640\,px are associated by
 BoT-SORT~\cite{aharon2022botsort} with sparse-optical-flow global motion compensation ---
 mandatory here, since the whole frame translates as the vehicle moves --- producing candidate
-tracks. The detector is not the one with the best AP$_{50}$, and the choice is deliberate:
+tracks. Only one component of the system is gradient-trained. The tracker's Kalman filter,
+motion compensation and association carry no weights at all; the optional appearance term is
+frozen, reusing the detector's own backbone features; and the confirmation rule's three
+parameters are fitted by grid search rather than by training. The detector is also not the one
+with the best AP$_{50}$, and the choice is deliberate:
 \cref{sec:choosing} selects on the precision-weighted $F_{0.5}$ instead, because the
 confirmation stage that consumes these detections must reject tens of thousands of false
 candidates against roughly two hundred true ones and therefore pays far more for a false
@@ -163,19 +163,20 @@ count, giving an uncertainty interval rather than a point estimate.
 
 Raw detector confidence cannot serve this purpose: no track in the corpus exceeds 0.90 and
 the median counted track sits at 0.74, because the animals are 27 pixels. The requirement is
-only meaningful against a calibrated posterior.
+only meaningful against a calibrated posterior. \Cref{fig:evidence} shows why a score must be
+per track rather than per frame: the raw confidence varies by 0.15 across frames of the same
+animal (Animal B, 0.66--0.81) even where every frame is a clean detection, so no single
+frame's value characterises the track. It also shows the audit trail --- every counted animal
+is exported as a contact sheet of its own track, one panel per sampled frame with elapsed time
+and per-frame score beneath, so a human can verify any individual count against the frames
+that produced it.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.86\linewidth]{figures/evidence_two.jpg}
-  \caption{\textbf{Per-animal evidence, two individuals.} Every counted animal is exported
-  as a contact sheet of its own track, one panel per sampled frame, with the elapsed time
-  and the raw per-frame detector confidence beneath each. A human auditor can therefore
-  verify any individual count against the frames that produced it. Both animals are from
-  videos the detector never trained on. The two rows also show why a per-track score is
-  needed: the raw confidence varies by 0.15 across frames of the same animal (Animal B,
-  0.66--0.81) even when every frame is a clean detection, so no single frame's value
-  characterizes the track.\label{fig:evidence}}
+  \caption{\textbf{Per-animal evidence, two individuals.} Each row is one animal's own
+  track, one panel per sampled frame, with elapsed time and raw per-frame detector confidence
+  beneath. Both animals are from videos the detector never trained on.\label{fig:evidence}}
 \end{figure}
 
 \subsection{Matching Criterion}
@@ -227,6 +228,15 @@ covered by an \emph{accepted} candidate, which \cref{sec:counting} shows is 10 p
 lower; the capped aggregate credits a video for predicting the right \emph{number} even
 when the accepted tracks do not land on the animals.
 
+Counting quantities carry 95\% intervals throughout. Proportions over the 83 held-out animals
+use the Wilson score interval, and means over the 13 held-out videos use a $t$-interval on the
+per-video values. These are sampling intervals over the corpus, and with 83 animals they are
+wide: a three-animal difference is not resolvable. We deliberately do \emph{not} attach
+intervals to the detection metrics of \cref{sec:detection}. Each architecture was trained
+once, so a bootstrap over the test images would produce a narrow interval that describes
+test-set sampling while saying nothing about the training variance that actually separates one
+architecture from another --- a precision the experiment does not support.
+
 \subsection{Held-Out Protocol}
 \label{sec:heldout}
 
@@ -239,22 +249,24 @@ confirmers are trained and thresholded under the identical split, so the compari
 
 \begin{table}[H]
 \caption{\textbf{Why the held-out protocol matters.} Evaluating on all 32 videos, as a naive
-pipeline evaluation would, reports 89.0\% coverage. On video the detector never trained on
-it is 66.3\%. We report the latter throughout.\label{tab:leak}}
+pipeline evaluation would, reports 81.8\% coverage. On video the detector never trained on
+it is 66.3\%. Both figures use the capped per-video fraction of \cref{sec:decomposition}; the
+uncapped ratio of predicted to true animals reads 89.0\% and 69.9\% respectively, and is the
+more flattering of the two because over-counting one video offsets misses in another.\label{tab:leak}}
 \centering
 \begin{tabularx}{\textwidth}{lRRR}
 \toprule
 \textbf{Evaluation Scope} & \textbf{Videos} & \textbf{Deer} & \textbf{Coverage} \\
 \midrule
-Detector-training videos & 19 & 153 & 99.3\% \\
+Detector-training videos & 19 & 153 & 90.2\% \\
 \textbf{Held out (val + test)} & \textbf{13} & \textbf{83} & \textbf{66.3\%} \\
-All 32 (the default) & 32 & 236 & 89.0\% \\
+All 32 (the default) & 32 & 236 & 81.8\% \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-The protocol is worth 23 points (\cref{tab:leak}): counting accuracy measured over all 32
-videos is 89.0\%, and on the 13 held-out videos it is 66.3\%. One qualification belongs
+The protocol is worth 15.5 points (\cref{tab:leak}): counting accuracy measured over all 32
+videos is 81.8\%, and on the 13 held-out videos it is 66.3\%. One qualification belongs
 here, because the paper's argument is about evaluation rigour. Four of the 13 held-out
 videos are the detector's \emph{validation} split. No gradient was computed on them, but
 they were used for checkpoint selection, so they are held out in the sense that matters for

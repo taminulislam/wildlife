@@ -1,0 +1,127 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="tract-pipeline" name="TRACT pipeline">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="c1" value="0 — INPUT" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=10;fontStyle=1;fontFamily=Helvetica;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="30" y="40" width="300" height="150" as="geometry"/></mxCell>
+        <mxCell id="c2" value="FLIR thermal transect
+640 × 512 × 1,  60 fps,  ~10.6 k frames" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#EDE7F6;strokeColor=#6A4FA3;" vertex="1" parent="1"><mxGeometry x="50" y="72" width="260" height="46" as="geometry"/></mxCell>
+        <mxCell id="c3" value="vehicle 25–90 km/h ⇒ whole-frame ego-motion
+(handled in stage 2, not here)" style="text;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=none;strokeColor=none;fontColor=#6A4FA3;" vertex="1" parent="1"><mxGeometry x="50" y="130" width="260" height="44" as="geometry"/></mxCell>
+        <mxCell id="c4" value="1 — PREPROCESS   (no weights)" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=10;fontStyle=1;fontFamily=Helvetica;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="360" y="40" width="250" height="150" as="geometry"/></mxCell>
+        <mxCell id="c5" value="CLAHE
+per-frame local histogram equalisation
+640×512×1 → 640×512×3" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="380" y="78" width="210" height="52" as="geometry"/></mxCell>
+        <mxCell id="c6" value="worth more than any architecture
+tested: 0.519 vs 0.299 test mAP50" style="text;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=none;strokeColor=none;fontColor=#5A5A5A;align=left;" vertex="1" parent="1"><mxGeometry x="380" y="138" width="215" height="34" as="geometry"/></mxCell>
+        <mxCell id="c7" value="2 — DETECTION   (the only gradient-trained block)" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=10;fontStyle=1;fontFamily=Helvetica;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="640" y="40" width="430" height="150" as="geometry"/></mxCell>
+        <mxCell id="c8" value="YOLO11m  @ 640 px  ·  20.1 M parameters
+C3k2 backbone → SPPF → C2PSA → PAN neck → decoupled head" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#DCE9F7;strokeColor=#2E6DA4;" vertex="1" parent="1"><mxGeometry x="660" y="74" width="390" height="50" as="geometry"/></mxCell>
+        <mxCell id="c9" value="NMS,  IoU 0.50" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="660" y="136" width="180" height="38" as="geometry"/></mxCell>
+        <mxCell id="c10" value="Dt = {(x, y, w, h, s)}
+score ≥ 0.10" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#EDE7F6;strokeColor=#6A4FA3;" vertex="1" parent="1"><mxGeometry x="866" y="136" width="184" height="38" as="geometry"/></mxCell>
+        <mxCell id="c11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c2" target="c5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c5" target="c8"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c8" target="c9"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c9" target="c10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c15" value="3 — ASSOCIATION   BoT-SORT   (zero learned weights)" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=10;fontStyle=1;fontFamily=Helvetica;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="30" y="230" width="1040" height="300" as="geometry"/></mxCell>
+        <mxCell id="c16" value="Kalman predict
+8-state (x, y, a, h, ẋ, ẏ, ȧ, ḣ)
+constant-velocity motion model" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="55" y="274" width="200" height="56" as="geometry"/></mxCell>
+        <mxCell id="c17" value="Global motion compensation
+sparseOptFlow → affine warp
+applied to every track state" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="285" y="274" width="210" height="56" as="geometry"/></mxCell>
+        <mxCell id="c18" value="cost matrix
+IoU fused with detection score
+match_thresh 0.80" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="525" y="274" width="200" height="56" as="geometry"/></mxCell>
+        <mxCell id="c19" value="Hungarian
+assignment" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="755" y="274" width="150" height="56" as="geometry"/></mxCell>
+        <mxCell id="c20" value="two-pass association
+high ≥ 0.15  then  low ≥ 0.05
+(recovers faint detections)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="285" y="356" width="210" height="54" as="geometry"/></mxCell>
+        <mxCell id="c21" value="track lifecycle
+new_track_thresh 0.15
+buffer 60 frames" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="525" y="356" width="200" height="54" as="geometry"/></mxCell>
+        <mxCell id="c22" value="appearance embedding
+frozen detector backbone
+with_reid = False" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#FAFAFA;strokeColor=#B0B0B0;dashed=1;" vertex="1" parent="1"><mxGeometry x="55" y="356" width="200" height="54" as="geometry"/></mxCell>
+        <mxCell id="c23" value="ablated in §4.4: best pool built
+(82/83 reached) yet 3 fewer counted" style="text;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=none;strokeColor=none;fontColor=#5A5A5A;align=left;" vertex="1" parent="1"><mxGeometry x="55" y="418" width="205" height="40" as="geometry"/></mxCell>
+        <mxCell id="c24" value="ORPHAN RECOVERY
+unmatched detections linked when Δt ≤ gap and
+scale-normalised distance ≤ τ  →  pseudo-tracks" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="755" y="356" width="285" height="54" as="geometry"/></mxCell>
+        <mxCell id="c25" value="+17 animals; without it single-frame animals are discarded" style="text;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=none;strokeColor=none;fontColor=#5A5A5A;align=left;" vertex="1" parent="1"><mxGeometry x="755" y="418" width="285" height="26" as="geometry"/></mxCell>
+        <mxCell id="c26" value="M candidate tracks
+(7 008 on the held-out set)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#EDE7F6;strokeColor=#6A4FA3;" vertex="1" parent="1"><mxGeometry x="755" y="462" width="285" height="40" as="geometry"/></mxCell>
+        <mxCell id="c27" value="per frame" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c10" target="c16"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c16" target="c17"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c17" target="c18"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c18" target="c19"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;exitX=0.5;exitY=0;entryX=0;entryY=1;" edge="1" parent="1" source="c20" target="c18"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;dashed=1;" edge="1" parent="1" source="c22" target="c18"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c33" value="matched" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="c19" target="c21"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c34" value="unmatched" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;exitX=1;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="c19" target="c24"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c21" target="c26"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c36" value="4–5 — TRACK FEATURES AND CONFIRMATION   (fitted by grid search, not trained)" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=10;fontStyle=1;fontFamily=Helvetica;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="30" y="570" width="640" height="200" as="geometry"/></mxCell>
+        <mxCell id="c37" value="per-track features
+n  = frames the track survives
+s  = seconds it spans
+c  = mean of its 5 highest detection scores" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#EDE7F6;strokeColor=#6A4FA3;" vertex="1" parent="1"><mxGeometry x="55" y="610" width="260" height="62" as="geometry"/></mxCell>
+        <mxCell id="c38" value="CONFIRMATION RULE
+accept ⟺  n ≥ 20  ∧  s ≥ 0  ∧  c ≥ 0.65
+3 parameters, swept on the 19 training videos, frozen" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#FBEBD2;strokeColor=#C8871B;" vertex="1" parent="1"><mxGeometry x="345" y="610" width="300" height="62" as="geometry"/></mxCell>
+        <mxCell id="c39" value="ablated alternatives — all lose to the rule (§4.7):  temporal transformer 6×10⁴ params  ·  gradient boosting 10³  ·  logistic regression 13" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#FAFAFA;strokeColor=#B0B0B0;dashed=1;" vertex="1" parent="1"><mxGeometry x="55" y="692" width="590" height="46" as="geometry"/></mxCell>
+        <mxCell id="c40" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;exitX=0;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="c26" target="c37"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c41" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c37" target="c38"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c42" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="c39" target="c38"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c43" value="6 — CALIBRATION AND OUTPUT" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=10;fontStyle=1;fontFamily=Helvetica;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="700" y="570" width="370" height="200" as="geometry"/></mxCell>
+        <mxCell id="c44" value="per-track posterior  P(track is a distinct animal)
+AUC 0.893 · 92.1 % of counted tracks ≥ 0.80" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#FBEBD2;strokeColor=#C8871B;" vertex="1" parent="1"><mxGeometry x="720" y="610" width="330" height="46" as="geometry"/></mxCell>
+        <mxCell id="c45" value="Poisson-binomial over accepted tracks
+⇒ count ± σ, not a point estimate" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#FBEBD2;strokeColor=#C8871B;" vertex="1" parent="1"><mxGeometry x="720" y="668" width="330" height="40" as="geometry"/></mxCell>
+        <mxCell id="c46" value="COUNT   +   per-animal evidence sheets   +
+793 low-confidence tracks flagged for review" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#EDE7F6;strokeColor=#6A4FA3;" vertex="1" parent="1"><mxGeometry x="720" y="718" width="330" height="40" as="geometry"/></mxCell>
+        <mxCell id="c47" value="accepted" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c38" target="c44"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c48" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c44" target="c45"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c49" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c45" target="c46"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c50" value="EVALUATION INSTRUMENT   (offline; not part of the runtime)" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=10;fontStyle=1;fontFamily=Helvetica;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#3C8C55;" vertex="1" parent="1"><mxGeometry x="1100" y="40" width="300" height="730" as="geometry"/></mxCell>
+        <mxCell id="c51" value="CVAT ground truth
+one annotated track = one animal
+236 animals · 21 646 boxes" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#E6F4EA;strokeColor=#3C8C55;" vertex="1" parent="1"><mxGeometry x="1120" y="80" width="260" height="52" as="geometry"/></mxCell>
+        <mxCell id="c52" value="matching criterion
+any-overlap (counting) vs IoU ≥ 0.50" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#E6F4EA;strokeColor=#3C8C55;" vertex="1" parent="1"><mxGeometry x="1120" y="152" width="260" height="46" as="geometry"/></mxCell>
+        <mxCell id="c53" value="REACHED
+touched by ≥ 1 candidate → detection" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#E6F4EA;strokeColor=#3C8C55;" vertex="1" parent="1"><mxGeometry x="1120" y="224" width="260" height="44" as="geometry"/></mxCell>
+        <mxCell id="c54" value="PRIMARY
+its best cover is not also another animal&#x27;s
+→ association" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#E6F4EA;strokeColor=#3C8C55;" vertex="1" parent="1"><mxGeometry x="1120" y="288" width="260" height="52" as="geometry"/></mxCell>
+        <mxCell id="c55" value="COUNTED
+confirmation accepted it → end to end" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#E6F4EA;strokeColor=#3C8C55;" vertex="1" parent="1"><mxGeometry x="1120" y="360" width="260" height="44" as="geometry"/></mxCell>
+        <mxCell id="c56" value="held-out result
+98.8 % → 88.0 % → 62.7 %
+MAE 2.38 animals / video" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=9;fontFamily=Helvetica;fillColor=#E6F4EA;strokeColor=#3C8C55;" vertex="1" parent="1"><mxGeometry x="1120" y="428" width="260" height="58" as="geometry"/></mxCell>
+        <mxCell id="c57" value="The gaps attribute error to a stage.
+Reporting only the last makes a detection
+failure and a confirmation failure look
+identical." style="text;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=none;strokeColor=none;fontColor=#5A5A5A;align=left;" vertex="1" parent="1"><mxGeometry x="1120" y="500" width="265" height="60" as="geometry"/></mxCell>
+        <mxCell id="c58" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c51" target="c52"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c59" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c52" target="c53"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c60" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c53" target="c54"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c61" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c54" target="c55"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c62" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;" edge="1" parent="1" source="c55" target="c56"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c63" value="candidates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c26" target="c53"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c64" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;fontSize=8;fontFamily=Helvetica;strokeColor=#5A5A5A;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=1;" edge="1" parent="1" source="c46" target="c55"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="c65" value="LEGEND" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=10;fontStyle=1;fontFamily=Helvetica;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="1100" y="590" width="300" height="180" as="geometry"/></mxCell>
+        <mxCell id="c66" value="gradient-trained" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=#DCE9F7;strokeColor=#2E6DA4;" vertex="1" parent="1"><mxGeometry x="1118" y="622" width="120" height="26" as="geometry"/></mxCell>
+        <mxCell id="c67" value="no weights at all" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=#F2F2F2;strokeColor=#8C8C8C;" vertex="1" parent="1"><mxGeometry x="1250" y="622" width="130" height="26" as="geometry"/></mxCell>
+        <mxCell id="c68" value="fitted, not trained" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=#FBEBD2;strokeColor=#C8871B;" vertex="1" parent="1"><mxGeometry x="1118" y="656" width="120" height="26" as="geometry"/></mxCell>
+        <mxCell id="c69" value="ablated / unused" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=#FAFAFA;strokeColor=#B0B0B0;dashed=1;" vertex="1" parent="1"><mxGeometry x="1250" y="656" width="130" height="26" as="geometry"/></mxCell>
+        <mxCell id="c70" value="evaluation only — never touches the runtime" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=#E6F4EA;strokeColor=#3C8C55;" vertex="1" parent="1"><mxGeometry x="1118" y="690" width="262" height="26" as="geometry"/></mxCell>
+        <mxCell id="c71" value="One learned component in the whole system.
+The contribution is the arrangement and the
+measurement, not the architecture." style="text;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=8;fontFamily=Helvetica;fillColor=none;strokeColor=none;fontColor=#5A5A5A;align=left;" vertex="1" parent="1"><mxGeometry x="1118" y="722" width="265" height="40" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

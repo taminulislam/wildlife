@@ -69,12 +69,12 @@ pipelines built to answer that question are optimized as detectors. (1) Backgrou
 whether detection accuracy predicts counting accuracy on thermal road-transect video, and
 localize where the two diverge. (2) Methods: we introduce a corpus of 32 fully annotated
 FLIR thermal transects (521,930 frames, 236 individually tracked white-tailed deer, 21,646
-boxes), benchmark twelve detectors on it, and decompose end-to-end counting
-error into three measurable stages --- whether an animal is detected at all, whether it
+boxes), benchmark twelve detectors on it, and build TRACT, a counting pipeline that
+decomposes end-to-end error into three measurable stages --- whether an animal is detected at all, whether it
 acquires its own candidate track, and whether it is finally counted. The confirmation rule
-is fitted on 19 videos and frozen before evaluation on 13 the detector never trained on. (3) Results: the pipeline detects 98.8\% of held-out animals,
-gives 88.0\% of them a distinct track, and counts 62.7\%, at a mean absolute error of 2.38
-animals per video. Four independent interventions that each demonstrably improve candidate
+is fitted on 19 videos and frozen before evaluation on 13 the detector never trained on. (3) Results: the pipeline detects $98.8\pm5.3\%$ of held-out
+animals, gives $88.0\pm8.7\%$ of them a distinct track, and counts $62.7\pm10.7\%$, at a mean
+absolute error of $2.38\pm1.29$ animals per video (95\% intervals). Four independent interventions that each demonstrably improve candidate
 generation make the final count worse, and learned confirmation heads all lose to a
 three-parameter hand-tuned rule. (4) Conclusions: detection is not the
 bottleneck in thermal wildlife counting. The confirmation stage is, and at this corpus size
@@ -148,6 +148,7 @@ IoU & Intersection over union\\
 MAE & Mean absolute error\\
 NMS & Non-maximum suppression\\
 ReID & Re-identification\\
+TRACT & Thermal Road-transect Animal Counting and Tracking\\
 RMSE & Root mean square error
 \end{tabular}
 }

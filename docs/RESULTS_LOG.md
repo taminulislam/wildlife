@@ -1133,6 +1133,32 @@ the REFIT table informative.
 
 ---
 
+### 6.14 ⚠ The coverage column mixed two definitions (found 2026-08-31)
+
+Section 3.6 of the paper defines the counted fraction as `sum_v min(pred_v, gt_v) / sum_v gt_v`
+— capped per video, so over-counting one video cannot offset misses in another. The held-out
+figure 66.3% uses that definition. **The seen-video and all-32 figures did not.**
+
+| scope | GT | predicted | raw pred/GT | capped (the defined metric) |
+|---|---|---|---|---|
+| fit (19 videos) | 153 | 152 | 99.3% | **90.2%** |
+| held out (13) | 83 | 58 | 69.9% | **66.3%** |
+| all 32 | 236 | 210 | 89.0% | **81.8%** |
+
+MAE was correct in every row (1.53 / 2.38 / 1.88); only the coverage column was affected. The
+99.3% looked near-perfect because the fit videos predict 152 animals against 153 true — a ratio
+that conceals over-counts cancelling misses, which is exactly what the capping exists to stop.
+
+Consequence: the held-out protocol is worth **15.5 points**, not 23. The argument is unchanged
+— a 15.5-point inflation still makes the case — but it is now measured consistently. Corrected
+throughout the manuscript on 2026-08-31.
+
+**Watch for this:** the paper contains a second, unrelated 23-point claim in §4.6 — removing the
+confidence condition raises held-out coverage from 66.3% to 89.2%. That one is capped and
+correct. The two coincided numerically, which is how the error survived.
+
+---
+
 ## 7. Open risks for the paper
 
 1. **Dataset scale.** 236 deer / 32 videos is thin for a benchmark contribution, and there
@@ -1195,6 +1221,12 @@ Outputs: `/work/hdd/bgte/tislam6/wildlife_outputs/{runs,logs}`, metrics under
 ---
 
 ## Changelog
+
+- **2026-08-31** — ⚠ Found the coverage column of the counting tables mixed capped and uncapped
+  definitions (§6.14). Seen-video coverage is 90.2% not 99.3%, all-32 is 81.8% not 89.0%, and
+  the held-out protocol is worth 15.5 points not 23. MAE was correct throughout. Also named the
+  pipeline TRACT, replaced the pools table with a per-site corpus-and-decomposition table, and
+  integrated the literature review (63 references).
 
 - **2026-08-28 (II)** — ⚠ Found the paper's Table 3 AP50 column was stale (§3.3): it
   carried the pre-harness §3 values while its P/R/F1 came from `detection_eval/*.json`,
@@ -1298,3 +1330,27 @@ Identical MAE and *better* coverage than the pooled split. That is a single fold
 easiest site — SHW has 38 animals and little grouping — so it is not evidence of anything,
 but it is not the collapse a cross-site transfer failure would look like either. Worth
 re-running if the paper ever needs a generalisation result; not worth blocking on.
+
+## 6.15 Uncertainty intervals reported in the paper (2026-08-31)
+
+All counting quantities in the manuscript now carry 95% intervals. Method, stated in §3.6:
+
+- **Proportions over the 83 held-out animals** — Wilson score interval.
+  reached 98.8 ±5.3 · primary 88.0 ±8.7 · **counted 62.7 ±10.7** · identity-matched 56.6 ±10.7
+  (pool C headline: counted 66.3 ±10.7)
+  per-animal recall YOLO11m 98.7 ±2.4 (n=235, whole corpus, hence tighter)
+  ReID rank-1 89.9 ±9.3 · box-size-alone 63.8 ±11.8
+- **Means over the 13 held-out videos** — t-interval on per-video values.
+  MAE 2.38, sd 2.14 → ±1.29 · bias −1.92, sd 2.60 → ±1.57
+
+**Deliberately not given intervals: the detection metrics of §4.2.** One training seed per
+architecture, so a test-image bootstrap would report test-set sampling noise while saying
+nothing about the training variance that actually separates AP50 0.460 from 0.510. A narrow
+interval there would overstate precision rather than qualify it. Recorded in §3.6 so a
+reviewer sees the omission is a decision.
+
+**Consequence for §4.4 (the inversion).** The intervals show no single pairwise pool
+comparison is individually significant: pool C's 55/83 has a ±9-animal interval and pools E
+(54) and G (52) sit inside it. Pool F (41) is the one pool that falls outside. The surviving
+argument, now stated explicitly in §4.4, is the consistent *direction* across four independent
+interventions (p = 2^-4 under a neutral null) plus the pool-F effect — not any one comparison.

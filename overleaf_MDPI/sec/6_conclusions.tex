@@ -1,8 +1,8 @@
 \section{Conclusions}
 \label{sec:conclusion}
 
-We set out to build a thermal wildlife counting system and found that the accuracy a
-practitioner would try to buy with a better detector is being lost somewhere else. By
+We set out to build a thermal wildlife counting system --- TRACT --- and found that the
+accuracy a practitioner would try to buy with a better detector is being lost somewhere else. By
 decomposing counting error into detection, association and confirmation, we showed that on
 held-out video the pipeline finds 98.8\% of animals, gives 88.0\% a distinct track, and
 counts 62.7\% --- and that four independent improvements to the first two stages each made
@@ -18,6 +18,12 @@ the false candidates in every feature we measured, so a confirmer receives contr
 supervision on exactly the examples that distinguish counting from detection. The capacity
 trend extrapolates to a crossover in the low thousands of positive tracks, an order of
 magnitude beyond this corpus and a concrete target for the next dataset.
+
+For a survey rather than a per-transect report, the confirmation threshold should be moved:
+at the setting where signed bias crosses zero the same pipeline recovers 81 of the 83
+held-out animals in aggregate, against 58 at the minimum-error setting
+(\cref{sec:operating}). The under-count is an operating-point choice, not a limit of the
+system.
 
 We release the dataset, per-individual annotations, evaluation harness and decomposition
 tooling. The gap between 88\% reachable and 63\% counted is the most useful thing we can

@@ -1,0 +1,9 @@
+group,value,gt_deer,recall_iou50,recall_iou30,recall_touch,recall_center
+ALL,all,235,0.8809,0.9404,0.9617,0.9617
+split,test,38,0.9211,0.9474,0.9474,0.9474
+split,train,152,0.8618,0.9211,0.9539,0.9539
+split,val,45,0.9111,1.0,1.0,1.0
+site,MAS,15,0.6667,0.8,0.8,0.8
+site,SHB,132,0.9242,0.9545,0.9697,0.9697
+site,SHW,38,0.9211,1.0,1.0,1.0
+site,TON,50,0.8,0.9,0.96,0.96
