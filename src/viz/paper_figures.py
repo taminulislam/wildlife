@@ -81,7 +81,7 @@ def save(fig, out: str, name: str) -> None:
 def fig_funnel(out: str) -> None:
     """Grouped bars, not a literal funnel: the reader's job is COMPARING three magnitudes
     across four pools, and a funnel shape would encode the same numbers less precisely."""
-    fig, ax = plt.subplots(figsize=(7.2, 4.0))
+    fig, ax = plt.subplots(figsize=(7.2, 3.7))
     x = np.arange(len(POOLS)); w = 0.25
     series = [("Detected (reached)", 3, AQUA),
               ("Own track (primary)", 4, BLUE),
@@ -108,8 +108,8 @@ def fig_funnel(out: str) -> None:
     ax.set_ylabel("deer (of 83 unseen)")
     ax.set_ylim(0, N_GT + 9)
     ax.set_yticks(np.arange(0, N_GT + 1, 20))
-    ax.set_title("Detection is not the bottleneck — confirmation is", loc="left",
-                 color=INK, pad=26)
+    # No in-figure title: the caption carries it, and printing it twice wastes the
+    # space that makes the bars readable.
     ax.legend(ncol=3, fontsize=10.5, loc="lower left", bbox_to_anchor=(-0.01, 1.005),
               handlelength=1.5, handleheight=1.0, columnspacing=1.6, borderaxespad=0)
     ax.grid(axis="x", visible=False)
@@ -135,7 +135,6 @@ def fig_inversion(out: str) -> None:
     ax.set_xscale("log")
     ax.set_xlabel("candidate tracks generated (log)")
     ax.set_ylabel("deer (of 83 unseen)")
-    ax.set_title("More candidates: more deer reachable, fewer counted", loc="left")
     ax.legend(fontsize=8, loc="center left")
     ax.spines[["top", "right"]].set_visible(False)
     save(fig, out, "fig2_inversion")
