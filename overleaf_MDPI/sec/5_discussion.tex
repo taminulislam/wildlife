@@ -95,8 +95,10 @@ than any architectural choice we tested --- 0.519 against 0.299 test mAP50 --- w
 larger effect than the entire 0.365--0.510 spread across twelve architectures. And the upper
 tail of the object-scale distribution deserves the attention normally reserved for the lower
 one: three of our misses are animals \emph{larger} than anything in the training split
-(\cref{fig:scale}), a failure mode that a small-object-focused evaluation would never
-surface.
+(\cref{fig:scale}), a failure mode that a small-object-focused evaluation would never surface. And do not carry
+an absolute confidence threshold to a new site: \cref{sec:loso} shows a detector trained
+without a site scores that site systematically lower, so a threshold fitted elsewhere can
+reject every track. Budget for a small labelled sample from each new site to re-fit it.
 
 \subsection{Limitations}
 \label{sec:limitations}
@@ -114,4 +116,8 @@ held-out animals larger than 100\,px lie outside it (\cref{fig:scale}), and the 
 remedy is unavailable in the symmetric form the standard augmentation provides. Finally, the
 sensitivity analysis of \cref{sec:sensitivity} varies one parameter of one rule on one
 operating pool; it establishes that the confidence condition is load-bearing here, not that
-0.65 transfers to another sensor or another species.
+0.65 transfers to another sensor or another species. \Cref{sec:loso} now shows it does not
+even transfer to another \emph{site}: under leave-one-site-out training the highest
+\texttt{topk\_conf} any track attains on the smallest site is 0.585, so the published
+threshold accepts nothing there. Deployment at a new site requires re-fitting the threshold on
+labelled data from it, and how much data that takes is not something this corpus can answer.

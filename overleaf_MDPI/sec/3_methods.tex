@@ -51,7 +51,9 @@ print scale.\label{fig:dataset}}
 \begin{table}[H]
 \caption{\textbf{Dataset composition.} 32 thermal road-transect videos from four Illinois
 sites, $640\times512$ at 60\,fps, a single annotated class. Splits are by video and
-site-stratified.\label{tab:dataset}}
+site-stratified. Rows count the frames \emph{extracted} for detector training, not the
+521,930 frames of the corpus; the complete track annotation is 21,646 boxes, of which the
+12,903 here fall inside the extracted frames.\label{tab:dataset}}
 \centering
 \begin{tabularx}{\textwidth}{lRRRRR}
 \toprule
@@ -66,7 +68,19 @@ Test  &  9 &  3725 & 1490 & 2235 & 2792 \\
 \end{tabularx}
 \end{table}
 
-Of the 18,914 annotated frames, 7438 contain at least one deer and 11,476 are explicit
+Two frame counts appear in this paper and they measure different things. The 32 videos
+contain 521,930 frames in total, and \emph{every} deer in \emph{every} frame of all 32 is
+annotated in CVAT as a member of an individual track: that annotation is the 236 tracks and
+21,646 boxes quoted above, and it is what ``fully annotated'' refers to. Training a detector
+on all 521,930 frames would be wasteful rather than helpful --- at 60\,fps consecutive frames
+are near-duplicates --- so the detector dataset of \cref{tab:dataset} is an extraction from
+that annotation: 18,914 frames sampled around annotated activity together with explicit
+negatives, carrying the 12,903 boxes that fall inside them. The 21,646 figure is therefore the
+size of the ground truth, the 12,903 the size of the detector's training signal, and the
+counting evaluation of \cref{sec:counting} always runs against the former, on whole videos
+decoded end to end, never against the sampled subset.
+
+Of the 18,914 extracted frames, 7438 contain at least one deer and 11,476 are explicit
 negatives; background frames matter, since a survey system must not fire on warm rocks or
 structures. The 236 animals are unevenly distributed across the four sites: SHB contributes 132
 (56\% of the corpus), TON 51, SHW 38 and MAS 15. That imbalance is not incidental --- SHB
@@ -159,6 +173,44 @@ posterior for ``this track is on a real animal'' and report it with every counte
 793 low-confidence tracks are flagged for human review rather than auto-counted. We also
 propagate per-track probabilities into a Poisson-binomial standard deviation on each video's
 count, giving an uncertainty interval rather than a point estimate.
+
+The calibrator is \textbf{isotonic regression fitted on the validation videos only}, mapping
+the confirmer's raw score to a probability; no held-out video contributes to the fit. Isotonic
+rather than Platt scaling because the raw score is not sigmoidal in the log-odds and a
+monotone step function makes no shape assumption; the cost is that the output takes a finite
+number of levels, 46 of them on held-out video.
+
+\Cref{tab:calib} reports whether the resulting number behaves like a probability on videos the
+calibrator never saw, scoring a track as positive when it is the \emph{primary} track of a
+real animal --- duplicates count as negatives, which is the decision the counting stage
+actually makes. Over all 2211 held-out candidate tracks the expected calibration error is
+0.004 and the Brier score 0.017 against 0.029 for a constant predictor at the base rate. That
+aggregate is generous, because 74\% of candidates sit at the isotonic floor where no decision
+is ever taken; restricted to the 316 tracks in the decision region the expected calibration
+error is 0.034 and the Brier score 0.093 against 0.148. Both are honest and the second is the
+one a practitioner should read. One caveat belongs with them: isotonic saturates, so the top
+level reports 1.000 on 13 held-out tracks whose true positive rate is 0.846. Confidence at the
+very top of the scale is optimistic by roughly 15 points, and the flag-for-review band, not
+the top of the scale, is where the calibrated number earns its keep.
+
+\begin{table}[H]
+\caption{\textbf{Reliability of the per-track posterior} on the 13 held-out videos, against
+the isotonic calibrator fitted on validation videos only. Positives are primary tracks;
+duplicates are negatives. The constant-predictor column is the Brier score of always
+predicting the base rate, so the gap is the skill the posterior
+adds.\label{tab:calib}}
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{LCCCCC}
+\toprule
+\textbf{Scope} & \textbf{Tracks} & \textbf{Base rate} & \textbf{ECE} & \textbf{Brier} & \textbf{Constant} \\
+\midrule
+All held-out candidates & 2211 & 0.030 & 0.004 & 0.017 & 0.029 \\
+Decision region ($p>0.01$) & 316 & 0.180 & 0.034 & 0.093 & 0.148 \\
+\midrule
+Fit videos, for reference & 4797 & 0.029 & 0.003 & 0.017 & 0.029 \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 Raw detector confidence cannot serve this purpose: no track in the corpus exceeds 0.90 and
 the median counted track sits at 0.74, because the animals are 27 pixels. The requirement is

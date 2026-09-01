@@ -23,7 +23,10 @@ paper's starting point: every one of the twelve architectures we train finds bet
 99.6\% of the 235 annotated individuals in at least one frame, while none exceeds
 AP$_{50}$ 0.510 on the same images. Per-box mAP remains a valid measure of localization. It
 answers a question the survey does not ask, and read as a survey metric it would place the
-difficulty in detection, where these measurements show it is very nearly solved.
+difficulty in detection, where these measurements show it is very nearly solved. That claim is
+bounded, and we bound it ourselves: it holds within this corpus, where the detector has seen
+every site. Under leave-one-site-out training it weakens to $90.7\%$ of animals reached
+(\cref{sec:loso}), which is still high but no longer near-saturated.
 
 \begin{figure}[H]
   \centering

@@ -81,8 +81,10 @@ held-out subset. Measured per
 animal rather than per box, recall runs from 0.821 to 0.996: \emph{every} architecture we
 trained finds between 82\% and 99.6\% of the 235 individuals in at least one frame, including
 models whose box recall sits near 0.45. This is the sharpest statement of the paper's premise
---- at the level a survey cares about, detection is very nearly solved, and the animals that
-go uncounted are lost after it. It also re-ranks the table a third time. RTMDet-m leads at
+--- at the level a survey cares about, detection is very nearly solved \emph{on this corpus},
+and the animals that go uncounted are lost after it. \Cref{sec:loso} tests how far that
+survives a change of site and finds it weakens rather than holds, which is where the
+qualification belongs. It also re-ranks the table a third time. RTMDet-m leads at
 0.996 and every mmdetection model places above every YOLO variant, which is not an argument
 for adopting one: their coverage is bought with false positives that the confirmation stage
 cannot absorb, as \cref{sec:inversion} shows and \cref{sec:choosing} anticipates. What the
@@ -498,6 +500,35 @@ The remaining question is whether the \emph{form} of the rule is what limits the
 so, replacing it with a learned confirmer should help. We tested that under three protocols
 and it does not.
 
+Because a negative result about learning is only as strong as the learners behind it, we
+state them in full. Every confirmer consumes the same input: one candidate track as a
+variable-length sequence of ten per-detection features --- confidence, box centre, width,
+height, $\sqrt{\text{area}}$, the frame-to-frame deltas of centre and $\sqrt{\text{area}}$,
+and the time gap to the previous detection --- with positions and sizes normalised by frame
+size, so that flicker appears as a large time gap and ego-motion as a systematic centre
+drift. Eight further features describe the track's \emph{competing group}, the tracks
+overlapping it in time whose mean boxes intersect it: group size, the track's length as a
+fraction of the longest in its group, and the group's confidence and duration statistics.
+These are the features a duplicate must be separated on, since a duplicate differs from its
+primary not in appearance but in being the shorter, weaker member of a group. Appearance is
+deliberately excluded, both because \cref{sec:reid} shows it carries little signal at this
+pixel scale and because embeddings would let a 60k-parameter model memorise 32 videos.
+
+The learners span three orders of magnitude in capacity: logistic regression on pooled
+summary statistics (13 parameters); gradient boosting, both depth-3 at 200 iterations
+($\sim$$10^3$) and depth-1 stumps ($\sim$40 effective parameters); and a temporal transformer
+(2 pre-norm encoder layers, $d_{\text{model}}=64$, 4 heads, dropout 0.2, sinusoidal position
+encoding, masked attention pooling so a 3-detection track and a 300-detection track pool
+comparably, cross-track context fused after pooling; $6\times10^4$ parameters). Class
+imbalance --- 207 primary tracks against 6801 duplicates and false candidates in pool C --- is
+handled by inverse-frequency positive weighting in the loss
+($w_+=N_-/N_+\approx33$); splits are by video throughout, reusing the detector's assignment so
+no video appears in two splits. We did \emph{not} attempt hard-negative mining or
+cost-sensitive losses beyond that weighting. We report this as a limitation rather than a
+defence: it is possible that a better-tuned learner closes the gap, but the monotone capacity
+trend below is evidence about sample size rather than about tuning, and a tuning fix would
+have to explain why the \emph{smallest} models do best.
+
 \begin{table}[H]
 \caption{\textbf{Held-out confirmation comparison.} All methods trained and thresholded on
 the 19 detector-training videos, reported on the 13 held out. Learned confirmers lose on
@@ -539,6 +570,100 @@ so the loss is $|\sum_i p_i - c|$ rather than per-track cross-entropy. It ranked
 explanation.
 
 Having established \emph{where} the animals are lost, we ask \emph{which} animals and why.
+
+\subsection{Duplicate Suppression at the Frame and Track Level}
+\label{sec:nms}
+
+Since the negatives that limit counting are duplicates, the natural question is whether
+better duplicate suppression solves it. We tested the two levels at which suppression can
+act, and neither reaches the duplicates that matter.
+
+At the \emph{frame} level, non-maximum suppression is already the mechanism, and
+\cref{tab:ablationmain} contains the sweep: raising the NMS IoU threshold from 0.50 to 0.90
+--- suppressing less, so that more overlapping boxes survive --- multiplies the candidate pool
+thirteenfold and produces the worst count in the paper, 41 of 83. Frame-level suppression is
+therefore load-bearing in the direction of \emph{more} suppression, not less. We did not test
+Soft-NMS~\cite{bodla2017softnms} or Confluence~\cite{shuai2021confluence}, and the reason is
+structural rather than incidental: both decide between boxes present in the same frame, while
+the duplicates that cost counts here are separate tracks on the same animal, often seconds
+apart, that no frame-level rule can see. A frame-level method could at best change how
+candidates are formed, and \cref{sec:inversion} shows that every change to candidate formation
+we made left the count unchanged or lower.
+
+At the \emph{track} level we did test clustering, which is the operation matching the problem:
+accept tracks that lie on an animal, then merge the accepted tracks into animals. Stage one
+becomes an easier learning problem --- ``is this track on a deer at all'' has 632 unambiguous
+positives instead of 207 contested ones --- and stage two is geometry: tracks overlapping in
+time within a box-scale of each other are one animal, and the count is the number of clusters.
+It reaches MAE 3.66 against the rule's 1.88 on the same 32-video protocol, and the error
+changes character rather than shrinking: bias falls to $-0.34$ from $-0.81$, but over-counts
+rise to 53 and under-counts to 64, against 17 and 43. The clustering is nearly unbiased and
+much noisier, which is what happens when merging decisions are made on geometry alone at 27
+pixels. This is the same trade as \cref{tab:confsens}: the methods that recover animals admit
+duplicates at a similar rate, and the published rule sits where the two costs balance.
+
+\subsection{Generalization Across Sites}
+\label{sec:loso}
+
+The held-out protocol of \cref{sec:heldout} splits by video, so a held-out video may come
+from a site the detector has seen. \Cref{tab:loso} asks the stricter question: train on three
+sites, count on the fourth, four times over, so every one of the 236 animals is scored by a
+detector that never saw its site. The confirmation rule is \emph{not} refitted per fold ---
+the published $(m,s,c)$ is applied unchanged, which is the honest reading of ``does this
+pipeline transfer''.
+
+\begin{table}[H]
+\caption{\textbf{Leave-one-site-out.} Each row trains on the other three sites and counts on
+the named one, so the four rows together score all 236 animals under cross-site conditions.
+\reachedq and \primaryq degrade modestly; \countedq does not, and the last two columns show
+why. ``Max $c$'' is the highest \texttt{topk\_conf} any long track attains in that fold ---
+on MAS no track reaches the published 0.65 and the rule accepts
+nothing.\label{tab:loso}}
+\begin{adjustwidth}{-\extralength}{0cm}
+\centering\footnotesize
+\begin{tabularx}{\fulllength}{LCCCCCCC}
+\toprule
+\textbf{Held-out site} & \textbf{Videos} & \textbf{Animals} & \textbf{\reachedq} & \textbf{\primaryq} & \textbf{\countedq} & \textbf{MAE} & \textbf{Max $c$} \\
+\midrule
+SHB & 8 & 132 & 120 & 102 & 91 & 7.38 & 0.862 \\
+TON & 8 &  51 &  46 &  40 & 20 & 4.12 & 0.782 \\
+SHW & 8 &  38 &  36 &  30 & 11 & 3.38 & 0.752 \\
+MAS & 8 &  15 &  12 &  12 &  0 & 1.88 & 0.585 \\
+\midrule
+\textbf{Pooled (cross-site)} & \textbf{32} & \textbf{236} & \textbf{90.7\%} & \textbf{78.0\%} & \textbf{51.7\%} & \textbf{4.19} & --- \\
+Within-site reference (\cref{tab:counting}) & 13 & 83 & 98.8\% & 88.0\% & 66.3\% & 2.38 & --- \\
+\bottomrule
+\end{tabularx}
+\end{adjustwidth}
+\end{table}
+
+Two things follow, and the second is the more useful. First, detection transfers well but not
+perfectly: \reachedq falls from 98.8\% within-site to $90.7 \pm 3.7\%$ across sites and
+\primaryq to $78.0 \pm 5.2\%$. These are measured over all 236 animals rather than the 83 of
+the main protocol, so they are the tighter estimates in the paper. The claim that detection is
+near-saturated should therefore be read as within-corpus; across sites a real detection gap
+opens, and \cref{sec:discussion} treats that as the boundary of the claim rather than a
+detail.
+
+Second, \countedq falls further and unevenly --- 51.7\% pooled, but from 69\% of SHB's animals
+down to none of MAS's --- and the ``Max $c$'' column names the cause. The confirmation rule's
+$c\ge0.65$ is an \emph{absolute} threshold on a detector score, and a detector trained without
+a site scores that site systematically lower: on the MAS fold no track anywhere reaches 0.585,
+so a threshold at 0.65 accepts nothing and the pipeline returns zero on 15 animals it detected
+12 of. This is not a new failure mode but the one \cref{sec:sensitivity} already identified,
+arriving through a different door: the confidence condition is doing duplicate suppression on
+a score scale that is itself site-dependent.
+
+The obvious repair does not work, which is informative. Replacing the absolute threshold with
+a fold-relative one --- accept the same \emph{fraction} of long tracks that $c\ge0.65$ accepts
+on pool C --- restores coverage to $80.9 \pm 5.0\%$ and destroys the count, at MAE 8.84 and a
+bias of $+6.03$ animals per video against $-2.94$ for the frozen rule. The cross-site folds
+generate more long tracks than the within-site pool, so a fixed acceptance fraction admits
+duplicates faster than it recovers animals. That is the inversion of \cref{sec:inversion}
+reappearing across sites, and it says that transferring this pipeline to a new site requires
+re-fitting the threshold on labelled data from that site, not a scale-free reformulation of
+it. Quantifying how much labelled data that takes is the most practically valuable open
+question this corpus leaves.
 
 \subsection{Which Animals Are Missed}
 \label{sec:analysis}

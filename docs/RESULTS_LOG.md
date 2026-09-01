@@ -1354,3 +1354,74 @@ comparison is individually significant: pool C's 55/83 has a ±9-animal interval
 (54) and G (52) sit inside it. Pool F (41) is the one pool that falls outside. The surviving
 argument, now stated explicitly in §4.4, is the consistent *direction* across four independent
 interventions (p = 2^-4 under a neutral null) plus the pool-F effect — not any one comparison.
+
+## 7. Reviewer-response work (2026-09-01)
+
+### 7.1 Dataset statistics reconciled (reviewer Q1)
+Both figures verified correct; they count different populations.
+- CVAT ground truth: 32 videos, **236 tracks, 21,646 boxes** (every deer in every frame).
+- Detector dataset `yolo_v3`: **18,914 extracted frames** (12,852/2,337/3,725) holding
+  **12,903 boxes** (7,547/2,564/2,792); 7,438 with deer, 11,476 explicit negatives.
+- 521,930 = raw frames in the 32 videos at 60 fps.
+Counting evaluation always runs on whole decoded videos against the 21,646-box GT, never on
+the sampled subset. §3.1 now states this; Table 2's caption says which population it counts.
+
+### 7.2 Calibration reliability (reviewer Q4) — `src/eval/calibration_quality.py`
+Calibrator is **isotonic regression fitted on the validation videos only** (`train_softcount.py:128`).
+Held-out (13 videos, 2,211 candidate tracks, base rate 0.030):
+ECE **0.004**, MCE 0.006, Brier **0.0173** vs 0.0290 for a constant predictor.
+Decision region (p>0.01, 316 tracks, base rate 0.180): ECE **0.034**, Brier **0.093** vs 0.148.
+46 distinct isotonic levels. **Top level saturates**: reports 1.000 on 13 tracks whose true
+positive rate is 0.846 — confidence at the top of the scale is ~15 points optimistic.
+→ new Table 5 (`tab:calib`) in §3.5.
+
+### 7.3 Leave-one-site-out (reviewer Q7) — `src/eval/loso_counting.py`
+Weights and per-fold tracks were already on `/work/hdd/.../counts/loso_*`, so this needed **no GPU**.
+Frozen published rule (m≥20, s≥0, c≥0.65) applied unchanged per fold:
+
+| Fold | Videos | Animals | reached | primary | counted | MAE | max topk_conf |
+|---|---|---|---|---|---|---|---|
+| SHB | 8 | 132 | 120 | 102 | 91 | 7.38 | 0.862 |
+| TON | 8 | 51 | 46 | 40 | 20 | 4.12 | 0.782 |
+| SHW | 8 | 38 | 36 | 30 | 11 | 3.38 | 0.752 |
+| MAS | 8 | 15 | 12 | 12 | **0** | 1.88 | **0.585** |
+| **Pooled** | 32 | 236 | **90.7%** ±3.7 | **78.0%** ±5.2 | **51.7%** ±6.4 | 4.19 | — |
+
+**Key finding: the absolute confidence threshold does not transfer across sites.** A detector
+trained without a site scores that site lower; on MAS no track anywhere reaches 0.585, so
+c≥0.65 accepts nothing on 15 animals of which 12 were detected.
+Fold-relative variant (accept the same 51.34% fraction of n≥20 tracks that c=0.65 accepts on
+pool C) restores coverage to 80.9% ±5.0 but **over-counts**: MAE 8.84, bias +6.03 vs −2.94.
+That is the §4.4 inversion reappearing across sites.
+→ new §4.6 (`sec:loso`) + Table 12 (`tab:loso`); "detection is nearly solved" now qualified
+as within-corpus in the intro, §4.1, Limitations and Practical Guidance.
+
+### 7.4 Duplicate suppression, frame vs track level (reviewer Q5, Q8)
+New §4.5 (`sec:nms`). Frame level: the NMS 0.50→0.90 sweep is already in the ablation and
+gives the worst count in the paper (41/83). Soft-NMS and Confluence **not run**, with the
+structural reason stated — both arbitrate between boxes in one frame, while the duplicates
+that cost counts are separate tracks seconds apart.
+Track level: detect-then-cluster (`results/temporal/cluster_orphan`) reaches MAE 3.66 vs the
+rule's 1.88 on the 32-video protocol; bias improves to −0.34 from −0.81 but over-counts rise
+to 53 and under-counts to 64 (vs 17/43) — nearly unbiased, much noisier.
+
+### 7.5 Learned confirmers documented (reviewer Q3)
+§4.7 now states: 10 per-detection features (conf, centre, w, h, √area, Δcentre, Δ√area, Δt),
+8 competing-group context features fused after attention pooling; learners from 13 parameters
+(logreg) through GBM stumps (~40) and depth-3 GBM (~10³) to the transformer (2 pre-norm layers,
+d=64, 4 heads, dropout 0.2, ~6×10⁴); imbalance by inverse-frequency positive weighting
+(w₊ = N₋/N₊ ≈ 33); splits by video. **Hard-negative mining and cost-sensitive losses were not
+attempted** — stated as a limitation, not a defence.
+
+### 7.6 Related work added
+`kay2022caltech` (Caltech Fish Counting — detection-limited, the opposite conclusion, used as
+a contrast rather than ignored), `bodla2017softnms`, `shuai2021confluence`, `guo2017calibration`.
+New §2.6 `sec:othermodalities`.
+
+### Not done, deliberately
+- **Test-only evaluation** (excl. the 4 validation videos): the user descoped it. Note for the
+  response letter: it would drop the sample from 83 animals to **38** (val holds 45), widening
+  the counting interval from ±10.7 to roughly ±15.
+- **Code/weights release**: descoped this round.
+- Orphan-provenance analysis (Q9) needs an instrumented re-run — track CSVs carry no orphan flag.
+- Ego-motion / ground-plane priors (Q6): no camera calibration or telemetry; genuine new work.

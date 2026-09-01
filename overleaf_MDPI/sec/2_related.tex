@@ -175,6 +175,35 @@ the closest published comparison for thermal deer survey, and report density rat
 individual counts. We found no published thermal or camera-based deer survey that reports a
 per-individual count evaluated against per-individual ground truth over continuous video.
 
+\subsection{Where the Bottleneck Sits in Other Modalities}
+\label{sec:othermodalities}
+
+The closest methodological comparison is the Caltech Fish Counting
+benchmark~\cite{kay2022caltech}, which poses the same problem --- count distinct individuals
+in continuous video, not detections per frame --- in sonar. Its conclusion is the opposite of
+ours: substituting a perfect detector recovers almost all of the counting error, so in that
+setting detection is the binding constraint. We take the contrast seriously rather than
+treating our result as universal. Sonar imagery is low-SNR and the reported failures are
+generalization failures of detection across deployments, whereas a thermal deer at 27 pixels
+is faint but consistently present, and a vehicle transect gives every animal tens to hundreds
+of frames of visibility with strong ego-motion cues for association. What generalizes from
+this paper is therefore not ``detection is solved'' but the \emph{instrument}: a staged
+decomposition that reports which stage binds, so that a practitioner in a new modality can
+measure rather than assume. Our \cref{sec:loso} results reinforce the point, since detection
+recovers some of its lost ground as a bottleneck once sites change.
+
+That framing also identifies the literature our confirmation stage should be read against.
+Duplicate suppression at the detection level is a mature topic --- Soft-NMS re-scores rather
+than discards overlapping boxes~\cite{bodla2017softnms}, and Confluence replaces the IoU
+criterion entirely with a proximity measure that behaves better on small
+objects~\cite{shuai2021confluence} --- but all of it operates \emph{within} a frame. The
+duplicates that limit counting here are between \emph{tracks}, separated in time, on the same
+animal; \cref{sec:nms} tests whether the frame-level tools reach that far. Calibration is the
+other relevant thread: modern detectors are systematically overconfident~\cite{guo2017calibration},
+which is why \cref{sec:calibration} reports a calibrated per-track posterior rather than a raw
+score, and why \cref{sec:loso} finds an absolute score threshold does not survive a change of
+site.
+
 \subsection{Positioning}
 
 \begin{table}[H]
