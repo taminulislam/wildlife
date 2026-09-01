@@ -459,12 +459,9 @@ track is the cheapest signal available that does separate them, because a duplic
 why $c$ cannot be relaxed to recover recall: recall and duplicate suppression are being
 bought with the same parameter.
 
-A practical corollary is visible in the bias column. The MAE-optimal setting is deliberately
-conservative, under-counting by 1.9 animals per video. A survey that needs an approximately
-\emph{unbiased} estimator rather than a minimum-error one should set $c\approx0.45$, where
-the bias is $-0.15$, and accept 1.0 more MAE for it. We report the MAE-optimal rule as the
-headline because it is the conventional choice, but which of the two a practitioner wants
-depends on whether their downstream statistic is sensitive to variance or to bias.
+The bias column carries a consequence for deployment rather than for this measurement, and
+\cref{sec:operating} takes it up: the MAE-optimal setting is deliberately conservative, and a
+survey wanting an approximately unbiased estimator should not use it.
 
 One objection remains: that \cref{tab:confsens} moves a single parameter and therefore
 overstates its importance. We repeated the sweep with $m$ and $s$ re-fitted on the 19

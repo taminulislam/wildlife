@@ -32,14 +32,9 @@ appears to be discarding is the price of that separation.
 
 This reframes what a practitioner should tune. The question is not ``how low can the
 confidence threshold go before false positives appear'', the usual detection framing, under
-which $c=0$ looks free, since coverage rises and the extra tracks are all on real animals. It
-is ``at what point does the estimator's bias cross zero'', which is a different quantity with
-a different optimum. \Cref{tab:confsens} locates that crossing at $c\approx0.45$, one full
-MAE point away from the minimum-error setting. Which of the two is correct depends on the
-downstream statistic: a density estimate aggregated over many transects is served by the
-unbiased setting, while a per-transect report is served by the low-variance one. We report
-the low-variance setting as the headline and note that the choice is a modelling decision
-that the counting literature does not usually make explicit.
+which $c=0$ looks free because coverage rises and the extra tracks are all on real animals. It
+is ``at what point does the estimator's bias cross zero'', a different quantity with a
+different optimum, which the next subsection locates and costs.
 
 \subsection{Choosing an Operating Point for Abundance Estimation}
 \label{sec:operating}

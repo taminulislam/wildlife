@@ -1,7 +1,10 @@
 \section{Related Work}
 \label{sec:related}
 
-\subsection{Wildlife Abundance and Density Estimation}
+\subsection{Wildlife Survey from Imagery}
+
+\label{sec:rw:survey}
+
 Every field method for estimating abundance carries assumptions whose violation biases the
 result. Distance sampling fits a detection function to distances recorded along transects and
 extrapolates to density; the \emph{Distance} software implements conventional,
@@ -20,11 +23,6 @@ addresses specific biases: movement compensation corrects the detection inflatio
 animals encountering a moving observer~\cite{morgan2024wildlife}, a concern that applies
 directly to road transects.
 
-What none of this settles is whether an automated system can deliver a \emph{per-individual} count (one animal, one count) rather than a density estimate conditioned on a detection
-function. These methods model imperfect detection as a nuisance parameter; none attributes
-the loss to a stage of an automated pipeline.
-
-\subsection{Thermal and Infrared Imaging for Wildlife}
 Thermal cameras detect animals by emitted heat, enabling nocturnal survey where visual methods
 fail. Burke et al.~\cite{burke2019optimizing} identify the binding constraints: contrast loss
 as ground temperature approaches body temperature, atmospheric absorption, vegetation
@@ -43,11 +41,6 @@ pellet-group counts for white-tailed deer and obtained overlapping but very wide
 4--24 deer\,km$^{-2}$. Nazir and Kaleem~\cite{nazir2021advances} note that thermal-domain work
 lags the RGB domain in dataset scale and standardisation.
 
-We found no thermal wildlife study that annotates individual animals as distinct tracks across
-continuous video. Detection is evaluated per frame or per image, which leaves unanswered
-whether the same animal is counted once or many times.
-
-\subsection{Aerial and UAV Survey and Automated Counting}
 Brown et al.~\cite{brown2022automated} tested detection across ground sample distances from
 0.2 to 1.0\,m\,px$^{-1}$ and found that image detail, not network capacity, sets the limit.
 Infantes et al.~\cite{infantes2022automated} built an end-to-end pinniped survey from flight
@@ -61,11 +54,6 @@ regression with uncertainty quantification to sonar imagery of fish schools, usi
 self-supervised pretraining to compensate for a small labelled set. Automated bird detection
 has also been evaluated for airport strike management~\cite{oviedo2024automatic}.
 
-Across this literature the dominant evaluation is per-image detection accuracy. Few studies
-report tracking metrics, and we found none reporting distinct-individual count accuracy
-against per-individual ground truth.
-
-\subsection{Camera Traps, Domain Shift and Generalisation}
 Deep learning for camera traps was catalysed by Norouzzadeh et
 al.~\cite{norouzzadeh2018automatically}, who matched crowd-sourced labels on 3.2 million
 Snapshot Serengeti images, and by Beery et al.~\cite{beery2018recognition}, who showed that
@@ -81,7 +69,29 @@ inflates reported accuracy, the same class of contamination our held-out protoco
 the trigger event, and individual identity is assumed unknown unless the species carries
 distinctive markings.
 
-\subsection{Small-Object Detection}
+White-tailed deer are among the most intensively managed ungulates in North America.
+Spotlight survey along road transects remains standard practice despite known road
+bias~\cite{vercauteren2011managing}. Accurate density estimates matter beyond harvest
+management: Bayesian weighted surveillance exploits heterogeneity in infection risk to detect
+chronic wasting disease efficiently~\cite{jennelle2018applying}, and deer-to-human SARS-CoV-2
+transmission was identified in animals sampled during routine CWD
+surveillance~\cite{pickering2022divergent}. McMahon et al.~\cite{mcmahon2021comparing} remain
+the closest published comparison for thermal deer survey, and report density rather than
+individual counts.
+
+One absence runs through all of it. These methods treat imperfect detection as a nuisance
+parameter to be estimated, not as a stage of a pipeline that can be measured and attributed:
+the abundance estimators model it as a detection function, the imaging studies evaluate per
+frame or per image, and the camera-trap literature takes the trigger event as its unit with
+identity assumed unknown. We found no thermal or camera-based wildlife study that annotates
+individual animals as distinct tracks across continuous video, and none that reports a
+distinct-individual count evaluated against per-individual ground truth. That is the gap this
+paper measures in.
+
+\subsection{Detection and Tracking at Small Scale}
+
+\label{sec:rw:detect}
+
 COCO defines small as area below $32^2$~\cite{lin2014coco}, but wildlife at range falls well
 under it. Wang et al.~\cite{wang2021nwd} show that IoU is catastrophically sensitive to
 localisation error at small scale: a one-pixel shift on a $6\times6$ box drops IoU from 0.53 to
@@ -92,7 +102,6 @@ scale distribution. This analysis bears directly on our result that IoU$\geq$0.5
 detectors relative to a counting criterion (\cref{sec:choosing}): at 27 pixels the strict
 threshold discards detections a counting task would accept.
 
-\subsection{Detection Architectures}
 Both one- and two-stage families appear in our benchmark: Faster R-CNN~\cite{ren2015faster} as
 the two-stage baseline, ATSS~\cite{zhang2020atss} and TOOD~\cite{feng2021tood} as
 anchor-assignment refinements, RTMDet~\cite{lyu2022rtmdet} as a modern convolutional one-stage
@@ -106,7 +115,6 @@ squarely where these differences matter, and \cref{sec:detection} reports how ea
 transfers under identical preprocessing and splits, a comparison the literature rarely
 offers, because each paper evaluates on its own data and augmentation pipeline.
 
-\subsection{Multi-Object Tracking}
 Tracking-by-detection dominates. SORT~\cite{bewley2016sort} and
 DeepSORT~\cite{wojke2017deepsort} established the Kalman-plus-association template;
 ByteTrack~\cite{zhang2022bytetrack} showed that associating low-confidence detections recovers
@@ -121,7 +129,10 @@ parallels the detection/association split but adds a third axis, confirmation, t
 metrics do not measure. The distinction matters: MOT benchmarks score identity
 \emph{preservation}, not whether an object should be counted at all.
 
-\subsection{Counting as Its Own Task}
+\subsection{Counting, Identity and Evaluation}
+
+\label{sec:rw:counting}
+
 Density regression, pioneered by MCNN~\cite{zhang2016single}, estimates per-image counts
 without detection, but the estimate is per frame and does not deduplicate across frames. That
 suits dense scenes with hundreds of overlapping instances; ours is the opposite regime, sparse
@@ -134,7 +145,6 @@ contribution is to show that in the sparse regime the detection-then-count frami
 so much as \emph{mis-attributed}: the detector is near-saturated, and the accuracy a
 practitioner would try to buy with a better backbone is lost downstream.
 
-\subsection{Animal Re-Identification}
 Individual identification from appearance is established for species with high-contrast
 markings: photo-identification networks reach high accuracy on coat
 patterns~\cite{miele2020revisiting}, deformable transformers reach 85\% mAP on cross-camera
@@ -146,7 +156,6 @@ two-number size descriptor, and an ImageNet backbone scores \emph{below} plain g
 therefore make no individual-identification claim and do not use appearance matching in the
 reported system.
 
-\subsection{Evaluation Methodology and Calibration}
 Nguyen et al.~\cite{nguyen2023trustworthy} show that detection rankings fluctuate with the IoU
 threshold and propose formal requirements that average precision does not satisfy. LRP
 Error~\cite{oksuz2022lrp} separates localisation from classification quality and yields a
@@ -160,20 +169,6 @@ al.~\cite{rahman2021perframe} predict per-frame mAP from internal features to mo
 deployment without ground truth, and Tarling et al.~\cite{tarling2022deep} show that
 uncertainty quantification improves both training and downstream biological decisions, the
 role our calibrated per-track posterior plays in \cref{sec:calibration}.
-
-\subsection{White-Tailed Deer}
-White-tailed deer are among the most intensively managed ungulates in North America.
-Spotlight survey along road transects remains standard practice despite known road
-bias~\cite{vercauteren2011managing}. Accurate density estimates matter beyond harvest
-management: Bayesian weighted surveillance exploits heterogeneity in infection risk to detect
-chronic wasting disease efficiently~\cite{jennelle2018applying}, and deer-to-human SARS-CoV-2
-transmission was identified in animals sampled during routine CWD
-surveillance~\cite{pickering2022divergent}. McMahon et al.~\cite{mcmahon2021comparing} remain
-the closest published comparison for thermal deer survey, and report density rather than
-individual counts. We found no published thermal or camera-based deer survey that reports a
-per-individual count evaluated against per-individual ground truth over continuous video.
-
-\subsection{Where the Bottleneck Sits in Other Modalities}
 \label{sec:othermodalities}
 
 The closest methodological comparison is the Caltech Fish Counting
