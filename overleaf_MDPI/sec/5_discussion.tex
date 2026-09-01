@@ -9,8 +9,7 @@ stage receives roughly two hundred positive tracks against 7000--28,000 negative
 negatives are not a homogeneous class. They divide into false candidates, which are easy,
 and \emph{duplicate} tracks on animals already counted, which are not: a duplicate is a
 correct detection of a real animal, and \cref{sec:analysis} shows that duplicates sit
-between the positives and the false candidates on every feature we measured --- box size,
-track length, candidate confidence alike.
+between the positives and the false candidates on every feature we measured: box size, track length, candidate confidence alike.
 
 A confirmer therefore receives contradictory supervision on exactly the examples that
 distinguish counting from detection. That is why capacity does not help: the capacity trend in \cref{sec:learned} declines monotonically from 13 parameters to $6\times10^4$, and
@@ -18,7 +17,7 @@ shrinking a gradient-boosted model to depth-1 stumps recovers nearly the whole g
 ambiguous middle of the negative class far faster than it grows the positives, so a rule
 tuned to survive the new ratio must be more aggressive, and aggression costs real animals.
 Extrapolating the capacity trend puts the crossover in the low thousands of positive
-tracks --- an order of magnitude beyond this corpus, and a concrete target for the next
+tracks, an order of magnitude beyond this corpus, and a concrete target for the next
 dataset rather than for a better architecture.
 
 \subsection{Recall and Duplicate Suppression Are Bought with One Parameter}
@@ -32,7 +31,7 @@ It is the only cheap signal separating a first sighting from a re-sighting, and 
 appears to be discarding is the price of that separation.
 
 This reframes what a practitioner should tune. The question is not ``how low can the
-confidence threshold go before false positives appear'' --- the usual detection framing, under
+confidence threshold go before false positives appear'', the usual detection framing, under
 which $c=0$ looks free, since coverage rises and the extra tracks are all on real animals. It
 is ``at what point does the estimator's bias cross zero'', which is a different quantity with
 a different optimum. \Cref{tab:confsens} locates that crossing at $c\approx0.45$, one full
@@ -49,9 +48,7 @@ A survey ecologist and a per-transect report want different things from this sys
 confirmation threshold is where the difference is settled.
 
 Our headline rule minimises mean absolute error per video, and it under-counts: 58 animals
-predicted where 83 exist across the 13 held-out transects, a shortfall of 25. For an abundance estimate that is not the quantity to optimise. Setting $c=0.45$ instead ---
-the point at which signed bias crosses zero in \cref{tab:confsens} --- the same pipeline
-predicts \textbf{81 animals against 83}, an aggregate error of 2.4\%. Individual transects are
+predicted where 83 exist across the 13 held-out transects, a shortfall of 25. For an abundance estimate that is not the quantity to optimise. Setting $c=0.45$ instead, at the point where signed bias crosses zero in \cref{tab:confsens}, makes the same pipeline predict \textbf{81 animals against 83}, an aggregate error of 2.4\%. Individual transects are
 less accurate, with mean absolute error rising from 2.38 to 3.38 animals per video, but the
 errors are now two-sided and cancel across a survey rather than accumulating in one direction.
 Under-counting by 25 becomes over- and under-counting that nets to two.
@@ -70,7 +67,7 @@ miss in another, which suits a per-video counter but not a population total, whe
 72.3\%; under the aggregate it recovers 97.6\% of the animals present.
 
 One route we expected to work does not. The standard remedy for a known undercount is a
-sightability correction --- estimate the detected fraction, divide by it --- and the held-out
+sightability correction: estimate the detected fraction and divide by it. The held-out
 protocol makes that estimate impossible to obtain honestly from our own data. On the 19
 detector-training videos the pipeline predicts 152 animals against 153, so a correction factor
 fitted there is 1.007, effectively no correction, while the held-out videos need 1.43. The
@@ -91,7 +88,7 @@ hand-tuned rule until the corpus is substantially larger than 236 individuals
 (\cref{tab:confirmers}).
 
 Two positive recommendations survive the same evidence. Contrast normalization is worth more
-than any architectural choice we tested --- 0.519 against 0.299 test mAP50 --- which is a
+than any architectural choice we tested, 0.519 against 0.299 test mAP50, which is a
 larger effect than the entire 0.365--0.510 spread across twelve architectures. And the upper
 tail of the object-scale distribution deserves the attention normally reserved for the lower
 one: three of our misses are animals \emph{larger} than anything in the training split
