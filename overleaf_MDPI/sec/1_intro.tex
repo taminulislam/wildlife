@@ -67,31 +67,15 @@ tracks against 7,000--28,000 negatives, with the positives not linearly separabl
 the duplicates in any feature we measured. Growing the candidate pool grows the negatives
 far faster than the positives, which is exactly why a richer pool returns a lower count.
 
-\subsection{Contributions}
-
-\begin{enumerate}[leftmargin=*,labelsep=4.5mm]
-\item \textbf{A thermal wildlife counting benchmark.} 32 fully annotated road-transect
-videos, 521,930 frames, 236 individually tracked deer, with per-individual identity that
-makes detection, tracking, and counting evaluable on one corpus. Released with the
-evaluation harness.
-\item \textbf{A decomposition that localizes counting error} into detection, association,
-and confirmation (\reachedq/\primaryq/\countedq), and a held-out protocol that removes the
-optimism of in-sample evaluation --- reporting counting accuracy on videos the detector
-trained on inflates it by 15.5 points.
-\item \textbf{Evidence that counting accuracy moves opposite to candidate quality}, replicated
-across four independent interventions, and evidence across three protocols that learned
-confirmation does not beat a three-parameter rule at this data scale.
-\item \textbf{A measurement finding with consequences beyond this dataset:} scored per
-animal rather than per box, detection is close to solved on this corpus while per-box mAP
-suggests it is not, and the IoU$\geq$0.50 criterion re-ranks detectors relative to a
-counting-appropriate one --- so selecting a detector by its detection metric does not select
-the model that counts best.
-\item \textbf{A parameter-sensitivity analysis of the confirmation rule} showing that its
-confidence condition is not an arbitrary constant but the component that separates counting
-from detection: removing it raises held-out coverage by 23 points while turning a
-systematic under-count into a systematic over-count.
-\item \textbf{Evidence that appearance re-identification is not viable at this pixel scale}, and is
-not used in our system: box size alone out-performs a pretrained appearance backbone, so what
-looks like identification is range matching. Also the diagnosis of a training-distribution
-gap that limits the detector on \emph{large} animals.
-\end{enumerate}
+This paper contributes three things. The first is the corpus: 32 fully annotated thermal
+road transects holding 236 individually tracked deer, with per-individual identity that makes
+detection, tracking and counting evaluable against one set of annotations, released with the
+evaluation harness. The second is the decomposition above, together with a held-out protocol
+that removes the optimism of in-sample evaluation --- reporting counting accuracy on videos
+the detector trained on inflates it by 15.5 points. The third is the pair of negative results
+the decomposition exposes: counting accuracy moves opposite to candidate quality across four
+independent interventions, and learned confirmation loses to a three-parameter rule under
+three evaluation protocols. The rest of the paper --- the twelve-detector benchmark, the
+matching-criterion analysis, the sensitivity of the confirmation rule, the failure of
+appearance re-identification at 27 pixels, and what survives a change of site --- is evidence
+for those three or a consequence of them.
