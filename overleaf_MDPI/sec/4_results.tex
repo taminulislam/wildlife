@@ -175,14 +175,33 @@ substantive separation is from the recall-oriented models at 0.368--0.433. We ad
 \textbf{YOLO11m at 640\,px} as the production detector, and every counting result in this
 paper uses it.
 
-Resolution is the one lever that behaves unpredictably, and we tested it on the two
-architectures that were competitive at 640\,px. Moving YOLOv9m to 1280\,px raises it on every
-metric, from 0.547 to 0.595 F1 and 0.506 to 0.516 AP$_{50}$, while the same move lowers
-YOLOv10m on every metric, from 0.543 to 0.525 F1 and 0.510 to 0.469 AP$_{50}$: at 640 the two
-are within 0.004 AP$_{50}$, at 1280 they diverge by 0.047. AP-small moves the other way for
-both (0.128 to 0.119 and 0.117 to 0.093), so the small-object deficit is not primarily a
-resolution deficit, and the extra resolution buys overall precision and recall rather than the
-smallest animals.
+\begin{table}[H]
+\caption{\textbf{640 versus 1280\,px.} Higher resolution lowers YOLOv10m on every column, and
+AP-small falls with it (0.117 to 0.093), so the small-object deficit is not primarily a
+resolution deficit. The adopted detector is shown for reference and has the best F1 of the
+three. Precision, recall and F1 here are the detector validator's own metrics at
+IoU$\geq$0.50, not the any-overlap counting criterion of \cref{tab:detectors}, so only the
+AP$_{50}$ column is comparable between the two tables.\label{tab:resolution}}
+\centering
+\begin{tabularx}{\textwidth}{lCCCCC}
+\toprule
+\textbf{Model} & \textbf{Resolution} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{AP$_\mathbf{50}$} \\
+\midrule
+YOLOv10m & 640 & 0.674 & 0.455 & 0.543 & 0.510 \\
+YOLOv10m & 1280 & 0.669 & 0.432 & 0.525 & 0.469 \\
+\midrule
+\textbf{YOLO11m (adopted)} & \textbf{640} & \textbf{0.732} & 0.434 & \textbf{0.545} & 0.460 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Resolution is the one lever that behaves unpredictably. \Cref{tab:resolution} shows 1280\,px
+lowering YOLOv10m on every metric, from 0.543 to 0.525 F1 and 0.510 to 0.469 AP$_{50}$, with
+AP-small falling from 0.117 to 0.093 alongside. YOLOv9m moves the other way over the same
+change, from 0.547 to 0.595 F1 and 0.506 to 0.516 AP$_{50}$: at 640 the two architectures are
+within 0.004 AP$_{50}$, at 1280 they diverge by 0.047. Extra resolution therefore buys overall
+precision and recall on some architectures and costs them on others, and on neither does it
+buy the smallest animals.
 
 That gain does not survive the pipeline. YOLOv9m at 1280\,px is the strongest detector this
 section produced, so we ran it through the complete counting pipeline under the protocol of
