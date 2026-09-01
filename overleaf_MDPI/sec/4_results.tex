@@ -351,9 +351,10 @@ G & \quad $+$ appearance re-identification & 27,679 & \textbf{82/83} & \textbf{7
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/qualitative.png}
-  \caption{\textbf{Tracking through overlap and low contrast.} Four frames from three
-  held-out transects. Box colour encodes track identity and is stable over time; each label
-  gives the track ID and its calibrated per-track score.\label{fig:qualitative}}
+  \caption{\textbf{Tracking through overlap and low contrast.} Six frames from four held-out
+  transects. Box colour encodes track identity and is stable over time; each label gives the
+  track ID and its calibrated per-track score. The first two panels are the same scene
+  0.3\,s apart; the other four are separate scenes.\label{fig:qualitative}}
 \end{figure}
 
 \Cref{tab:ablationmain} gives the pipeline ablation with one stage changed per row, and the
@@ -368,18 +369,18 @@ threshold and pointed us at the tracker's initialization gate.
 \Cref{fig:qualitative} shows what the association stage does on held-out video under the two
 conditions that make counting fail. The first is overlap. When two animals stand close
 enough that their boxes intersect, a tracker that leans on spatial proximity will hand both
-to one identity, and the pair is counted once; the top row and the bottom-right frame each
-contain such a pair, and in both the animals are carried as separate tracks with separate
-identities. The top row is the same scene 0.3\,s apart, with five animals tracked and five
-counted in both frames, and tracks 3035 and 3041 keep their identities across the pair while
-the camera translates beneath them. The second is low contrast. In the bottom-right frame two animals of 42 and 50\,px sit
+to one identity, and the pair is counted once; the first two panels and the centre panel of
+the lower row each contain such a pair, and in every case the animals are carried as separate
+tracks with separate identities. Those first two panels are the same scene 0.3\,s apart, with
+five animals tracked and five counted in both, and tracks 3035 and 3041 keep their identities
+across the pair while the camera translates beneath them. The second is low contrast. In the centre panel of the lower row two animals of 42 and 50\,px sit
 against an almost uniform thermal field, overlapping in image space and individually close to indistinguishable, near the point where a human reader would hesitate to call them animals at all. They are still carried as two tracks. Overlap and low contrast are the two
 conditions under which a counting system silently merges individuals into one, and neither
 does so here. Persistence
-is visible directly in the top row: the two frames are 0.3\,s apart, the whole scene
+is visible directly in the first two panels: they are 0.3\,s apart, the whole scene
 translates between them as the vehicle moves, and the identities survive the translation
 because motion compensation removes the camera's contribution before association. The
-bottom-left frame shows the range spread a single transect frame can contain (87\,px and 22\,px animals simultaneously), with the calibrated score falling as the animal recedes,
+lower-left panel shows the range spread a single transect frame can contain (87\,px and 22\,px animals simultaneously), with the calibrated score falling as the animal recedes,
 which is the behaviour a per-track posterior is meant to have.
 
 \subsection{What the Confidence Condition Buys}
