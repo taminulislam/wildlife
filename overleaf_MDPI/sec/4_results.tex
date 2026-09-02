@@ -41,9 +41,8 @@ RTMDet-m & 0.466 & 0.339 & 0.411 & 0.437 & 0.325 & \textbf{0.779} & 0.459 & 0.36
 \end{adjustwidth}
 \end{table}
 
-F1 rises monotonically across \cref{tab:detectors} as the matching rule relaxes, and
-centre-in-box tracks presence to within 0.032 for every model, so the criterion choice shifts
-the level uniformly rather than favouring particular architectures.
+F1 rises monotonically across \cref{tab:detectors} as the matching rule relaxes, uniformly
+rather than favouring particular architectures (\cref{sec:criterion}).
 \Cref{tab:detectors} shows first how little separates them: AP$_{50}$ spans 0.365--0.510,
 with the top three within 0.004, across designs as different as Faster R-CNN, DINO and
 YOLO12m. That narrow spread is the signature of a data-limited rather than an
@@ -53,34 +52,26 @@ and the plateaus sit on top of one another. Two patterns in that figure matter f
 follows. Precision settles near 0.65--0.70 while recall settles near 0.40--0.45 in every
 panel, which is the precision-heavy operating point \cref{sec:choosing} argues the counting
 stage needs; and several models peak early and then decline, so the figures we report come
-from the best checkpoint rather than the last. The five mmdetection models of
-\cref{tab:detectors} are absent because their validation loop logs only the COCO evaluator's
-output, which contains no scalar precision or recall, so they could contribute only a
-different set of series. The one genuinely unsettled curve is DINO R50,
-which is still oscillating between 0.15 and 0.30 mAP@50 at the point its budget expires, the slow convergence the query-based literature reports, visible directly.
+from the best checkpoint rather than the last. The one unsettled curve is DINO R50, still oscillating between 0.15 and 0.30 mAP@50 when its
+budget expires, the slow convergence the query-based literature reports, visible directly.
 
-The absolute values are low for two reasons, neither of them a model failure. The first is
-geometric: for axis-aligned boxes of side $s$ offset by $d$ pixels,
+The absolute values are low for two reasons, neither of them a model failure. The first
+quantifies \cref{sec:criterion}: for axis-aligned boxes of side $s$ offset by $d$ pixels,
 $\mathrm{IoU}=(s-d)/(s+d)$, so at the corpus median $s=27$ a four-pixel centre error already
-fails a 0.75 threshold and nine pixels fails 0.50. Scoring at strict IoU demands sub-pixel
-localization on animals 27 pixels across with diffuse thermal boundaries. The second is that
-these metrics count boxes rather than animals: an animal visible for 100 frames contributes
-100 ground-truth boxes, and one found in half of them scores 0.5 recall even though counting
-requires a single detection. The 11,476 background frames contribute nothing either way,
-since precision, recall and F1 have no true-negative term. Counted per animal, the same
-detectors that score around 0.50 box recall find 220 of the 235 annotated deer in at least
-one frame, and the full pipeline reaches 82 of 83 on held-out video (\cref{sec:counting}).
-The distance between 0.50 and 0.94 reflects two metrics answering different
-questions, the first sign that detection accuracy does not predict counting ability.
+fails a 0.75 threshold and nine pixels fails 0.50. The second is that these metrics count
+boxes rather than animals: an animal visible for 100 frames contributes 100 ground-truth
+boxes, and one found in half of them scores 0.5 recall even though counting requires a single
+detection. The 11,476 background frames contribute nothing either way, since precision, recall
+and F1 have no true-negative term.
 
-The last column of \cref{tab:detectors} makes that gap explicit for every model. Measured
-over 235 animals these are tighter than the counting figures: YOLO11m's 98.7\% carries a
-95\% interval of $\pm2.4$ points, because the sample is the whole corpus rather than the
-held-out subset. Measured per
-animal rather than per box, recall runs from 0.821 to 0.996: \emph{every} architecture we
-trained finds between 82\% and 99.6\% of the 235 individuals in at least one frame, including
-models whose box recall sits near 0.45. This is the sharpest statement of the paper's premise: at the level a survey cares about, detection is very nearly solved \emph{on this corpus},
-and the animals that go uncounted are lost after it. \Cref{sec:loso} tests how far that
+The last column of \cref{tab:detectors} closes that gap. Measured per animal rather than per
+box, recall runs from 0.821 to 0.996: \emph{every} architecture we trained finds between 82\%
+and 99.6\% of the 235 individuals in at least one frame, including models whose box recall
+sits near 0.45, and the full pipeline reaches 82 of 83 on held-out video
+(\cref{sec:counting}). Over 235 animals these are the paper's tighter estimates, YOLO11m's
+98.7\% carrying a 95\% interval of $\pm2.4$ points. This is the sharpest statement of the
+paper's premise: at the level a survey cares about, detection is very nearly solved
+\emph{on this corpus}, and the animals that go uncounted are lost after it. \Cref{sec:loso} tests how far that
 survives a change of site and finds it weakens rather than holds, which is where the
 qualification belongs. It also re-ranks the table a third time. RTMDet-m leads at
 0.996 and every mmdetection model places above every YOLO variant, which is not an argument
@@ -128,10 +119,10 @@ detection table. Recall is further understated by the matching rule: relaxing Io
 1741 to 1530, because a looser criterion can credit a box that was placed a few pixels off
 an animal but cannot recover an animal the detector never fired on.
 
-The ordering of \cref{tab:threshold} is for reading rather than a verdict, because F1 weights
-precision and recall equally, the balance \cref{sec:choosing} argues is ill-suited to a counting pipeline. Under the precision-weighted $F_{0.5}$ we actually select on, YOLO11m leads at 0.775
-against YOLO12m's 0.767. What matters more than the size of the trade is its direction, which
-is not symmetric: a detector already operating at high recall has nowhere left to go. Dropping
+The ordering of \cref{tab:threshold} is for reading rather than a verdict; \cref{sec:choosing}
+selects on the precision-weighted $F_{0.5}$ instead. What matters more than the size of the
+trade is its direction, which is not symmetric: a detector already at high recall has nowhere
+left to go. Dropping
 RT-DETR-L to 0.10 buys 231 additional true boxes and costs 7433 false ones, reducing precision to 0.187, not a candidate pool any confirmation stage can work with, which is the
 argument of \cref{sec:inversion} arriving one stage earlier.
 
@@ -142,13 +133,15 @@ argument of \cref{sec:inversion} arriving one stage earlier.
 \end{adjustwidth}
   \caption{\textbf{Validation curves for the six strongest detectors}, ordered by test
   AP$_{50}$ and truncated at epoch 70 so the curves share a range. Drawn from the training log
-  each run wrote; no curve is smoothed or re-fitted. The $y$-axes are not
-  shared.\label{fig:training}}
+  each run wrote; no curve is smoothed or re-fitted. The $y$-axes are not shared. The five
+  mmdetection models are absent because their validation loop logs only the COCO evaluator's
+  output, which carries no scalar precision or recall.\label{fig:training}}
 \end{figure}
 
-One architectural pattern survives every criterion. The query-based detectors underperform:
-DINO R50 reaches 0.365 AP$_{50}$ on a full native schedule, below plain Faster R-CNN, and
-Deformable DETR's training exhausted GPU memory at epoch 5 and was not rerun at a smaller batch. RT-DETR-L, which targets exactly this, recovers to 0.434 but still trails the convolutional one-stage models.
+One architectural pattern survives every criterion: the query-based detectors underperform.
+DINO R50 reaches 0.365 AP$_{50}$ on a full native schedule, below plain Faster R-CNN;
+Deformable DETR exhausted GPU memory at epoch 5 and was not rerun at a smaller batch; and
+RT-DETR-L, which targets exactly this, recovers only to 0.434.
 
 \subsection{Choosing a Detector for Counting}
 \label{sec:choosing}
