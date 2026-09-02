@@ -88,8 +88,7 @@ indicative only.
 Every individual deer is annotated in CVAT as a distinct \emph{track}. This is the property
 the paper depends on: one track is one animal, so the same annotation simultaneously serves
 as per-frame detection ground truth, as association ground truth, as count ground truth
-(the number of tracks in a video), and, as \cref{sec:analysis} exploits, as identity
-labels for re-identification.
+(the number of tracks in a video), and, as \cref{sec:analysis} exploits, as identity labels for the appearance analysis of \cref{sec:reid}.
 
 We split by \emph{video}, never by frame, and stratify by site so all four sites appear in
 each split, the deployment target is these same sites, and a frame-level split would leak

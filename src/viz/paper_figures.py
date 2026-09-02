@@ -50,7 +50,7 @@ POOLS = [
     ("C", "Orphan\n(conf 0.10)",      7008, 74, 66, 55),
     ("E", "Max-recall\n(conf 0.02)", 18349, 79, 69, 54),
     ("F", "Loose NMS\n(IoU 0.90)",   90239, 79, 70, 41),
-    ("G", "ReID\n(appearance)",      27679, 82, 73, 52),
+    ("G", "Appearance\n(matching)",   27679, 82, 73, 52),
 ]
 N_GT = 83
 
@@ -279,7 +279,7 @@ def ablation_table(out: str) -> None:
     note = {"C": "orphan recovery, conf 0.10 (operating point)",
             "E": "+ track-init gate removed, conf 0.02",
             "F": "+ NMS IoU 0.50 -> 0.90",
-            "G": "+ appearance ReID"}
+            "G": "+ appearance matching"}
     for tag, _lab, cand, re_, pri, cnt in POOLS:
         md.append(f"| {tag} | {note[tag]} | {cand:,} | {re_}/83 | {pri}/83 | "
                   f"**{cnt}/83 = {100*cnt/83:.1f}%** | {mae[tag]:.2f} |")
@@ -309,7 +309,7 @@ def ablation_table(out: str) -> None:
            "| Detector confidence 0.10 / 0.05 / 0.02 | §6.4.2 | recovers zero extra deer |",
            "| Track-initialisation threshold | §6.4.3 | the real gate: +5 primaries |",
            "| Orphan recovery on/off | §6.3 | +17 deer |",
-           "| ReID cue decomposition (7 variants) | §6.9 | box size dominates appearance |",
+           "| Appearance cue decomposition (7 variants) | §6.9 | box size dominates appearance |",
            "| Track splitting threshold sweep | §6.8 | +3 deer for 4,000 candidates |",
            ""]
     p = os.path.join(out, "ablation_table.md")

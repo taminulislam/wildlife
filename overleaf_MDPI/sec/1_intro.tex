@@ -53,8 +53,7 @@ own track, and counts $62.7 \pm 10.7\%$ (95\% Wilson intervals over the 83 anima
 
 Having localized the loss, we attack it. We improve candidate generation four independent
 ways, lowering detector confidence from 0.10 to 0.02, removing the tracker's
-track-initialization gate, raising the NMS IoU threshold from 0.50 to 0.90, and adding
-appearance re-identification to the association step. Each one demonstrably improves the
+track-initialization gate, raising the NMS IoU threshold from 0.50 to 0.90, and adding an appearance term to the association step. Each one demonstrably improves the
 pool. Each one makes the final count worse or no better. We then replace the hand-tuned
 confirmation rule with learned alternatives of varying capacity, under three evaluation
 protocols, and every one of them loses to three hand-tuned parameters.
@@ -72,5 +71,5 @@ evaluation harness. The second is the decomposition above, together with a held-
 that removes the optimism of in-sample evaluation: reporting counting accuracy on videos the detector trained on inflates it by 15.5 points. The third is the pair of negative results
 the decomposition exposes: counting accuracy moves opposite to candidate quality across four
 independent interventions, and learned confirmation loses to a three-parameter rule under
-three evaluation protocols. The rest of the paper (the twelve-detector benchmark, the matching-criterion analysis, the sensitivity of the confirmation rule, the failure of appearance re-identification at 27 pixels, and what survives a change of site) is evidence
+three evaluation protocols. The rest of the paper (the twelve-detector benchmark, the matching-criterion analysis, the sensitivity of the confirmation rule, the failure of appearance matching at 27 pixels, and what survives a change of site) is evidence
 for those three or a consequence of them.
