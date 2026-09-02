@@ -41,10 +41,19 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 
 def gt_per_video(cvat_dir: str) -> dict[str, int]:
+    """Animals that are DETECTABLE: tracks with at least one non-outside box.
+
+    The corpus holds 236 annotated tracks, but one (FernRidgeRd_TON, track 3) is marked
+    outside on every frame -- the animal is occluded throughout -- so it can never be
+    detected and would sit permanently in the denominator. Every detection and counting
+    denominator in the paper is therefore 235, not 236.
+    """
     out = {}
     for x in sorted(glob.glob(os.path.join(cvat_dir, "*.xml"))):
         v = os.path.splitext(os.path.basename(x))[0].replace("_annotations", "")
-        out[v] = len(ET.parse(x).getroot().findall(".//track"))
+        tracks = ET.parse(x).getroot().findall(".//track")
+        out[v] = sum(1 for t in tracks
+                     if any(b.get("outside") != "1" for b in t.findall("box")))
     return out
 
 

@@ -17,8 +17,7 @@ placed precisely on an animal; it needs the animal noticed once. We therefore sc
 detection stage \emph{per animal}, over the whole of an animal's track, asking whether any
 frame produced a box touching it, and report it alongside the conventional per-box metrics
 rather than in place of them. The two measure different things, and that difference is the
-paper's starting point: every one of the twelve architectures we train finds between 82\% and
-99.6\% of the 235 annotated individuals in at least one frame, while none exceeds
+paper's starting point: every one of the eleven architectures we benchmark finds between 82\% and 99.6\% of the 235 detectable individuals in at least one frame, while none exceeds
 AP$_{50}$ 0.510 on the same images. Per-box mAP remains a valid measure of localization. It
 answers a question the survey does not ask, and read as a survey metric it would place the
 difficulty in detection, where these measurements show it is very nearly solved. That claim is
@@ -47,13 +46,15 @@ ground-truth animal we ask whether it is \reachedq (touched by at least one cand
 track), whether it is \primaryq (some candidate covers it better than it covers any other
 animal, so a one-count-per-track decision \emph{could} count it), and whether it is finally
 \countedq. The gaps between these three numbers attribute error to detection, to
-association, and to confirmation respectively. \Cref{fig:funnel} gives the result: on
-held-out video the pipeline reaches $98.8 \pm 5.3\%$ of animals, gives $88.0 \pm 8.7\%$ their
-own track, and counts $62.7 \pm 10.7\%$ (95\% Wilson intervals over the 83 animals).
+association, and to confirmation respectively. \Cref{fig:funnel} gives the result for all four candidate configurations. The pipeline we
+report reaches $89.2 \pm 8.5\%$ of held-out animals, gives $79.5 \pm 9.9\%$ their own track and
+counts $66.3 \pm 10.7\%$; the richest pool we built reaches $98.8 \pm 5.3\%$ and gives
+$88.0 \pm 8.7\%$ their own track, yet counts \emph{fewer}, at $62.7 \pm 10.7\%$ (95\% Wilson
+intervals over the 83 animals).
 
 Having localized the loss, we attack it. We improve candidate generation four independent
 ways, lowering detector confidence from 0.10 to 0.02, removing the tracker's
-track-initialization gate, raising the NMS IoU threshold from 0.50 to 0.90, and adding an appearance term to the association step. Each one demonstrably improves the
+track-initialization gate, raising the non-maximum suppression (NMS) intersection-over-union threshold from 0.50 to 0.90, and adding an appearance term to the association step. Each one demonstrably improves the
 pool. Each one makes the final count worse or no better. We then replace the hand-tuned
 confirmation rule with learned alternatives of varying capacity, under three evaluation
 protocols, and every one of them loses to three hand-tuned parameters.

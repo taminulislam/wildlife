@@ -5,8 +5,10 @@
 \label{sec:detection}
 
 Twelve architectures spanning two-stage, one-stage and query-based designs were trained on
-the identical site-stratified split with identical preprocessing, which bounds how much of
-the counting error any choice of backbone could account for.
+the identical site-stratified split with identical preprocessing, which bounds how much of the
+counting error any choice of backbone could account for. Eleven appear in \cref{tab:detectors};
+Deformable DETR exhausted GPU memory at epoch 5 and was not rerun at a smaller batch, so it has
+no comparable numbers and every count of models in this section is eleven.
 
 \begin{table}[H]
 \caption{\textbf{Detection on the held-out test split} (3725 images, 2792 boxes) at
@@ -14,8 +16,7 @@ the counting error any choice of backbone could account for.
 three different questions, not three views of one. The strict criteria ask whether a box
 \emph{localizes} an animal, any overlap asks whether it \emph{touches} one, and the last
 column asks whether the \emph{animal} was found at all in any frame of its track. Only the
-last is the quantity a survey depends on, and it is the one on which the twelve models are
-indistinguishable.\label{tab:detectors}}
+last is the quantity a survey depends on, and it is the one on which the eleven models are indistinguishable.\label{tab:detectors}}
 \begin{adjustwidth}{-\extralength}{0cm}
 \centering\footnotesize
 \setlength{\tabcolsep}{3pt}
@@ -66,7 +67,7 @@ and F1 have no true-negative term.
 
 The last column of \cref{tab:detectors} closes that gap. Measured per animal rather than per
 box, recall runs from 0.821 to 0.996: \emph{every} architecture we trained finds between 82\%
-and 99.6\% of the 235 individuals in at least one frame, including models whose box recall
+and 99.6\% of the 235 detectable individuals in at least one frame, including models whose box recall
 sits near 0.45, and the full pipeline reaches 82 of 83 on held-out video
 (\cref{sec:counting}). Over 235 animals these are the paper's tighter estimates, YOLO11m's
 98.7\% carrying a 95\% interval of $\pm2.4$ points. This is the sharpest statement of the
@@ -140,8 +141,7 @@ argument of \cref{sec:inversion} arriving one stage earlier.
 
 One architectural pattern survives every criterion: the query-based detectors underperform.
 DINO R50 reaches 0.365 AP$_{50}$ on a full native schedule, below plain Faster R-CNN;
-Deformable DETR exhausted GPU memory at epoch 5 and was not rerun at a smaller batch; and
-RT-DETR-L, which targets exactly this, recovers only to 0.434.
+and RT-DETR-L, which targets exactly this, recovers only to 0.434.
 
 \subsection{Choosing a Detector for Counting}
 \label{sec:choosing}
@@ -522,7 +522,7 @@ Two further protocols agree. Under 8-fold cross-validation over videos the rule 
 (1.88 MAE), and the pattern across that sweep is diagnostic: performance declines monotonically with model capacity: logistic regression at 13 parameters reaches 3.41,
 gradient boosting at $10^3$ reaches 2.41--2.66, and the transformer at $6\times10^4$ reaches
 2.81, while shrinking a gradient-boosted model to depth-1 stumps ($\sim$40 effective
-parameters) recovers nearly the whole gap and achieves the best RMSE of any method. This is
+parameters) recovers nearly the whole gap and achieves the best root-mean-square error of any method. This is
 a variance limit, not an architectural one.
 
 We also trained directly on the counting objective, letting fragments share probability mass
@@ -565,7 +565,7 @@ duplicates at a similar rate, and the published rule sits where the two costs ba
 
 The held-out protocol of \cref{sec:heldout} splits by video, so a held-out video may come
 from a site the detector has seen. \Cref{fig:loso} asks the stricter question: train on three sites, count on the fourth, four
-times over, so every one of the 236 animals is scored by a detector that never saw its site,
+times over, so every one of the 235 detectable animals is scored by a detector that never saw its site,
 across 8 videos per fold. The confirmation rule is \emph{not} refitted per fold: the published $(m,s,c)$ is applied unchanged, which is the honest reading of ``does this
 pipeline transfer''.
 
@@ -581,12 +581,12 @@ pipeline transfer''.
 result: detection and association hold a large and nearly regular quadrilateral across all
 four sites, while the counted polygon is lopsided and pinches to a point at MAS. Sites run
 clockwise by corpus size and every vertex is labelled, since a radar encodes value as radius
-while the eye reads area. Per-fold MAE is 7.38, 4.12, 3.38 and 1.88 animals per video for SHB,
+while the eye reads area. Per-fold MAE is 7.38, 4.00, 3.38 and 1.88 animals per video for SHB,
 TON, SHW and MAS. Two things follow,
 and the second is the more useful. First, detection transfers well but not
 perfectly. Pooled over the four folds, \reachedq falls from the within-site 98.8\% to
-$90.7 \pm 3.7\%$, \primaryq from 88.0\% to $78.0 \pm 5.2\%$, \countedq from 66.3\% to
-$51.7 \pm 6.4\%$, and MAE rises from 2.38 to 4.19 animals per video. These are measured over all 236 animals rather than the 83 of
+$91.1 \pm 3.7\%$, \primaryq from 88.0\% to $78.3 \pm 5.2\%$, \countedq from 66.3\% to
+$51.9 \pm 6.4\%$, and MAE rises from 2.38 to 4.16 animals per video. These are measured over all 235 detectable animals rather than the 83 of
 the main protocol, so they are the tighter estimates in the paper. The claim that detection is
 near-saturated should therefore be read as within-corpus; across sites a real detection gap
 opens, and \cref{sec:discussion} treats that as the boundary of the claim rather than a
@@ -602,8 +602,8 @@ so a threshold at 0.65 accepts nothing and the pipeline returns zero on 15 anima
 arriving through a different door: the confidence condition is doing duplicate suppression on
 a score scale that is itself site-dependent.
 
-The obvious repair does not work, which is informative. Replacing the absolute threshold with a fold-relative one, accepting the same \emph{fraction} of long tracks that $c\ge0.65$ accepts on pool C, restores coverage to $80.9 \pm 5.0\%$ and destroys the count, at MAE 8.84 and a
-bias of $+6.03$ animals per video against $-2.94$ for the frozen rule. The cross-site folds
+The obvious repair does not work, which is informative. Replacing the absolute threshold with a fold-relative one, accepting the same \emph{fraction} of long tracks that $c\ge0.65$ accepts on pool C, restores coverage to $80.9 \pm 5.1\%$ and destroys the count, at MAE 8.88 and a
+bias of $+6.06$ animals per video against $-2.91$ for the frozen rule. The cross-site folds
 generate more long tracks than the within-site pool, so a fixed acceptance fraction admits
 duplicates faster than it recovers animals. That is the inversion of \cref{sec:inversion}
 reappearing across sites, and it says that transferring this pipeline to a new site requires

@@ -1441,3 +1441,33 @@ sites clockwise by corpus size (SHB 132 → TON 51 → SHW 38 → MAS 15):
 Radar's two known defects are handled explicitly: every vertex is labelled (radius is not
 readable by eye, and area grows as its square) and the axis order is stated in the caption
 rather than left arbitrary. Palette matches fig1_funnel.
+
+### 7.8 Consistency audit (2026-09-02)
+
+**Corrected: 235 vs 236 animals.** CVAT holds 236 tracks, but `FernRidgeRd_TON` track 3 is
+marked `outside` on every frame (occluded throughout), so it can never be detected. 235 is the
+detectable count and is now the denominator for every detection and counting figure; 236 stays
+as the count of annotated individuals. §3.1 states this. `src/eval/loso_counting.py` now filters
+tracks with no visible box, so LOSO moves:
+reached 90.7 → **91.1%**, primary 78.0 → **78.3%**, counted 51.7 → **51.9%**, MAE 4.19 → **4.16**,
+TON per-fold MAE 4.12 → **4.00**, TON n 51 → 50. Fold-relative variant: MAE 8.84 → 8.88,
+bias +6.03 → +6.06. Radar regenerated.
+
+**Corrected: the headline decomposition described the wrong configuration.** Abstract, intro
+and conclusions quoted 98.8 / 88.0 / 62.7, which are **pool G** (appearance matching) — the
+ablation §3.4 says the reported system does not use. The reported system is pool C:
+**89.2 ±8.5 / 79.5 ±9.9 / 66.3 ±10.7**, matching `tab:counting`. All three now lead with pool C
+and give pool G as the ceiling that counts fewer.
+
+**Corrected: twelve vs eleven detectors.** Twelve were trained; `tab:detectors` has eleven rows
+(Deformable DETR OOM'd at epoch 5). §4.1 now says so at the top, and every claim about the
+table says eleven.
+
+**Abbreviations** expanded on first use: CLAHE, CVAT, AUC, ECE, NMS, IoU, HOTA, UAV, RMSE,
+SNR, MOT. The `\abbreviations` list gained AUC, CVAT, ECE, HOTA, LOSO, UAV and is alphabetised.
+
+**§3.1 renamed** "Dataset: Corpus, Annotation and Splits" so the dataset contribution is
+findable in the contents.
+
+Verified clean: all 22 floats cited, no dangling refs, no missing/uncited bib keys, math and
+environments balanced, every tabular row matches its column spec.

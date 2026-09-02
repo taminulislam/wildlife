@@ -85,20 +85,20 @@ khaled.ahmed@siu.edu (K.R.A.)}
 %------------------------------------------------------------------
 \abstract{(1) Background: wildlife surveys ask how many animals are present, but the
 pipelines built to answer that question are optimized as detectors; we test whether detection
-accuracy predicts counting accuracy on thermal road-transect video, and localize where the
-two diverge. (2) Methods: we introduce a corpus of 32 fully annotated FLIR thermal road
-transects containing 236 individually tracked white-tailed deer, benchmark twelve detectors
-on it, and build TRACT, a counting pipeline that decomposes end-to-end error into its
-detection, association and confirmation stages. The confirmation rule is frozen before
-evaluation on videos the detector never saw. (3) Results: scored per animal rather than per
-box, detection is close to solved. The pipeline finds 98.8\% of held-out animals and gives
-88.0\% of them a distinct track, but counts only 62.7\%. Four interventions that each
-demonstrably improve candidate generation make the final count worse, and learned
-confirmation heads all lose to a three-parameter hand-tuned rule. (4) Conclusions: detection
-is not the bottleneck in thermal wildlife counting. Confirmation is, and at this corpus size
-it is limited by supervision rather than model capacity: the extra candidates a better
-detector supplies are re-sightings of animals already counted, which no confirmer we trained
-separates from first sightings.}
+accuracy predicts counting accuracy on thermal road-transect video, and localize where the two
+diverge. (2) Methods: we introduce a corpus of 32 fully annotated FLIR thermal road transects
+containing 236 individually tracked white-tailed deer, benchmark twelve detectors on it, and
+build TRACT, a counting pipeline that decomposes end-to-end error into its detection,
+association and confirmation stages. The confirmation rule is frozen before evaluation on
+videos the detector never saw. (3) Results: scored per animal rather than per box, detection is
+close to solved. The reported pipeline finds 89.2\% of held-out animals, gives 79.5\% a
+distinct track and counts 66.3\%; the richest candidate pool we built reaches 98.8\% and counts
+fewer still, at 62.7\%. Four interventions that each demonstrably improve candidate generation
+make the final count worse, and learned confirmation heads all lose to a three-parameter
+hand-tuned rule. (4) Conclusions: detection is not the bottleneck in thermal wildlife counting.
+Confirmation is, and at this corpus size it is limited by supervision rather than model
+capacity: the extra candidates a better detector supplies are re-sightings of animals already
+counted, which no confirmer we trained separates from first sightings.}
 
 \keyword{thermal imaging; wildlife survey; animal counting; object detection; multi-object
 tracking; white-tailed deer; benchmark dataset; error decomposition}
@@ -164,14 +164,20 @@ The following abbreviations are used in this manuscript:\\
 \noindent
 \begin{tabular}{@{}ll}
 AP & Average precision\\
+AUC & Area under the ROC curve\\
 CLAHE & Contrast-limited adaptive histogram equalization\\
+CVAT & Computer Vision Annotation Tool\\
+ECE & Expected calibration error\\
 FLIR & Forward-looking infrared\\
 GMC & Global motion compensation\\
+HOTA & Higher-order tracking accuracy\\
 IoU & Intersection over union\\
+LOSO & Leave-one-site-out\\
 MAE & Mean absolute error\\
 NMS & Non-maximum suppression\\
+RMSE & Root mean square error\\
 TRACT & Thermal Road-transect Animal Counting and Tracking\\
-RMSE & Root mean square error
+UAV & Uncrewed aerial vehicle
 \end{tabular}
 }
 

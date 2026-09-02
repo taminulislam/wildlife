@@ -45,7 +45,7 @@ Brown et al.~\cite{brown2022automated} tested detection across ground sample dis
 0.2 to 1.0\,m\,px$^{-1}$ and found that image detail, not network capacity, sets the limit.
 Infantes et al.~\cite{infantes2022automated} built an end-to-end pinniped survey from flight
 planning through orthomosaic to automatic body-size measurement.
-Kline et al.~\cite{kline2024integrating} tracked zebra and giraffe from an autonomous UAV but
+Kline et al.~\cite{kline2024integrating} tracked zebra and giraffe from an autonomous uncrewed aerial vehicle (UAV) but
 restricted analysis to herd centroids rather than individuals, and Mpouziotas et
 al.~\cite{mpouziotas2023automated} reached 91.3\% AP on drone bird footage evaluated per frame
 only. Kilfoil et al.~\cite{kilfoil2020using} found that both human and CNN counts of sea
@@ -121,12 +121,12 @@ ByteTrack~\cite{zhang2022bytetrack} showed that associating low-confidence detec
 substantial recall; BoT-SORT~\cite{aharon2022botsort} added camera-motion compensation and an
 appearance term. Our camera moves at 25--90\,km\,h$^{-1}$, so global motion compensation is not
 optional; we use BoT-SORT with sparse optical-flow compensation and ablate its appearance term
-in \cref{sec:inversion}. Evaluation has moved toward HOTA, which separates detection from
+in \cref{sec:inversion}. Evaluation has moved toward higher-order tracking accuracy (HOTA), which separates detection from
 association accuracy, and Valmadre et al.~\cite{valmadre2021local} argue that global metrics
 mask local failures. MOTRv2~\cite{zhang2023motrv2} shows that even end-to-end transformer
 trackers benefit from strong detection priors. Our \reachedq/\primaryq/\countedq decomposition
 parallels the detection/association split but adds a third axis, confirmation, that these
-metrics do not measure. The distinction matters: MOT benchmarks score identity
+metrics do not measure. The distinction matters: Multi-object tracking benchmarks score identity
 \emph{preservation}, not whether an object should be counted at all.
 
 \subsection{Counting, Identity and Evaluation}
@@ -175,7 +175,7 @@ The closest methodological comparison is the Caltech Fish Counting
 benchmark~\cite{kay2022caltech}, which poses the same problem in sonar: count distinct individuals in continuous video, not detections per frame. Its conclusion is the opposite of
 ours: substituting a perfect detector recovers almost all of the counting error, so in that
 setting detection is the binding constraint. We take the contrast seriously rather than
-treating our result as universal. Sonar imagery is low-SNR and the reported failures are
+treating our result as universal. Sonar imagery has a low signal-to-noise ratio and the reported failures are
 generalization failures of detection across deployments, whereas a thermal deer at 27 pixels
 is faint but consistently present, and a vehicle transect gives every animal tens to hundreds
 of frames of visibility with strong ego-motion cues for association. What generalizes from
