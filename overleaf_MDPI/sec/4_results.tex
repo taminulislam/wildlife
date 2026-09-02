@@ -135,7 +135,7 @@ is not symmetric: a detector already operating at high recall has nowhere left t
 RT-DETR-L to 0.10 buys 231 additional true boxes and costs 7433 false ones, reducing precision to 0.187, not a candidate pool any confirmation stage can work with, which is the
 argument of \cref{sec:inversion} arriving one stage earlier.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \begin{adjustwidth}{-\extralength}{0cm}
   \centering
   \includegraphics[width=\fulllength]{figures/fig5_training.pdf}
@@ -280,7 +280,7 @@ reported alongside it because the two answer different questions.
 This is the paper's central experimental result. We improved the candidate pool four
 independent ways and measured the effect on the decomposition and on the final count.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/fig2_inversion.pdf}
   \caption{\textbf{The inversion.} As candidate generation improves, more animals become
@@ -350,7 +350,7 @@ G & \quad $+$ appearance matching & 27,679 & \textbf{82/83} & \textbf{73/83} & 5
 \end{adjustwidth}
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/qualitative.png}
   \caption{\textbf{Tracking through overlap and low contrast.} Six frames from four held-out
@@ -576,7 +576,7 @@ times over, so every one of the 236 animals is scored by a detector that never s
 across 8 videos per fold. The confirmation rule is \emph{not} refitted per fold: the published $(m,s,c)$ is applied unchanged, which is the honest reading of ``does this
 pipeline transfer''.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.78\linewidth]{figures/fig_loso_radar.pdf}
   \caption{\textbf{Leave-one-site-out: the three stages degrade with different shapes.} Each
@@ -622,7 +622,7 @@ question this corpus leaves.
 \subsection{Which Animals Are Missed}
 \label{sec:analysis}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/fig4_scale.pdf}
   \caption{\textbf{A hole in the training distribution.} The training split contains no box
