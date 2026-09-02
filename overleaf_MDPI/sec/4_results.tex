@@ -697,25 +697,22 @@ Trained thermal encoder & \textbf{0.899} \\
 \end{tabularx}
 \end{table}
 
-A word on terms before the result, because this subsection is the one place the paper uses
-``re-identification'' in its own right. We reserve it for the \emph{task} of recognising a
-specific individual, which is what this subsection tests and rejects. The ablated component
-that uses appearance to help associate detections within a video is called \emph{appearance
-matching} throughout, and the reported system contains neither (\cref{sec:pipeline}).
+A word on terms before the result. \emph{Recognising an individual animal} is the task this
+subsection tests and rejects. \emph{Appearance matching}, the ablated component that uses
+appearance to help associate detections within one video, is a different and much easier
+operation. The reported system performs neither (\cref{sec:pipeline}).
 
-Appearance-based individual re-identification is the natural proposal for the association
-stage, and it is the one component we tested and \emph{rejected on the evidence}. This
+Appearance-based recognition of individual animals is the natural proposal for the association stage, and it is the one component we tested and \emph{rejected on the evidence}. This
 subsection records why, because the negative result is more useful than the proposal: at this
 pixel scale appearance carries less identity information than a two-number bounding box, and
 a system built on it would be reporting range, not identity. Because the annotation gives one
 track per individual, the corpus already contains identity labels and the question can be
-settled empirically rather than argued. We evaluate closed-set identity matching, the standard re-identification protocol, on \textbf{69 animals in 7 videos the detector never trained on}: each
+settled empirically rather than argued. We evaluate closed-set identity matching, under the standard protocol for this question, on \textbf{69 animals in 7 videos the detector never trained on}: each
 track is split temporally, the first half forms the gallery and the second half the query.
 Within video is the \emph{ceiling}, since both halves share range, pose and thermal
 calibration, so a low score is decisive.
 
-A trained thermal encoder reaches rank-1 $0.899 \pm 0.093$ (\cref{tab:reid}), which sounds
-like working re-identification until the decomposition. \textbf{Box size alone reaches
+A trained thermal encoder reaches rank-1 $0.899 \pm 0.093$ (\cref{tab:reid}), which sounds like working individual recognition until the decomposition. \textbf{Box size alone reaches
 $0.638 \pm 0.118$}, and within
 a video an animal's range changes slowly, so most of what looks like identification is
 matching \emph{distance}. Appearance in isolation carries little signal: mean intensity carries exactly
@@ -729,5 +726,5 @@ best candidate pool in the paper, 82 of 83 animals reached and 73 given their ow
 so better association does not translate into a better count, the same pattern every other
 pool improvement follows. The conclusion for practice is therefore double, and both halves
 are negative: appearance cannot identify individual deer at this resolution, and even where
-it demonstrably improves association it does not improve the count. \textbf{The reported system uses neither appearance matching nor re-identification}, and we would advise against building a
+it demonstrably improves association it does not improve the count. \textbf{The reported system uses neither appearance matching nor any form of individual recognition}, and we would advise against building a
 thermal survey pipeline on it until the imagery is several times larger than 27 pixels.

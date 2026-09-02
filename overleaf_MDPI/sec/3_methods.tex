@@ -130,13 +130,11 @@ Road-transect Animal Counting and Tracking). The name denotes a composition rath
 architecture: every component is standard, and the assembly (contrast normalisation, detection, motion-compensated tracking, orphan recovery and a calibrated confirmation rule) is what is arranged for counting rather than for detection. Detections from YOLO11m at
 640\,px are associated by
 BoT-SORT~\cite{aharon2022botsort} with sparse-optical-flow global motion compensation (mandatory here, since the whole frame translates as the vehicle moves), producing candidate tracks. One point of terminology belongs here, because the association stage is easily
-mistaken for something it is not. \textbf{The reported system runs with BoT-SORT's appearance
-term disabled and performs no re-identification.} It associates detections into tracks within
+mistaken for something it is not. \textbf{The reported system runs with BoT-SORT's appearance term disabled and does not attempt to recognise individual animals.} It associates detections into tracks within
 a single video using motion and geometry, which prevents an animal from being counted twice in
 one transect; it makes no claim to recognise an individual animal, and could not, since
 \cref{sec:reid} shows that at a median $29\times24$ pixels a two-number size descriptor
-out-performs a pretrained appearance backbone. We call this \emph{track association} rather
-than re-identification throughout. Where appearance appears in this paper it is an
+out-performs a pretrained appearance backbone. We call this \emph{track association} throughout. Where appearance appears in this paper it is an
 \emph{ablation} (pool G of \cref{sec:inversion}) or a probe of how much identity signal the
 imagery carries (\cref{tab:reid}), never a component of the counting results we report.
 
