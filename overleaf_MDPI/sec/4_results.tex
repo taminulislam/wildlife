@@ -576,21 +576,20 @@ times over, so every one of the 236 animals is scored by a detector that never s
 across 8 videos per fold. The confirmation rule is \emph{not} refitted per fold: the published $(m,s,c)$ is applied unchanged, which is the honest reading of ``does this
 pipeline transfer''.
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
-  \includegraphics[width=0.78\linewidth]{figures/fig_loso_radar.pdf}
-  \caption{\textbf{Leave-one-site-out: the three stages degrade with different shapes.} Each
-  axis is one held-out site, trained on the other three, as a percentage of that site's
-  animals; the four folds together score all 236. \reachedq and \primaryq hold a large, nearly
-  regular shape, while \countedq collapses unevenly and reaches zero at MAS. Per-fold MAE is
-  7.38, 4.12, 3.38 and 1.88 animals per video for SHB, TON, SHW and MAS. Sites run clockwise
-  by corpus size and every vertex is labelled, because a radar encodes value as radius while
-  the eye reads area.\label{fig:loso}}
+  \includegraphics[width=0.58\linewidth]{figures/fig_loso_radar.pdf}
+  \caption{\textbf{Leave-one-site-out.} Each axis is one held-out site, trained on the other
+  three, as a percentage of that site's animals; animal counts in
+  parentheses.\label{fig:loso}}
 \end{figure}
 
 \Cref{fig:loso} puts the three stages on one set of axes, and the shapes are what carry the
 result: detection and association hold a large and nearly regular quadrilateral across all
-four sites, while the counted polygon is lopsided and pinches to a point. Two things follow,
+four sites, while the counted polygon is lopsided and pinches to a point at MAS. Sites run
+clockwise by corpus size and every vertex is labelled, since a radar encodes value as radius
+while the eye reads area. Per-fold MAE is 7.38, 4.12, 3.38 and 1.88 animals per video for SHB,
+TON, SHW and MAS. Two things follow,
 and the second is the more useful. First, detection transfers well but not
 perfectly. Pooled over the four folds, \reachedq falls from the within-site 98.8\% to
 $90.7 \pm 3.7\%$, \primaryq from 88.0\% to $78.0 \pm 5.2\%$, \countedq from 66.3\% to

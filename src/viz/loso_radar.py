@@ -52,8 +52,8 @@ def main() -> None:
     closed = ang + ang[:1]
 
     plt.rcParams.update({"figure.dpi": 200, "savefig.dpi": 300, "savefig.bbox": "tight",
-                         "font.size": 11, "text.color": INK, "figure.facecolor": "white"})
-    fig, ax = plt.subplots(figsize=(6.6, 5.4), subplot_kw={"polar": True})
+                         "font.size": 10, "text.color": INK, "figure.facecolor": "white"})
+    fig, ax = plt.subplots(figsize=(5.6, 4.4), subplot_kw={"polar": True})
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
 
@@ -75,10 +75,10 @@ def main() -> None:
             t.set_path_effects([pe.withStroke(linewidth=2.6, foreground="white")])
 
     ax.set_xticks(ang)
-    ax.set_xticklabels([f"{s}\n({rep[s]['gt']} animals)" for s in sites], fontsize=11)
+    ax.set_xticklabels([f"{s} ({rep[s]['gt']})" for s in sites], fontsize=10.5)
     ax.set_ylim(0, 100)
     ax.set_yticks([25, 50, 75, 100])
-    ax.set_yticklabels(["25%", "50%", "75%", "100%"], fontsize=9, color=INK2)
+    ax.set_yticklabels(["25", "50", "75", "100%"], fontsize=8.5, color=INK2)
     ax.set_rlabel_position(180 / n)
     # Ring labels cross the filled polygons, so they carry a white plate.
     for lbl in ax.get_yticklabels():
@@ -86,9 +86,10 @@ def main() -> None:
         lbl.set_zorder(6)
     ax.grid(color=GRID, lw=0.8)
     ax.spines["polar"].set_color(GRID)
-    ax.tick_params(axis="x", pad=14)
-    ax.legend(loc="lower center", bbox_to_anchor=(0.5, -0.20), ncol=3,
-              frameon=False, fontsize=10.5, handlelength=1.4, columnspacing=1.6)
+    ax.tick_params(axis="x", pad=6)
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, -0.19), ncol=3,
+              frameon=False, fontsize=9.5, handlelength=1.2, columnspacing=1.2,
+              borderaxespad=0, handletextpad=0.5)
 
     os.makedirs(args.out, exist_ok=True)
     for ext in ("pdf", "png"):
