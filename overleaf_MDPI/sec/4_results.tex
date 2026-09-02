@@ -571,58 +571,38 @@ duplicates at a similar rate, and the published rule sits where the two costs ba
 \label{sec:loso}
 
 The held-out protocol of \cref{sec:heldout} splits by video, so a held-out video may come
-from a site the detector has seen. \Cref{tab:loso} asks the stricter question: train on three
-sites, count on the fourth, four times over, so every one of the 236 animals is scored by a
-detector that never saw its site. The confirmation rule is \emph{not} refitted per fold: the published $(m,s,c)$ is applied unchanged, which is the honest reading of ``does this
+from a site the detector has seen. \Cref{fig:loso} asks the stricter question: train on three sites, count on the fourth, four
+times over, so every one of the 236 animals is scored by a detector that never saw its site,
+across 8 videos per fold. The confirmation rule is \emph{not} refitted per fold: the published $(m,s,c)$ is applied unchanged, which is the honest reading of ``does this
 pipeline transfer''.
-
-\begin{table}[H]
-\caption{\textbf{Leave-one-site-out.} Each row trains on the other three sites and counts on
-the named one, so the four rows together score all 236 animals under cross-site conditions.
-\reachedq and \primaryq degrade modestly; \countedq does not, and the last two columns show
-why. ``Max $c$'' is the highest \texttt{topk\_conf} any long track attains in that fold: on MAS no track reaches the published 0.65 and the rule accepts
-nothing.\label{tab:loso}}
-\begin{adjustwidth}{-\extralength}{0cm}
-\centering\footnotesize
-\begin{tabularx}{\fulllength}{LCCCCCCC}
-\toprule
-\textbf{Held-out site} & \textbf{Videos} & \textbf{Animals} & \textbf{\reachedq} & \textbf{\primaryq} & \textbf{\countedq} & \textbf{MAE} & \textbf{Max $c$} \\
-\midrule
-SHB & 8 & 132 & 120 & 102 & 91 & 7.38 & 0.862 \\
-TON & 8 &  51 &  46 &  40 & 20 & 4.12 & 0.782 \\
-SHW & 8 &  38 &  36 &  30 & 11 & 3.38 & 0.752 \\
-MAS & 8 &  15 &  12 &  12 &  0 & 1.88 & 0.585 \\
-\midrule
-\textbf{Pooled (cross-site)} & \textbf{32} & \textbf{236} & \textbf{90.7\%} & \textbf{78.0\%} & \textbf{51.7\%} & \textbf{4.19} & --- \\
-Within-site reference (\cref{tab:counting}) & 13 & 83 & 98.8\% & 88.0\% & 66.3\% & 2.38 & --- \\
-\bottomrule
-\end{tabularx}
-\end{adjustwidth}
-\end{table}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.78\linewidth]{figures/fig_loso_radar.pdf}
-  \caption{\textbf{The three stages degrade with different shapes across sites.} The same
-  leave-one-site-out folds as \cref{tab:loso}, as a fraction of each site's animals. \reachedq
-  and \primaryq hold a large, nearly regular shape; \countedq collapses unevenly and reaches
-  zero at MAS. Sites run clockwise by corpus size and every vertex is labelled, because a
-  radar encodes value as radius while the eye reads area.\label{fig:loso}}
+  \caption{\textbf{Leave-one-site-out: the three stages degrade with different shapes.} Each
+  axis is one held-out site, trained on the other three, as a percentage of that site's
+  animals; the four folds together score all 236. \reachedq and \primaryq hold a large, nearly
+  regular shape, while \countedq collapses unevenly and reaches zero at MAS. Per-fold MAE is
+  7.38, 4.12, 3.38 and 1.88 animals per video for SHB, TON, SHW and MAS. Sites run clockwise
+  by corpus size and every vertex is labelled, because a radar encodes value as radius while
+  the eye reads area.\label{fig:loso}}
 \end{figure}
 
 \Cref{fig:loso} puts the three stages on one set of axes, and the shapes are what carry the
 result: detection and association hold a large and nearly regular quadrilateral across all
 four sites, while the counted polygon is lopsided and pinches to a point. Two things follow,
 and the second is the more useful. First, detection transfers well but not
-perfectly: \reachedq falls from 98.8\% within-site to $90.7 \pm 3.7\%$ across sites and
-\primaryq to $78.0 \pm 5.2\%$. These are measured over all 236 animals rather than the 83 of
+perfectly. Pooled over the four folds, \reachedq falls from the within-site 98.8\% to
+$90.7 \pm 3.7\%$, \primaryq from 88.0\% to $78.0 \pm 5.2\%$, \countedq from 66.3\% to
+$51.7 \pm 6.4\%$, and MAE rises from 2.38 to 4.19 animals per video. These are measured over all 236 animals rather than the 83 of
 the main protocol, so they are the tighter estimates in the paper. The claim that detection is
 near-saturated should therefore be read as within-corpus; across sites a real detection gap
 opens, and \cref{sec:discussion} treats that as the boundary of the claim rather than a
 detail.
 
-Second, \countedq falls further and unevenly, 51.7\% pooled, but from 69\% of SHB's animals
-down to none of MAS's, and the ``Max $c$'' column names the cause. The confirmation rule's
+Second, \countedq falls further and unevenly, from 69\% of SHB's animals down to none of
+MAS's, and the per-fold score ceiling names the cause. The highest \texttt{topk\_conf} any long
+track attains is 0.862 on the SHB fold, 0.782 on TON, 0.752 on SHW and 0.585 on MAS. The confirmation rule's
 $c\ge0.65$ is an \emph{absolute} threshold on a detector score, and a detector trained without
 a site scores that site systematically lower: on the MAS fold no track anywhere reaches 0.585,
 so a threshold at 0.65 accepts nothing and the pipeline returns zero on 15 animals it detected
