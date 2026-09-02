@@ -70,27 +70,33 @@ contamination that inflates coverage on seen video also destroys any correction 
 it. A sightability factor for this system would have to be fitted on video the detector never
 trained on, which is to say on data that could have been used to train it instead.
 
-\subsection{Practical Guidance}
+\subsection{Implications for Practice}
 
-The guidance that follows is inverted from the field's default. For a counting application at
-this data scale: do not select a detector by its detection metric, because the counting
-criterion re-ranks seven of eleven models by two or more places (\cref{sec:choosing})
-and the best detector by AP$_{50}$
-counts worse than the fourth-best; do not evaluate on video the detector trained on, which
-inflates coverage by 15.5 points (\cref{tab:leak}); do not assume a larger candidate pool is a
-better one (\cref{tab:ablationmain}); and do not expect a learned confirmation stage to beat a
-hand-tuned rule until the corpus is substantially larger than 236 individuals
+What follows are consequences of the measurements above rather than recommendations drawn
+from survey experience, and they are scoped to what this corpus can support: one sensor, four
+sites, one winter, one species, 236 individuals. Within that scope, four of them run against
+the field's default.
+
+Selecting a detector by its detection metric did not select the model that counts best here.
+The counting criterion re-ranks seven of eleven models by two or more places
+(\cref{sec:choosing}), and the best model by AP$_{50}$ counted worse than the fourth-best.
+Evaluating on video the detector had trained on inflated coverage by 15.5 points
+(\cref{tab:leak}), which is what makes a held-out protocol worth its cost. A larger candidate
+pool was not a better one in any of the four attempts we made (\cref{tab:ablationmain}). And a
+learned confirmation stage did not beat a hand-tuned rule at this data scale, with the capacity
+trend placing the crossover an order of magnitude beyond 236 individuals
 (\cref{tab:confirmers}).
 
-Two positive recommendations survive the same evidence. Contrast normalization is worth more
-than any architectural choice we tested, 0.519 against 0.299 test mAP50, which is a
-larger effect than the entire 0.365--0.510 spread across twelve architectures. And the upper
-tail of the object-scale distribution deserves the attention normally reserved for the lower
-one: three of our misses are animals \emph{larger} than anything in the training split
-(\cref{fig:scale}), a failure mode that a small-object-focused evaluation would never surface. And do not carry
-an absolute confidence threshold to a new site: \cref{sec:loso} shows a detector trained
-without a site scores that site systematically lower, so a threshold fitted elsewhere can
-reject every track. Budget for a small labelled sample from each new site to re-fit it.
+Three observations point the other way. Contrast normalization was worth more than any
+architectural choice we tested, 0.519 against 0.299 test mAP50, a larger effect than the entire
+0.365--0.510 spread across twelve architectures. The upper tail of the object-scale
+distribution repaid the attention normally reserved for the lower one: three of our misses are
+animals \emph{larger} than anything in the training split (\cref{fig:scale}), a failure mode a
+small-object-focused evaluation would not surface. And an absolute confidence threshold did not
+transfer between sites, since a detector trained without a site scored that site systematically
+lower and a threshold fitted elsewhere rejected every track on one fold (\cref{sec:loso}).
+Whether a small labelled sample from each new site is the right remedy is a question this
+corpus can pose but not answer.
 
 \subsection{Limitations}
 \label{sec:limitations}
