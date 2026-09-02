@@ -1425,3 +1425,19 @@ New §2.6 `sec:othermodalities`.
 - **Code/weights release**: descoped this round.
 - Orphan-provenance analysis (Q9) needs an instrumented re-run — track CSVs carry no orphan flag.
 - Ego-motion / ground-plane priors (Q6): no camera calibration or telemetry; genuine new work.
+
+### 7.7 LOSO radar figure (2026-09-02)
+`src/viz/loso_radar.py` reads `results/counting_eval/loso_counting.json` and renders
+`fig_loso_radar.pdf` — the three decomposition stages as a fraction of each site's animals,
+sites clockwise by corpus size (SHB 132 → TON 51 → SHW 38 → MAS 15):
+
+| Site | reached | primary | counted |
+|---|---|---|---|
+| SHB | 91% | 77% | 69% |
+| TON | 90% | 78% | 39% |
+| SHW | 95% | 79% | 29% |
+| MAS | 80% | 80% | **0%** |
+
+Radar's two known defects are handled explicitly: every vertex is labelled (radius is not
+readable by eye, and area grows as its square) and the axis order is stated in the caption
+rather than left arbitrary. Palette matches fig1_funnel.

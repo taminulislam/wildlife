@@ -600,7 +600,20 @@ Within-site reference (\cref{tab:counting}) & 13 & 83 & 98.8\% & 88.0\% & 66.3\%
 \end{adjustwidth}
 \end{table}
 
-Two things follow, and the second is the more useful. First, detection transfers well but not
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\linewidth]{figures/fig_loso_radar.pdf}
+  \caption{\textbf{The three stages degrade with different shapes across sites.} The same
+  leave-one-site-out folds as \cref{tab:loso}, as a fraction of each site's animals. \reachedq
+  and \primaryq hold a large, nearly regular shape; \countedq collapses unevenly and reaches
+  zero at MAS. Sites run clockwise by corpus size and every vertex is labelled, because a
+  radar encodes value as radius while the eye reads area.\label{fig:loso}}
+\end{figure}
+
+\Cref{fig:loso} puts the three stages on one set of axes, and the shapes are what carry the
+result: detection and association hold a large and nearly regular quadrilateral across all
+four sites, while the counted polygon is lopsided and pinches to a point. Two things follow,
+and the second is the more useful. First, detection transfers well but not
 perfectly: \reachedq falls from 98.8\% within-site to $90.7 \pm 3.7\%$ across sites and
 \primaryq to $78.0 \pm 5.2\%$. These are measured over all 236 animals rather than the 83 of
 the main protocol, so they are the tighter estimates in the paper. The claim that detection is
