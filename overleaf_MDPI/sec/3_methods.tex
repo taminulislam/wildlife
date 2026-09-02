@@ -19,7 +19,7 @@ actually receives, and in its third and fourth panels the animals are a few doze
 slightly warmer texture against thermal clutter. The median animal is $29\times24$\,px,
 approximately the smallest box in the third panel.
 
-Thermal transects carry low and drifting global contrast, so every frame is normalized with contrast-limited adaptive histogram equalisation (CLAHE)~\cite{zuiderveld1994clahe} before use, identically at training and inference and for
+Thermal transects carry low and drifting global contrast, so every frame is normalized with contrast-limited adaptive histogram equalisation (CLAHE)~\cite{reza2004realization} before use, identically at training and inference and for
 every model reported here. This single preprocessing choice is worth more than any architectural one we tested: test mAP50 falls from $0.519$ to $0.299$ without it, which
 is why the figures in this paper show normalized rather than raw frames: they are the pixels
 the detectors actually consume.
