@@ -1492,3 +1492,19 @@ a browser. VP80/vp09 WebM work; `engine.CODECS` negotiates in order VP80 → vp0
 **Verified on GPU** (gpuA100x4-interactive, 400-frame NShelbyRd clip, frames 8400–8800):
 14 counted from 27 candidate tracks in 93 s, WebM output plays back, overlay renders
 correctly. A 150-frame clip with no deer correctly returned 0.
+
+### 8.1 Upload path hardened (2026-09-03)
+A 123.6 MB upload from a lab PC failed with `TypeError: Failed to fetch`, while the same
+file posted over loopback succeeded in 0.3 s — so the pipeline and parser were fine and the
+single large POST across the SSH tunnel plus the editor's port forward was the failure.
+
+Two fixes, both in `src/app/server.py`:
+- **Chunked upload.** `/api/upload/start` then `/api/upload/chunk` in 8 MB pieces, three
+  retries each, with real progress in the UI. Verified byte-identical on the 129.7 MB
+  GolfDr file, 16 chunks, 0.5 s over loopback.
+- **Cluster file browser.** A first tab lists videos already on Delta under `data/`,
+  `/work/nvme/bgte/tislam6` and `/work/hdd/bgte/tislam6` (`--roots`, path-escape checked),
+  so a file on the cluster needs no transfer at all.
+
+Also: `protocol_version = "HTTP/1.1"` for correct framing to `fetch()`, a 900 s handler
+timeout so a slow tunnel is not mistaken for a dead client, and `/api/run` now accepts JSON.

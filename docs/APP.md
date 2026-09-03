@@ -44,6 +44,18 @@ python src/app/cli.py --video folder/videos/ --out results/app_run --device 0
 
 Writes `<stem>_counted.webm`, `<stem>_tracks.csv` and a `summary.csv` across all inputs.
 
+## Two ways to give it a video
+
+**Choose on the cluster** (default tab) — browse `data/`, `/work/nvme/...` and
+`/work/hdd/...` on Delta and pick a file. Nothing is transferred, so it starts instantly
+and cannot time out. Use this whenever the video is already on the cluster.
+
+**Upload from this computer** — for a video that only exists on your own machine. The
+browser sends it in 8 MB chunks with three retries each, and shows real progress. A single
+large POST through an SSH tunnel and an editor's port forward is what fails in practice
+(a 120 MB file reliably produced `TypeError: Failed to fetch`); the same bytes in 8 MB
+pieces go through. Verified byte-identical on a 129.7 MB file.
+
 ## What the interface exposes
 
 | Control | Default | Effect |
