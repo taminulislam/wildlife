@@ -8,16 +8,23 @@ YOLO11m @ 640 px → BoT-SORT with global motion compensation → orphan recover
 confirmation rule (n ≥ 20 frames, span ≥ 0 s, top-5 mean confidence ≥ 0.65). Numbers it
 reports are the paper's numbers.
 
-## Web interface
+## Web interface — one command, all on Delta
 
 ```bash
-bash scripts/run_app.sh              # gets a GPU node, starts the server, prints the URL
+cd /work/nvme/bgte/tislam6/wildlife_project
+bash scripts/run_app.sh
 ```
 
-The server prints an `ssh -L …` line. Run that on your laptop, then open
-<http://localhost:8080>. Drag a video in, press **Run pipeline**.
+It submits a GPU job, waits for the node, waits for the server to answer, then holds an SSH
+forward so `http://localhost:8080` **on the login node** reaches the compute node. Open that
+address. VS Code and Cursor Remote-SSH forward it to the browser on your own machine
+automatically; from a plain terminal, reconnect with
+`ssh -L 8080:localhost:8080 <user>@login.delta.ncsa.illinois.edu`.
 
-Running it by hand instead:
+Leave the terminal open. Ctrl+C stops the app and frees the GPU.
+`bash scripts/run_app.sh 8095 04:00:00` picks a different port and walltime.
+
+Running the server by hand instead, if you want the node interactively:
 
 ```bash
 srun --account=bgte-delta-gpu --partition=gpuA100x4-interactive \

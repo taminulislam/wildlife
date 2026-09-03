@@ -109,3 +109,6 @@ MDPI_template_ACS*.zip
 *.fls
 overleaf_*/main.out
 overleaf_*/main.toc
+
+# TRACT app server logs
+.tract_app.*.log
