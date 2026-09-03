@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # One command to open the TRACT interface, run entirely on Delta.
 #
-#   bash scripts/run_app.sh                  # port 8080, 2 h
-#   bash scripts/run_app.sh 8095 04:00:00
+#   bash scripts/run_app.sh                  # port 8080, 1 h (interactive partition)
+#   bash scripts/run_app.sh 8095 04:00:00    # longer than 1 h switches to the batch queue
 #
 # It submits a GPU job, waits for the node, then holds a local forward so that
 # http://localhost:<port> ON THE LOGIN NODE reaches the server on the compute node.
@@ -13,7 +13,7 @@
 # Ctrl+C stops the forward and cancels the job.
 set -uo pipefail
 PORT="${1:-8080}"
-TIME="${2:-02:00:00}"
+TIME="${2:-01:00:00}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PY=/work/nvme/bgte/tislam6/envs/wildlife/bin/python
 LOG="$ROOT/.tract_app.$PORT.log"
@@ -22,7 +22,17 @@ ACCT=bgte-delta-gpu
 command -v sbatch >/dev/null || { echo "sbatch not found; are you on a Delta login node?"; exit 1; }
 [ -x "$PY" ] || { echo "python not found at $PY"; exit 1; }
 
-JOB=$(sbatch --parsable --account="$ACCT" --partition=gpuA100x4-interactive \
+# gpuA100x4-interactive is capped at 1 h. Anything longer has to go to the batch
+# partition, which allows 2 days but may wait in the queue.
+secs() { local h m s; IFS=: read -r h m s <<< "$1"; echo $(( 10#${h:-0}*3600 + 10#${m:-0}*60 + 10#${s:-0} )); }
+if [ "$(secs "$TIME")" -gt 3600 ]; then
+  PART=gpuA100x4
+  echo "note: ${TIME} exceeds the 1 h interactive limit, using partition ${PART} (may queue)"
+else
+  PART=gpuA100x4-interactive
+fi
+
+JOB=$(sbatch --parsable --account="$ACCT" --partition="$PART" \
       --nodes=1 --ntasks=1 --cpus-per-task=8 --gpus-per-node=1 --mem=48g \
       --time="$TIME" --job-name=tract-app --output="$LOG" \
       --wrap "$PY -u $ROOT/src/app/server.py --port $PORT --device 0") || exit 1

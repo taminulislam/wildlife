@@ -22,7 +22,11 @@ automatically; from a plain terminal, reconnect with
 `ssh -L 8080:localhost:8080 <user>@login.delta.ncsa.illinois.edu`.
 
 Leave the terminal open. Ctrl+C stops the app and frees the GPU.
-`bash scripts/run_app.sh 8095 04:00:00` picks a different port and walltime.
+
+`bash scripts/run_app.sh 8095 04:00:00` picks a different port and walltime. The default
+hour uses `gpuA100x4-interactive`, which starts almost immediately but is capped at 1 h;
+anything longer is sent to the `gpuA100x4` batch partition instead, which allows two days
+but may sit in the queue.
 
 Running the server by hand instead, if you want the node interactively:
 
