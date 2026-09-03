@@ -1508,3 +1508,17 @@ Two fixes, both in `src/app/server.py`:
 
 Also: `protocol_version = "HTTP/1.1"` for correct framing to `fetch()`, a 900 s handler
 timeout so a slow tunnel is not mistaken for a dead client, and `/api/run` now accepts JSON.
+
+### 8.2 UI dead-button bug (2026-09-03)
+"Choose on the cluster" did nothing, and so did every other control. Cause: `PAGE` in
+`server.py` is a Python triple-quoted string, so **Python consumed the `\n` escape inside a
+JavaScript string literal** and emitted a real newline there. That is a JS syntax error,
+which kills the entire `<script>` block — every handler on the page, not just the one near
+the fault. Nothing appears in the server log, because the server is working perfectly.
+
+Fix: `PAGE = r"""…"""`. `\n` is the only escape the block contains, and JS must receive it
+verbatim. Added `scripts/check_ui.sh`, which extracts the `<script>` body and runs
+`node --check` on it; run it after touching the page.
+
+Verified after the fix: listing at the root and in `visit1`, run-by-path returns a job id,
+and `/etc/passwd` is refused as outside the allowed roots.

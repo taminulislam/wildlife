@@ -45,7 +45,7 @@ VIDEO_EXT = (".mp4", ".avi", ".mov", ".mkv", ".m4v")
 # these is refused, so the browser cannot be used to read arbitrary files off the cluster.
 BROWSE_ROOTS: list[str] = []
 
-PAGE = """<!doctype html><html><head><meta charset="utf-8">
+PAGE = r"""<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TRACT — thermal deer counting</title><style>
 :root{--bg:#12151a;--panel:#1a1f27;--line:#2a323d;--ink:#e8ecf1;--dim:#9aa7b4;
