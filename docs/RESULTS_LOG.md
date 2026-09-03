@@ -1471,3 +1471,24 @@ findable in the contents.
 
 Verified clean: all 22 floats cited, no dangling refs, no missing/uncited bib keys, math and
 environments balanced, every tabular row matches its column spec.
+
+## 8. TRACT application (2026-09-03)
+
+`src/app/` — raw video in, annotated video plus count out, running the published pipeline
+(CLAHE → YOLO11m@640 → BoT-SORT with GMC → orphan recovery → frozen rule n≥20, span≥0,
+top5≥0.65).
+
+- `engine.py` two-pass core: pass 1 tracks, pass 2 draws, so the on-screen counter rises at
+  the frame each track first satisfies the rule rather than jumping at the end.
+- `server.py` web UI on Python's `http.server`. No Gradio/Streamlit/Flask — none installed,
+  and the project is near its inode quota. Hand-written streaming multipart parser instead
+  of `cgi`, which is removed in Python 3.13; verified byte-identical on a 2.4 MB upload.
+- `cli.py` same engine for batch/Slurm. `scripts/run_app.sh` grabs a GPU and prints the tunnel.
+
+**Codec finding:** this OpenCV build has *no* H.264 encoder (avc1/H264/X264/h264 all fail to
+open). mp4v opens but will not play in Chrome or Safari, so it looks like a broken result in
+a browser. VP80/vp09 WebM work; `engine.CODECS` negotiates in order VP80 → vp09 → avc1 → mp4v.
+
+**Verified on GPU** (gpuA100x4-interactive, 400-frame NShelbyRd clip, frames 8400–8800):
+14 counted from 27 candidate tracks in 93 s, WebM output plays back, overlay renders
+correctly. A 150-frame clip with no deer correctly returned 0.
