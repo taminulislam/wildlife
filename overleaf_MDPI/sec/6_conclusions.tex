@@ -1,19 +1,19 @@
 \section{Conclusions}
 \label{sec:conclusion}
 
-TRACT counts white-tailed deer from thermal road transects, and decomposing its error shows
-that the accuracy a practitioner would try to buy with a better detector is being lost
-somewhere else: on held-out video the reported pipeline reaches $89.2\pm8.5\%$ of animals, gives
-$79.5\pm9.9\%$ a distinct track and counts $66.3\pm10.7\%$, while four independent improvements
-to the first two stages each made the third worse: the richest pool reaches $98.8\pm5.3\%$ and
-counts only $62.7\pm10.7\%$. The cause is supervision
-rather than model class. The pools offer roughly two hundred positive tracks, and duplicate
-tracks on animals already counted sit \emph{between} the positives and the false candidates
-in every feature we measured, so learned confirmers of three capacities lose to a
-three-parameter rule whose confidence condition turns out to be performing duplicate
-suppression rather than the recall filtering it resembles. Moving that threshold to where
-signed bias crosses zero recovers 81 of the 83 held-out animals in aggregate
-(\cref{sec:operating}), which makes the under-count an operating-point choice rather than a
-limit of the system. We release the dataset, per-individual annotations, evaluation harness
-and decomposition tooling: the gap between what is reachable and what is counted is large,
-precisely localized and entirely open.
+TRACT counts white-tailed deer from thermal road transects, and decomposing its error moves
+the problem rather than solving it: what a practitioner would try to buy with a better
+detector is lost after detection, in the stage deciding whether a track is a new animal.
+Four independent improvements to detection and association each left the count no better or
+worse, and learned confirmers of three capacities lost to three hand-tuned parameters. The
+reason is supervision rather than model class: with roughly two hundred positive tracks, and
+duplicates of animals already counted sitting \emph{between} the positives and the false
+candidates on every feature we measured, what separates a first sighting from a re-sighting
+is precisely what a confirmer cannot learn at this scale. Two boundaries follow for anyone
+adopting the result. The pipeline does not transfer unaltered, since a detector trained
+without a site scores it low enough that an absolute confidence threshold can reject every
+track (\cref{sec:loso}). And the under-count is an operating-point choice rather than a
+limit: at the threshold where signed bias crosses zero the same pipeline recovers 81 of the
+83 held-out animals in aggregate (\cref{sec:operating}). We release the dataset,
+per-individual annotations, evaluation harness and decomposition tooling; the gap between
+what is reachable and what is counted is large, precisely localized and entirely open.
