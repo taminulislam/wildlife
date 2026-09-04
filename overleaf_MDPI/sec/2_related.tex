@@ -202,36 +202,36 @@ not report the quantity.\label{tab:related}}
 \begin{adjustwidth}{-\extralength}{0cm}
 \centering\footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\fulllength}{Llllccccc}
+\begin{tabularx}{\fulllength}{Llllcccc}
 \toprule
-\textbf{Work} & \textbf{Modality} & \textbf{Platform} & \textbf{Taxa} & \textbf{Indiv.} &
+\textbf{Work} & \textbf{Modality} & \textbf{Platform} & \textbf{Taxa} &
 \textbf{Per-ind.\ ID} & \textbf{Video} & \textbf{Count?} & \textbf{Split} \\
 \midrule
-Burke 2019~\cite{burke2019optimizing} & Thermal & UAV & Rabbit & n/r & No & No & No & n/r \\
-Karp 2020~\cite{karp2020detecting} & Thermal & Handheld & Hare & n/r & No & No & No & n/r \\
-Ul Haq 2021~\cite{ulhaq2021automated} & Thermal & Aircraft & Multiple & n/r & No & Yes & No & n/r \\
-McMahon 2021~\cite{mcmahon2021comparing} & Thermal & UAV & W.\ deer & n/r & No & No & Density & n/r \\
-Corcoran 2019~\cite{corcoran2019automated} & Thermal & UAV & Koala & n/r & No & No & No & n/r \\
-Mowen 2022~\cite{mowen2022improving} & Thermal & Vehicle & Multiple & n/r & No & Yes & No & n/r \\
-Brown 2022~\cite{brown2022automated} & RGB & UAV & Livestock & n/r & No & No & No & Yes \\
-Norouzzadeh 2018~\cite{norouzzadeh2018automatically} & RGB & Camera trap & 48 spp. & n/r & No & No & No & Site \\
-Beery 2018~\cite{beery2018recognition} & RGB & Camera trap & Multiple & n/r & No & No & No & Location \\
-Kellenberger 2018~\cite{kellenberger2018detecting} & RGB & Aircraft & Multiple & n/r & No & No & No & Region \\
-Liu 2023~\cite{liu2023lote} & RGB & Camera trap & Endangered & n/r & No & Yes & No & Domain \\
-Adam 2025~\cite{adam2025wildlifereid10k} & RGB & Mixed & 33 spp. & 10,000 & Yes & No & No & Similarity \\
-Tarling 2022~\cite{tarling2022deep} & Sonar & Fixed & Fish & n/r & No & Yes & Density & n/r \\
-Dolokov 2023~\cite{dolokov2023upper} & RGB & Overhead & Mice & 4 & Yes & Yes & No & n/r \\
+Burke 2019~\cite{burke2019optimizing} & Thermal & UAV & Rabbit & No & No & No & n/r \\
+Karp 2020~\cite{karp2020detecting} & Thermal & Handheld & Hare & No & No & No & n/r \\
+Ul Haq 2021~\cite{ulhaq2021automated} & Thermal & Aircraft & Multiple & No & Yes & No & n/r \\
+McMahon 2021~\cite{mcmahon2021comparing} & Thermal & UAV & W.\ deer & No & No & Density & n/r \\
+Corcoran 2019~\cite{corcoran2019automated} & Thermal & UAV & Koala & No & No & No & n/r \\
+Mowen 2022~\cite{mowen2022improving} & Thermal & Vehicle & Multiple & No & Yes & No & n/r \\
+Brown 2022~\cite{brown2022automated} & RGB & UAV & Livestock & No & No & No & Yes \\
+Norouzzadeh 2018~\cite{norouzzadeh2018automatically} & RGB & Camera trap & 48 spp. & No & No & No & Site \\
+Beery 2018~\cite{beery2018recognition} & RGB & Camera trap & Multiple & No & No & No & Location \\
+Kellenberger 2018~\cite{kellenberger2018detecting} & RGB & Aircraft & Multiple & No & No & No & Region \\
+Liu 2023~\cite{liu2023lote} & RGB & Camera trap & Endangered & No & Yes & No & Domain \\
+Adam 2025~\cite{adam2025wildlifereid10k} & RGB & Mixed & 33 spp. & Yes & No & No & Similarity \\
+Tarling 2022~\cite{tarling2022deep} & Sonar & Fixed & Fish & No & Yes & Density & n/r \\
+Dolokov 2023~\cite{dolokov2023upper} & RGB & Overhead & Mice & Yes & Yes & No & n/r \\
 \midrule
-\textbf{This work} & \textbf{Thermal} & \textbf{Vehicle} & \textbf{W.\ deer} & \textbf{236} &
+\textbf{This work} & \textbf{Thermal} & \textbf{Vehicle} & \textbf{W.\ deer} &
 \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & \textbf{Video} \\
 \bottomrule
 \end{tabularx}
 \end{adjustwidth}
 \end{table}
 
-\Cref{tab:related} makes the gap specific rather than asserted. Its ``Individuals'' column
-gives the number of distinct annotated animals and ``per-individual ID'' asks whether each is
-annotated as its own track rather than as anonymous per-frame boxes; the last two columns are
+\Cref{tab:related} makes the gap specific rather than asserted. Its ``per-individual ID''
+column asks whether each animal is annotated as its own track rather than as anonymous
+per-frame boxes; the last two columns are
 the ones that isolate the gap, namely whether a count of distinct animals is reported end to
 end and whether training and evaluation are separated by video or site rather than by frame. Thermal wildlife datasets with
 per-individual track identity over continuous video are essentially absent: existing thermal
