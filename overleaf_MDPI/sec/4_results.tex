@@ -598,16 +598,21 @@ track attains is 0.862 on the SHB fold, 0.782 on TON, 0.752 on SHW and 0.585 on 
 $c\ge0.65$ is an \emph{absolute} threshold on a detector score, and a detector trained without
 a site scores that site systematically lower: on the MAS fold no track anywhere reaches 0.585,
 so a threshold at 0.65 accepts nothing and the pipeline returns zero on 15 animals it detected
-12 of. This is not a new failure mode but the one \cref{sec:sensitivity} already identified,
+12 of. We cannot attribute that shift to site as such. Each of the four sites was surveyed on
+a single night, so a fold removes a site together with that night's conditions: ambient
+temperature, humidity and wind all differ between nights, and they set how far an animal's
+heat signature stands above the background. A lower thermal contrast shrinks the region the
+detector responds to, changing both the box it draws and the confidence it assigns. The shift
+is therefore between deployment conditions, of which site is only one, and separating them
+would need the same site surveyed on several nights. This is not a new failure mode but the one \cref{sec:sensitivity} already identified,
 arriving through a different door: the confidence condition is doing duplicate suppression on
-a score scale that is itself site-dependent.
+a score scale that itself depends on deployment conditions.
 
 The obvious repair does not work, which is informative. Replacing the absolute threshold with a fold-relative one, accepting the same \emph{fraction} of long tracks that $c\ge0.65$ accepts on pool C, restores coverage to $80.9 \pm 5.1\%$ and destroys the count, at MAE 8.88 and a
 bias of $+6.06$ animals per video against $-2.91$ for the frozen rule. The cross-site folds
 generate more long tracks than the within-site pool, so a fixed acceptance fraction admits
 duplicates faster than it recovers animals. That is the inversion of \cref{sec:inversion}
-reappearing across sites, and it says that transferring this pipeline to a new site requires
-re-fitting the threshold on labelled data from that site, not a scale-free reformulation of
+reappearing across sites, and it says that transferring this pipeline to a new site or survey night requires re-fitting the threshold on labelled data from it, not a scale-free reformulation of
 it. Quantifying how much labelled data that takes is the most practically valuable open
 question this corpus leaves.
 
@@ -636,6 +641,19 @@ The three groups are separated by degree rather than by kind, which is the reaso
 annotated frames and candidate confidence 0.76; the rejected group sits at 28.0\,px, 47
 frames and 0.52; the undetected at 19.9\,px and 47 frames. The rejected animals lie between
 the other two on every measure, so no threshold on any one of them separates them cleanly.
+
+Turned around, the same data give the probability that an animal is found and counted as a
+function of its size, which is the form a survey needs. Taking each animal's median box side
+as a proxy for its range, the detector finds 78\% of the 235 detectable animals below 20\,px
+and essentially all of them above 30\,px, but counting falls off far faster: 81\% of animals
+at 30--40\,px are counted, 57\% at 20--30\,px, where the corpus median sits, and 22\% below
+20\,px. On the 83 held-out animals alone the 20--30\,px figure is lower still, at 36\%. The
+loss that range causes is therefore mostly a confirmation loss rather than a detection loss,
+the paper's central finding reappearing as a function of distance. Above 100\,px the counted
+rate falls back to 50\%, the training-distribution gap described next. Box size also carries
+body size, pose and thermal contrast, so this is a size-based detection function rather than
+a strict distance function, but it is the empirical input a distance-sampling estimate of
+abundance would need.
 
 That inspection produced an unexpected finding. Three of the missed animals are not small but
 very \emph{large}: 104, 149 and 157\,px against a corpus median of 27, and the 149\,px animal

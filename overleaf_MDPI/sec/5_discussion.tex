@@ -92,16 +92,17 @@ architectural choice we tested, 0.519 against 0.299 test mAP50, a larger effect 
 distribution repaid the attention normally reserved for the lower one: three of our misses are
 animals \emph{larger} than anything in the training split (\cref{fig:scale}), a failure mode a
 small-object-focused evaluation would not surface. And an absolute confidence threshold did not
-transfer between sites, since a detector trained without a site scored that site systematically
-lower and a threshold fitted elsewhere rejected every track on one fold (\cref{sec:loso}).
-Whether a small labelled sample from each new site is the right remedy is a question this
+transfer between sites, since a detector trained without a site scored that site systematically lower and a threshold
+fitted elsewhere rejected every track on one fold (\cref{sec:loso}), a shift this corpus cannot
+separate from the different nights on which the sites were surveyed.
+Whether a small labelled sample from each new site or survey night is the right remedy is a question this
 corpus can pose but not answer.
 
 \subsection{Limitations}
 \label{sec:limitations}
 
-Several limits bound these claims. The corpus is 236 animals from four sites in one region
-and one winter, one site contributes 56\% of them, per-site figures for the smallest site
+Several limits bound these claims. The corpus is 236 animals from four sites in one region and one winter, each site surveyed
+on a single night so that site and survey conditions are confounded, one site contributes 56\% of them, per-site figures for the smallest site
 (15 animals) are correspondingly noisy, and all results are single-species. Our headline
 counting metric is a per-video aggregate, and the stricter identity-matched figure is 10
 points lower. Four of the 13 held-out videos are the detector's validation split and so
@@ -115,5 +116,4 @@ operating pool; it establishes that the confidence condition is load-bearing her
 0.65 transfers to another sensor or another species. \Cref{sec:loso} now shows it does not
 even transfer to another \emph{site}: under leave-one-site-out training the highest
 \texttt{topk\_conf} any track attains on the smallest site is 0.585, so the published
-threshold accepts nothing there. Deployment at a new site requires re-fitting the threshold on
-labelled data from it, and how much data that takes is not something this corpus can answer.
+threshold accepts nothing there. Deployment at a new site, or on a night unlike the training nights, requires re-fitting the threshold on labelled data from it, and how much data that takes is not something this corpus can answer.

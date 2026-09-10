@@ -172,9 +172,12 @@ it, 17 animals are recovered.
 A survey system that cannot say how sure it is cannot be audited. We calibrate a per-track
 posterior for ``this track is on a real animal'' and report it with every counted animal:
 \textbf{92.1\% of counted animals carry confidence $\ge0.80$} (mean 0.965, area under the ROC curve 0.893), and
-793 low-confidence tracks are flagged for human review rather than auto-counted. We also
-propagate per-track probabilities into a Poisson-binomial standard deviation on each video's
-count, giving an uncertainty interval rather than a point estimate.
+793 low-confidence tracks are flagged for human review rather than auto-counted. We also propagate the per-track probabilities into a Poisson-binomial standard deviation on
+each video's count. That quantity is narrower than it looks. It expresses uncertainty about
+whether the tracks already accepted are real animals and says nothing about animals that
+were never detected or never accepted, so on held-out video its nominal 95\% band contains the
+true count in only one of thirteen videos. It should not be read as an interval on abundance,
+which would need a model of the probability that an animal is detected and counted at all.
 
 The calibrator is \textbf{isotonic regression fitted on the validation videos only}, mapping
 the confirmer's raw score to a probability; no held-out video contributes to the fit. Isotonic

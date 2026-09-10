@@ -1522,3 +1522,49 @@ verbatim. Added `scripts/check_ui.sh`, which extracts the `<script>` body and ru
 
 Verified after the fix: listing at the root and in `visit1`, run-by-path returns a job id,
 and `/etc/passwd` is refused as outside the allowed roots.
+
+## 9. Co-author review (G. Bastille-Rousseau, 2026-09-10)
+
+### 9.1 Determinism (his Q4) — deterministic
+`/work/hdd/.../counts/determinism/rep{1,2,3}`: three independent reruns of the same four
+videos with the same rule. `summary.csv`, `counts.csv` and `tracks.csv` are **byte-identical**
+across all three (MD5), i.e. the same 6,085 per-frame detections with identical coordinates and
+scores, not merely equal counts. Caveat: same GPU model and library versions throughout; a
+different GPU or cuDNN build could in principle move a borderline score across a threshold.
+
+### 9.2 Site is confounded with survey night (his Q2)
+Every site was surveyed on exactly one night: SHB 12.11.2025, TON 12.03.25, SHW 01.18.2026,
+MAS 12.22.25. A LOSO fold therefore removes a site *and* that night's temperature, humidity and
+thermal contrast together. The confidence drop attributed to "site" in §4.9 cannot be separated
+from survey conditions with this design. Manuscript updated in §4.9, §5 (implications,
+limitations) and the conclusions; separating the two needs one site surveyed on several nights.
+
+### 9.3 P(detected | size), P(counted | size) (his Q3) — `src/eval/size_detection_curve.py`
+Per animal: median sqrt(box area) over visible frames; detected = any candidate touches it;
+counted = an ACCEPTED candidate touches it. Totals reproduce the paper (held-out 74/83 detected,
+47/83 counted = the §4.3 identity-matched figure; all-corpus 222/235 detected).
+
+| size (px) | n (all) | P(detected) | P(counted) |
+|---|---|---|---|
+| <20 | 37 | 0.78 | 0.22 |
+| 20–30 | 91 | 0.96 | 0.57 |
+| 30–40 | 52 | 1.00 | 0.81 |
+| 40–60 | 39 | 1.00 | 0.79 |
+| 60–100 | 10 | 1.00 | 1.00 |
+| ≥100 | 6 | 0.83 | 0.50 |
+
+Held-out only: <20 px 0.62/0.31, 20–30 0.88/0.36, 30–40 1.00/0.82, 40–60 1.00/0.74.
+**Counting falls off far more steeply with size than detection does** — at the corpus median
+(20–30 px) detection is 96% and counting 57%. The ≥100 px dip is the training-distribution hole
+(no training box above 96 px). Size is a proxy for range but also carries body size (fawn vs
+adult), pose and thermal contrast, so this is a size-detection function, not strictly distance.
+**Not added to the manuscript** — a next-step input for a distance-sampling detection function.
+
+### 9.4 The per-video count uncertainty does not cover the truth (his Q1)
+`results/temporal/calibrated_orphan/per_video_counts.csv` carries a Poisson-binomial `count_sd`.
+On the 13 held-out videos its nominal 95% band contains the true count in **1 of 13**; four
+videos with animals present have SD = 0; pooled, truth 83 against 32.9 ± 5.5. It measures
+uncertainty over whether *accepted* tracks are real and ignores animals never detected or never
+accepted. §3.5 had described it as "an uncertainty interval rather than a point estimate" —
+corrected to say what it covers and that it is not an interval on abundance. A real count
+interval needs a detection-probability model, which 9.3 is the first ingredient of.

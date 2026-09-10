@@ -10,9 +10,7 @@ reason is supervision rather than model class: with roughly two hundred positive
 duplicates of animals already counted sitting \emph{between} the positives and the false
 candidates on every feature we measured, what separates a first sighting from a re-sighting
 is precisely what a confirmer cannot learn at this scale. Two boundaries follow for anyone
-adopting the result. The pipeline does not transfer unaltered, since a detector trained
-without a site scores it low enough that an absolute confidence threshold can reject every
-track (\cref{sec:loso}). And the under-count is an operating-point choice rather than a
+adopting the result. The pipeline does not transfer unaltered, since a detector trained without one site and its survey night scores it low enough that an absolute confidence threshold can reject every track (\cref{sec:loso}). And the under-count is an operating-point choice rather than a
 limit: at the threshold where signed bias crosses zero the same pipeline recovers 81 of the
 83 held-out animals in aggregate (\cref{sec:operating}). We release the dataset,
 per-individual annotations, evaluation harness and decomposition tooling; the gap between
