@@ -3,7 +3,8 @@
 TRACT engine: one raw video in, one annotated video plus a count out.
 
 This is the published pipeline, not a demo approximation: CLAHE contrast normalisation,
-YOLO11m at 640 px, BoT-SORT with global motion compensation, orphan recovery, and the
+YOLO11m at 640 px, BoT-SORT (recall-first thresholds) with global motion compensation,
+orphan recovery, and the
 frozen three-parameter confirmation rule (n >= 20 frames, span >= 0 s, top-5 mean
 confidence >= 0.65). Changing those defaults changes the numbers away from the paper's.
 
@@ -29,7 +30,11 @@ sys.path.insert(0, os.path.join(_ROOT, "common"))
 from thermal import enhance_contrast                                   # noqa: E402
 
 DEFAULT_WEIGHTS = "/work/hdd/bgte/tislam6/wildlife_outputs/runs/yolo11m_640_v3pooled/weights/best.pt"
-DEFAULT_TRACKER = os.path.join(_ROOT, "track", "botsort_deer.yaml")
+# The paper's pool-C runs (scripts/dtai_count_orphan.sbatch) used the recall-first tracker
+# thresholds (track_high 0.15, new_track 0.15), not botsort_deer.yaml (0.25 / 0.30). With
+# the stricter file a faint animal never starts a track: on OikosRd_TON the published
+# pipeline counts 1 of 2 and this engine counted 0 until the file was matched.
+DEFAULT_TRACKER = os.path.join(_ROOT, "track", "botsort_deer_recall.yaml")
 
 # Distinct, high-contrast track colours (BGR). Deliberately not a gradient: adjacent IDs
 # must be told apart at a glance on a grey thermal frame.
@@ -66,7 +71,8 @@ class Track:
         return len(self.obs)
 
     def span_s(self, fps: float) -> float:
-        return (self.obs[-1][0] - self.obs[0][0]) / max(fps, 1e-6)
+        # inclusive frame span, the definition src/track/count_deer.py records
+        return (self.obs[-1][0] - self.obs[0][0] + 1) / max(fps, 1e-6)
 
     def topk_conf(self, k: int) -> float:
         c = sorted((o[1] for o in self.obs), reverse=True)[:k]
@@ -134,7 +140,8 @@ def _link_orphans(orphans: list, cfg: Config, start_id: int) -> dict[int, Track]
             if p[0] in claimed or p[0] - group[-1][0] > cfg.orphan_gap:
                 continue
             scale = max(group[-1][4], group[-1][5], 1.0)
-            if abs(p[2] - group[-1][2]) < 3 * scale and abs(p[3] - group[-1][3]) < 3 * scale:
+            # 2.5 x box scale, the radius src/track/count_deer.py links with
+            if abs(p[2] - group[-1][2]) < 2.5 * scale and abs(p[3] - group[-1][3]) < 2.5 * scale:
                 used[j] = True
                 group.append(p)
                 claimed.add(p[0])

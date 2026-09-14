@@ -54,17 +54,16 @@
 %------------------------------------------------------------------
 \Title{Automated Counting of White-Tailed Deer in Vehicle-Mounted Thermal Video: Detector Benchmarking and a Staged Error Decomposition}
 
-% ORCIDs: fill each in and add the matching \orcidA{}..\orcidE{} after the author's
-% name in \Author below. Left out deliberately rather than filled with the template's
-% dummy 0000-0000-0000-000X, which renders a live link to a nonexistent record.
-%\newcommand{\orcidauthorA}{0000-0000-0000-0000} % Islam
-%\newcommand{\orcidauthorB}{0000-0000-0000-0000} % Sarker
+% ORCIDs. Morelock's is not yet known: when it is, uncomment C and add \orcidC{}
+% after his name. Never use the template's dummy ID, which links to a nonexistent record.
+\newcommand{\orcidauthorA}{0000-0002-7803-4564} % Islam
+\newcommand{\orcidauthorB}{0000-0003-2482-8059} % Sarker
 %\newcommand{\orcidauthorC}{0000-0000-0000-0000} % Morelock
-%\newcommand{\orcidauthorD}{0000-0000-0000-0000} % Bastille-Rousseau
-%\newcommand{\orcidauthorE}{0000-0000-0000-0000} % Ahmed
+\newcommand{\orcidauthorD}{0000-0001-6799-639X} % Bastille-Rousseau
+\newcommand{\orcidauthorE}{0000-0002-3707-4316} % Ahmed
 
-\Author{Taminul Islam $^{1,}$*, Toqi Tahamid Sarker $^{1}$, Seth J. Morelock $^{2}$,
-Guillaume Bastille-Rousseau $^{2}$ and Khaled R. Ahmed $^{1}$}
+\Author{Taminul Islam $^{1,}$*\orcidA{}, Toqi Tahamid Sarker $^{1}$\orcidB{}, Seth J. Morelock $^{2}$,
+Guillaume Bastille-Rousseau $^{2}$\orcidD{} and Khaled R. Ahmed $^{1}$\orcidE{}}
 
 \AuthorNames{Taminul Islam, Toqi Tahamid Sarker, Seth J. Morelock, Guillaume
 Bastille-Rousseau and Khaled R. Ahmed}
@@ -80,22 +79,21 @@ IL 62901, USA; seth.morelock@siu.edu (S.J.M.); gbr@siu.edu (G.B.-R.)}
 %------------------------------------------------------------------
 % Abstract and keywords
 %------------------------------------------------------------------
-\abstract{(1) Background: wildlife surveys ask how many animals are present, but the
-pipelines built to answer that question are optimized as detectors; we test whether detection
-accuracy predicts counting accuracy on thermal road-transect video, and localize where the two
-diverge. (2) Methods: we introduce a corpus of 32 fully annotated FLIR thermal road transects
-containing 236 individually tracked white-tailed deer, benchmark twelve detectors on it, and
-build TRACT, a counting pipeline that decomposes end-to-end error into its detection,
-association and confirmation stages. The confirmation rule is frozen before evaluation on
-videos the detector never saw. (3) Results: scored per animal rather than per box, detection is
-close to solved. The reported pipeline finds 89.2\% of held-out animals, gives 79.5\% a
-distinct track and counts 66.3\%; the richest candidate pool we built reaches 98.8\% and counts
-fewer still, at 62.7\%. Four interventions that each demonstrably improve candidate generation
-make the final count worse, and learned confirmation heads all lose to a three-parameter
-hand-tuned rule. (4) Conclusions: detection is not the bottleneck in thermal wildlife counting.
-Confirmation is, and at this corpus size it is limited by supervision rather than model
-capacity: the extra candidates a better detector supplies are re-sightings of animals already
-counted, which no confirmer we trained separates from first sightings.}
+\abstract{(1) Background: wildlife surveys often aim to estimate the abundance of animals in an
+area, yet automated pipelines are usually judged as object detectors, by how well they locate
+animals in individual frames rather than by how many distinct animals they count. We test
+whether detection accuracy predicts counting accuracy on thermal road-transect video.
+(2) Methods: we introduce 32 fully annotated FLIR thermal road transects containing 236
+individually tracked white-tailed deer, benchmark twelve detectors, and build TRACT, a
+counting pipeline whose error we decompose into detection, association and confirmation. The
+confirmation rule is fitted on training videos and frozen before evaluation on videos the
+detector never saw. (3) Results: scored per animal rather than per box, detection is close
+to solved. The reported pipeline finds 89.2\% of held-out animals, gives 79.5\% a distinct
+track and counts 66.3\%; the richest candidate pool we built reaches 98.8\% and counts fewer
+still, at 62.7\%. Every configuration that enriches the candidate pool makes the final count worse, and learned confirmation heads all lose to a three-parameter rule.
+(4) Conclusions: in this survey, detection is not the bottleneck; confirmation is. At this
+corpus size it is limited by supervision rather than model capacity, because the extra
+candidates a better detector supplies are re-sightings of animals already counted.}
 
 \keyword{thermal imaging; wildlife survey; animal counting; object detection; multi-object
 tracking; white-tailed deer; benchmark dataset; error decomposition}
@@ -134,24 +132,22 @@ T.T.S., S.J.M., G.B.-R. and K.R.A.; visualization, T.I.; supervision, G.B.-R. an
 project administration, G.B.-R. and K.R.A.; funding acquisition, G.B.-R. and K.R.A. All
 authors have read and agreed to the published version of the manuscript.}
 
-\funding{TODO before submission, state the funding source and grant number, or ``This
-research received no external funding''.}
+\funding{This research was funded by the Federal Aid Wildlife Restoration Fund, grant number
+W87R.}
 
-\institutionalreview{The study is observational and non-invasive: all footage was recorded
-from a public roadway with a vehicle-mounted thermal camera, and no animal was approached,
-handled, captured or otherwise disturbed. TODO before submission, confirm with the
-institutional IACUC whether a waiver statement or an approval code is required.}
+\institutionalreview{Ethical review and approval were not required for this study because it
+was purely observational: all footage was recorded from public roads with a vehicle-mounted
+thermal camera, and no animal was approached, handled, captured or otherwise disturbed.}
+
 
 \informedconsent{Not applicable.}
 
-\dataavailability{TODO before submission, replace with the archive DOI. The corpus, the
-per-individual track annotations, the evaluation harness and the decomposition tooling will
-be released on acceptance; a Zenodo deposit is being prepared, and this statement must cite
-its DOI before the paper is submitted.}
+\dataavailability{The corpus, the per-individual track annotations, the evaluation harness
+and the decomposition tooling will be deposited in Zenodo upon acceptance, and the DOI will be
+provided at that point.}
 
-\acknowledgments{TODO before submission, acknowledge computing allocation and field
-support. This work used the Delta and DeltaAI systems at the National Center for
-Supercomputing Applications.}
+\acknowledgments{We thank the Illinois Department of Natural Resources. This work used the
+Delta and DeltaAI systems at the National Center for Supercomputing Applications.}
 
 \conflictsofinterest{The authors declare no conflicts of interest.}
 

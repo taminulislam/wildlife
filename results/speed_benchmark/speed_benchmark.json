@@ -1,0 +1,238 @@
+{
+ "video": "OikosRd_TON_12.03.25_LS.mp4",
+ "frames_timed": 2000,
+ "gpu": "NVIDIA A100-SXM4-40GB",
+ "torch": "2.5.1+cu121",
+ "cuda": "12.1",
+ "cpu": "x86_64",
+ "n_cpu": 64,
+ "opencv": "4.13.0",
+ "ultralytics": "8.4.80",
+ "source_fps": 59.981384415712455,
+ "source_frames": 15392,
+ "width": 640,
+ "height": 512,
+ "decode": {
+  "n": 2000,
+  "ms_per_frame": 0.667,
+  "fps": 1498.7
+ },
+ "clahe": {
+  "n": 2000,
+  "ms_per_frame": 1.961,
+  "fps": 509.9
+ },
+ "detector_b1": {
+  "n": 1950,
+  "mean_ms": 9.776,
+  "median_ms": 9.714,
+  "p95_ms": 10.099,
+  "fps": 102.3
+ },
+ "detector_tracker_b1": {
+  "n": 1950,
+  "mean_ms": 28.071,
+  "median_ms": 27.278,
+  "p95_ms": 34.499,
+  "fps": 35.6
+ },
+ "tracker_overhead_ms": 18.295,
+ "pipeline_b1_estimate": {
+  "ms_per_frame": 30.699,
+  "fps": 32.6,
+  "realtime_factor": 0.54
+ },
+ "pipeline_full_video": {
+  "frames": 15392,
+  "wall_s": 475.4,
+  "fps": 32.4,
+  "realtime_factor": 0.54,
+  "tracks": 205,
+  "confirmed": 0,
+  "rule_ms_total": 0.076
+ },
+ "roster": [
+  {
+   "model": "YOLOv8m@640",
+   "imgsz": 640,
+   "params_M": null,
+   "gflops": null,
+   "b1_fp32": {
+    "n": 500,
+    "mean_ms": 8.09,
+    "median_ms": 8.047,
+    "p95_ms": 8.439,
+    "fps": 123.6
+   },
+   "b32_fp32": {
+    "n": 35,
+    "mean_ms": 91.605,
+    "median_ms": 94.436,
+    "p95_ms": 95.232,
+    "fps": 349.3
+   }
+  },
+  {
+   "model": "YOLOv9m@640",
+   "imgsz": 640,
+   "params_M": null,
+   "gflops": null,
+   "b1_fp32": {
+    "n": 500,
+    "mean_ms": 12.033,
+    "median_ms": 11.986,
+    "p95_ms": 12.228,
+    "fps": 83.1
+   },
+   "b32_fp32": {
+    "n": 35,
+    "mean_ms": 107.543,
+    "median_ms": 107.431,
+    "p95_ms": 108.939,
+    "fps": 297.6
+   }
+  },
+  {
+   "model": "YOLOv10m@640",
+   "imgsz": 640,
+   "params_M": null,
+   "gflops": null,
+   "b1_fp32": {
+    "n": 500,
+    "mean_ms": 9.31,
+    "median_ms": 9.286,
+    "p95_ms": 9.426,
+    "fps": 107.4
+   },
+   "b32_fp32": {
+    "n": 35,
+    "mean_ms": 94.255,
+    "median_ms": 94.359,
+    "p95_ms": 94.827,
+    "fps": 339.5
+   }
+  },
+  {
+   "model": "YOLO11m@640",
+   "imgsz": 640,
+   "params_M": null,
+   "gflops": null,
+   "b1_fp32": {
+    "n": 500,
+    "mean_ms": 9.819,
+    "median_ms": 9.728,
+    "p95_ms": 9.979,
+    "fps": 101.8
+   },
+   "b32_fp32": {
+    "n": 35,
+    "mean_ms": 86.762,
+    "median_ms": 86.479,
+    "p95_ms": 87.672,
+    "fps": 368.8
+   },
+   "b1_fp16": {
+    "n": 500,
+    "mean_ms": 9.862,
+    "median_ms": 9.818,
+    "p95_ms": 10.045,
+    "fps": 101.4
+   },
+   "b32_fp16": {
+    "n": 35,
+    "mean_ms": 89.408,
+    "median_ms": 87.044,
+    "p95_ms": 96.403,
+    "fps": 357.9
+   }
+  },
+  {
+   "model": "YOLO12m@640",
+   "imgsz": 640,
+   "params_M": null,
+   "gflops": null,
+   "b1_fp32": {
+    "n": 500,
+    "mean_ms": 13.183,
+    "median_ms": 13.114,
+    "p95_ms": 13.426,
+    "fps": 75.9
+   },
+   "b32_fp32": {
+    "n": 35,
+    "mean_ms": 120.53,
+    "median_ms": 123.532,
+    "p95_ms": 124.058,
+    "fps": 265.5
+   }
+  },
+  {
+   "model": "RT-DETR-L@640",
+   "imgsz": 640,
+   "params_M": null,
+   "gflops": null,
+   "b1_fp32": {
+    "n": 500,
+    "mean_ms": 28.784,
+    "median_ms": 28.721,
+    "p95_ms": 28.926,
+    "fps": 34.7
+   },
+   "b32_fp32": {
+    "n": 35,
+    "mean_ms": 195.102,
+    "median_ms": 194.753,
+    "p95_ms": 196.895,
+    "fps": 164.0
+   }
+  },
+  {
+   "model": "YOLOv9m@1280",
+   "imgsz": 1280,
+   "params_M": null,
+   "gflops": null,
+   "b1_fp32": {
+    "n": 500,
+    "mean_ms": 14.678,
+    "median_ms": 14.599,
+    "p95_ms": 14.925,
+    "fps": 68.1
+   },
+   "b32_fp32": {
+    "n": 35,
+    "mean_ms": 432.42,
+    "median_ms": 432.018,
+    "p95_ms": 435.13,
+    "fps": 74.0
+   }
+  },
+  {
+   "model": "YOLOv10m@1280",
+   "imgsz": 1280,
+   "params_M": null,
+   "gflops": null,
+   "b1_fp32": {
+    "n": 500,
+    "mean_ms": 12.211,
+    "median_ms": 12.181,
+    "p95_ms": 12.331,
+    "fps": 81.9
+   },
+   "b32_fp32": {
+    "n": 35,
+    "mean_ms": 379.581,
+    "median_ms": 379.553,
+    "p95_ms": 380.287,
+    "fps": 84.3
+   }
+  }
+ ],
+ "detector_b1_cpu": {
+  "threads": 8,
+  "n": 230,
+  "mean_ms": 144.094,
+  "median_ms": 144.276,
+  "p95_ms": 146.191,
+  "fps": 6.9
+ }
+}

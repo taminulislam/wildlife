@@ -1,0 +1,179 @@
+%=================================================================
+% Neural Computing and Applications (Springer Nature) submission.
+% Automated counting of white-tailed deer in vehicle-mounted thermal video.
+%
+% Build: pdflatex main; bibtex main; pdflatex main; pdflatex main   (compiler: pdfLaTeX)
+%
+% NCA runs DOUBLE-BLIND review. \blindtrue below removes authors, affiliations and the
+% declarations from this file; they live in title_page.tex, which is uploaded separately.
+% Set \blindfalse to print the complete author version (e.g. for co-authors or a preprint).
+%
+% Springer asks for a single .tex at final submission: flatten the \input{}s then.
+% The MDPI (Journal of Imaging) version is frozen in mdpi_full_version/.
+%=================================================================
+\documentclass[pdflatex,sn-basic,Numbered]{sn-jnl}% Springer Basic style; Numbered gives the [n] citations NCA requires (the default is author-year)
+
+\newif\ifblind
+\blindtrue
+
+%------------------------------------------------------------------
+% Packages. sn-jnl loads geometry, fontenc, hyperref, natbib and wrapfig itself.
+%------------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array,tabularx}
+\usepackage{rotating}       % sidewaystable for tables wider than the text block
+\usepackage[title]{appendix}
+\usepackage{xspace}
+\usepackage{cleveref}       % after hyperref, which the class loads
+
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+
+\crefname{figure}{Fig.}{Figs.}
+\Crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
+\crefname{appendix}{Appendix}{Appendices}
+\Crefname{appendix}{Appendix}{Appendices}
+\crefname{equation}{Eq.}{Eqs.}
+\Crefname{equation}{Equation}{Equations}
+
+% The three quantities the paper is built around.
+\newcommand{\reachedq}{\textsc{reached}\xspace}
+\newcommand{\primaryq}{\textsc{primary}\xspace}
+\newcommand{\countedq}{\textsc{counted}\xspace}
+% ablation verdict marks: shape carries the meaning, colour is decoration only
+\newcommand{\yes}{\textcolor[rgb]{0.05,0.45,0.20}{\checkmark}}
+\newcommand{\no}{\textcolor[rgb]{0.70,0.10,0.10}{$\boldsymbol{\times}$}}
+\newcommand{\same}{\textcolor{gray}{--}}
+
+\raggedbottom
+
+\begin{document}
+
+\title[Counting White-Tailed Deer in Vehicle-Mounted Thermal Video]{Automated Counting of White-Tailed Deer in Vehicle-Mounted Thermal Video: Detector Benchmarking and a Staged Error Decomposition}
+
+\ifblind
+\author*[1]{\fnm{Anonymous} \sur{Authors}}
+\affil*[1]{\orgname{Author details withheld for double-blind review}}
+\else
+\author*[1]{\fnm{Taminul} \sur{Islam}}\email{taminul.islam@siu.edu}
+\author[1]{\fnm{Toqi Tahamid} \sur{Sarker}}\email{toqitahamid.sarker@siu.edu}
+\author[2]{\fnm{Seth J.} \sur{Morelock}}\email{seth.morelock@siu.edu}
+\author[2]{\fnm{Guillaume} \sur{Bastille-Rousseau}}\email{gbr@siu.edu}
+\author[1]{\fnm{Khaled R.} \sur{Ahmed}}\email{khaled.ahmed@siu.edu}
+\affil*[1]{\orgdiv{School of Computing}, \orgname{Southern Illinois University}, \orgaddress{\city{Carbondale}, \state{IL}, \postcode{62901}, \country{USA}}}
+\affil[2]{\orgdiv{Center for Wildlife Sustainability}, \orgname{Southern Illinois University}, \orgaddress{\city{Carbondale}, \state{IL}, \postcode{62901}, \country{USA}}}
+\fi
+
+\abstract{Wildlife surveys often aim to estimate the abundance of animals in an area, yet
+automated pipelines are usually judged as object detectors, by how well they locate animals
+in individual frames rather than by how many distinct animals they count. We test whether
+detection accuracy predicts counting accuracy on thermal road-transect video. We introduce 32
+fully annotated FLIR thermal road transects containing 236 individually tracked white-tailed
+deer, benchmark twelve detectors, and build TRACT, a counting pipeline whose error we
+decompose into detection, association and confirmation. The confirmation rule is fitted on
+training videos and frozen before evaluation on videos the detector never saw. Scored per
+animal rather than per box, detection is close to solved. The reported pipeline finds 89.2\%
+of held-out animals, gives 79.5\% a distinct track and counts 66.3\%; the richest candidate
+pool we built reaches 98.8\% and counts fewer still, at 62.7\%. Every configuration that
+enriches the candidate pool makes the final count worse, and learned confirmation heads all
+lose to a three-parameter rule. In this survey, detection is not the bottleneck; confirmation
+is. At this corpus size it is limited by supervision rather than model capacity, because the
+extra candidates a better detector supplies are re-sightings of animals already counted.}
+
+\keywords{Thermal imaging, Wildlife survey, Animal counting, Object detection, Multi-object tracking, White-tailed deer}
+
+\maketitle
+
+\input{sec/1_intro}
+\input{sec/2_related}
+\input{sec/3_methods}
+\input{sec/4_results}
+\input{sec/5_discussion}
+\input{sec/6_conclusions}
+
+%=================================================================
+\backmatter
+
+\ifblind
+\bmhead{Declarations}
+Funding, competing interests, ethics approval, data and code availability, author
+contributions and acknowledgements are given on the separate title page, as required for
+double-blind review.
+\else
+\bmhead{Acknowledgements}
+We thank the Illinois Department of Natural Resources. This work used the Delta and DeltaAI
+systems at the National Center for Supercomputing Applications.
+
+\section*{Declarations}
+
+\bmhead{Funding}
+This research was funded by the Federal Aid Wildlife Restoration Fund, grant number W87R.
+
+\bmhead{Competing interests}
+The authors declare no competing interests.
+
+\bmhead{Ethics approval}
+Ethical review and approval were not required for this study because it was purely
+observational: all footage was recorded from public roads with a vehicle-mounted thermal
+camera, and no animal was approached, handled, captured or otherwise disturbed.
+
+\bmhead{Consent to participate and for publication}
+Not applicable.
+
+\bmhead{Data availability}
+The corpus and the per-individual track annotations will be deposited in Zenodo upon
+acceptance, and the DOI will be provided at that point.
+
+\bmhead{Code availability}
+The evaluation harness and the decomposition tooling will be deposited in Zenodo together
+with the data upon acceptance.
+
+\bmhead{Author contributions}
+Conceptualization, T.I., G.B.-R. and K.R.A.; methodology, T.I. and K.R.A.; software, T.I. and
+T.T.S.; validation, T.I.; formal analysis, T.I.; investigation, T.I., S.J.M., G.B.-R. and
+K.R.A.; resources, S.J.M., G.B.-R. and K.R.A.; data curation, T.I. and S.J.M.; writing,
+original draft preparation, T.I.; writing, review and editing, T.I., T.T.S., S.J.M., G.B.-R.
+and K.R.A.; visualization, T.I.; supervision, G.B.-R. and K.R.A.; project administration,
+G.B.-R. and K.R.A.; funding acquisition, G.B.-R. and K.R.A. All authors have read and agreed
+to the published version of the manuscript.
+\fi
+
+\bmhead{Abbreviations}
+\noindent
+\begin{tabular}{@{}ll}
+AP & Average precision\\
+AUC & Area under the ROC curve\\
+CLAHE & Contrast-limited adaptive histogram equalization\\
+CVAT & Computer Vision Annotation Tool\\
+ECE & Expected calibration error\\
+FLIR & Forward-looking infrared\\
+GMC & Global motion compensation\\
+HOTA & Higher-order tracking accuracy\\
+IoU & Intersection over union\\
+LOSO & Leave-one-site-out\\
+MAE & Mean absolute error\\
+NMS & Non-maximum suppression\\
+RMSE & Root mean square error\\
+TRACT & Thermal Road-transect Animal Counting and Tracking\\
+UAV & Uncrewed aerial vehicle
+\end{tabular}
+
+%=================================================================
+\begin{appendices}
+\crefalias{section}{appendix}% so \cref{app:...} reads "Appendix A", not "Section A"
+\input{sec/7_appendix}
+\end{appendices}
+
+\bibliography{main}
+
+\end{document}

@@ -1565,6 +1565,180 @@ adult), pose and thermal contrast, so this is a size-detection function, not str
 On the 13 held-out videos its nominal 95% band contains the true count in **1 of 13**; four
 videos with animals present have SD = 0; pooled, truth 83 against 32.9 ± 5.5. It measures
 uncertainty over whether *accepted* tracks are real and ignores animals never detected or never
-accepted. §3.5 had described it as "an uncertainty interval rather than a point estimate" —
+accepted. §3.4 (Calibrated Per-Animal Confidence) had described it as "an uncertainty interval rather than a point estimate" —
 corrected to say what it covers and that it is not an interval on abundance. A real count
 interval needs a detection-probability model, which 9.3 is the first ingredient of.
+
+### 9.5 Determinism statement added to the paper (2026-09-10)
+§3.3 (Counting Pipeline) now states inference is deterministic: three runs on one A100 (job 21403665, gpua007,
+2026-08-24) over GolfDr, NShelbyRd(blue), NWolfCreek(orange) and Robinson — 55 of the 83
+held-out animals — gave byte-identical detections, tracks and counts. Those runs used an older
+acceptance rule; since the tracks are byte-identical and the rule is a deterministic filter,
+the published rule's counts are identical too.
+
+Cross-platform evidence is weaker and the paper says so: GH200 smoke test (job 2728181:
+aarch64, torch 2.12/CUDA 13.0, ultralytics 8.4.106) gave YOLOv10m keyframe mAP50 0.6696 vs
+A100's reported 0.670 — agreement to the three decimals the A100 figure carries. That was a
+different detector (YOLOv10m) and a detection metric, not counts. The GH200 LOSO runs used
+their own GH200-trained weights, so they are not a same-model rerun. Counts have never been
+compared across GPU types.
+
+## 10. Supervisor review round 2 (2026-09-10) — `Supervisor_review_comments.docx`, 19 comments
+
+### 10.1 Confirmation-rule grid (comments 12, 13, 16, 17) — `src/eval/rule_grid.py`
+Reproduces the published rule exactly on held-out (MAE 2.38, 58 predicted, 66.3%); top-5
+recomputed from per-frame confidences matches stored values to 0.0001.
+- **m=2, c=0.3** (his proposal): 477 tracks accepted for 83 animals, MAE 30.3, bias +30.3.
+  Never under-counts a video, ~6 tracks per animal. Does not remove the bottleneck.
+- Published (m=20, c=0.65) is the single fit-set minimum (1.53). Held-out, the c=0.65 column is
+  flat: MAE 2.31–2.38 for m = 2…20 — m barely matters once c is set; c carries the rule.
+- Length-only m≥40, c=0: fit 2.37 but held-out 3.85 — does not generalize. c is what transfers.
+- k×c (his "2 frames at 0.85 / 10–20 at 0.45"): top-2≥0.85 accepts nothing (0/83);
+  top-10≥0.45 MAE 3.00; top-20≥0.45 MAE 2.62.
+- Refit (m,c) per k on fit videos: c=0.65 selected for every k; held-out MAE 2.23 (k=3),
+  2.31 (k=2), 2.38 (k=5), 2.46 (k=1), 2.62 (k=10) — all inside the published ±1.29 CI.
+  k=20 lowest fit (1.42) but worst held-out (3.00): over-fitting.
+Figure: `src/viz/rule_grid_figure.py` → Appendix B `fig:rulegrid`, log-scale heatmaps.
+
+### 10.2 Table 6 error (comment 14)
+Text said the pipeline's 0.10 threshold gives "recall 20 points higher" — that is YOLO12m's
+gain; the pipeline runs YOLO11m, 0.503 → 0.576 (+7). Caption called them "the two strongest
+detectors of Table 4" although YOLO12m is 6th by F1 there; they are the top two by F0.5.
+
+### 10.3 Other manuscript changes
+Results removed from the introduction (numbers, the LOSO figure — which was also stale at
+90.7% vs the corrected 91.1% — and Figure 1, now in §4.4); abstract background clarified and
+conclusion scoped to "this survey"; "hand-tuned" (7×) → the values are grid-searched;
+Diefenbach et al. 2025 (J. Appl. Ecol. 62:986–994) cited from Crossref; ground-truth
+imperfect-detection caveat in §2.1 and Limitations; funding W87R and IDNR acknowledgement.
+
+## 11. Simulated review round 2 (2026-09-10) — triage and fixes
+
+Items verified before editing (the review read the 09-04 draft):
+- **Pools are nested, not independent.** Pool E bundles detector conf 0.10→0.02 with the tracker
+  thresholds (`botsort_deer_maxrecall.yaml`); the ReID tracker file says it matches Phase E exactly
+  plus `with_reid`, and F has ~5× E's candidates. So three nested interventions, not four
+  independent ones — the 2^-4 sign-test probability was invalid. Removed, and "independent"
+  dropped in abstract/intro/2/4.4/conclusions.
+- **DINO R50**: run for 36 epochs (native 12); validation mAP50 oscillated 0.15–0.24 to the end;
+  best checkpoint epoch 6; reported test AP50 0.365 is from `best_coco_bbox_mAP_50_epoch_6.pth`.
+  The Fig 5 paragraph described a DINO curve that Fig 5 does not show (mmdet models excluded) —
+  deleted; §4.1 now reconciles both accounts and calls it a failure to converge.
+- **The two 1.88s are genuine**: replaying calibrated_confirmer's 8-fold CV, the per-fold sweep
+  re-selected (20, 0, 0.65) in all 8 folds, so CV predictions equal the frozen rule on all 32
+  videos (MAE 1.875). The older `ttc_cv` run (30 videos, 2.23) is a different experiment.
+- **Dolokov**: Table 1 already says Count? = No, consistent with §2.3 — reviewer misread.
+Also: single-tracker limitation added; five self-annotating phrases trimmed; data availability
+TODO replaced with "deposited in Zenodo upon acceptance". IRB TODO still awaiting the IACUC fact.
+
+IRB statement finalized 2026-09-10: no IACUC review required (observational, public roads, no handling). No TODOs remain in the manuscript.
+
+### 11.1 Rule-grid figure moved into the main text (2026-09-10)
+`fig:rulegrid` moved from Appendix B into Section 4.6 (Appendix B removed), redrawn at 5.45 x 2.35 in to match the text column so it is placed at \linewidth with no scaling (cell labels print at 5 pt). Cited in 3.3 and 4.6. Response documents updated to say Section 4.6.
+
+## 12. Range-dependent censoring in the ground truth (2026-09-10)
+Reviewer (wildlife ecology) asked whether the annotation itself under-represents distant
+animals, as spotlight counts do. `src/eval/range_censoring.py` on the 32 CVAT exports,
+235 tracks with a visible box, range proxy = median sqrt(box area) (same as Fig. 10).
+Output: `results/counting_eval/range_censoring/`.
+
+- **Track duration vs range: no reliable decline.** Median frames by size quartile
+  (far -> near): 39 / 56 / 69 / 55; Kruskal-Wallis p=0.24; Spearman pooled +0.05
+  [-0.22,+0.26], within-video +0.23 [-0.08,+0.44] (95% video-cluster bootstrap). Post hoc,
+  the farthest quartile (<22.5 px) vs the rest: median ratio 0.69 [0.39,1.53], p=0.067.
+  Same with first-sighting size.
+- **Formation vs range: clear shortfall of small (distant) animals.** Counts per size bin
+  against n(s) ~ s^-3 (s ~ 1/range, uniform ground density in the camera wedge), anchored
+  on 30-60 px, where the law fits exactly (30-40/40-60 observed 1.39, predicted 1.40):
+  25-30 px 43 vs 53 expected; 20-25 px 46 vs 98; 15-20 px 29 vs 212. Under the most
+  conservative law (fixed-width strip, n ~ s^-2, which does NOT fit the anchor: predicts 1.00)
+  15-20 px is still 29 vs ~91. The GT is a census of animals resolvable at >~20 px.
+  Smallest annotated animal 10.7 px (median size); smallest box 9.8 px.
+- **Annotation property found on the way:** boxes keep one size through 78% of tracks
+  (within-track max/min median 1.00; median 4 keyframes ~15 frames apart; boxes moved, not
+  resized). So size is a between-animal range proxy only, and a closest-approach
+  (perpendicular-distance) histogram is not interpretable; that test was dropped.
+- Caveats: uniform density vs roads is unverifiable (road avoidance also shows as a deficit
+  of large boxes: 60-100 px 10 vs 19, >=100 px 6 vs 11); box size conflates body size
+  (fawns, ~0.75-0.8x adult length in Dec-Jan) and posture (bedded) with range, which blurs
+  the curve by about one bin but cannot produce a 3-7x shortfall.
+- **In the paper (2026-09-11):** added to Limitations (5.5), first point, no new table or
+  figure; framed as the detectability-with-range limit every visual survey has (cites
+  vercauteren2011managing), with the road-proximity/uniform-density assumption flagged via
+  diefenbach2025accounting and the body-size/posture caveat. Overleaf 4476133.
+- **Moved (2026-09-11, Overleaf 5aa0568):** the test now sits at the end of 5.3 (abundance
+  estimation), closing with "an abundance estimate needs both factors: the pipeline's size
+  curve (4.10) and a detection function for the survey". Limitations cut from 558 to 154 words,
+  one sentence on the ground truth pointing to 5.3; dropped details (96 px bound, 45 of 83,
+  0.585, MAS noise, one-parameter sensitivity) are all stated in Methods/Results already.
+  Related Work's pointer now goes to 5.3.
+
+## 13. Pipeline and detector speed (2026-09-14, job 22052064, one A100-SXM4-40GB, torch 2.5.1+cu121, ultralytics 8.4.80)
+`src/eval/speed_benchmark.py`, output `results/speed_benchmark/speed_benchmark.json`. Held-out
+OikosRd_TON (15,392 frames, 60 fps, 640x512), batch 1 as the app runs it, 50 warm-up frames
+discarded, cuda.synchronize around every call.
+- Decode 0.67 ms/frame (CPU); CLAHE 1.96 ms/frame (CPU); YOLO11m@640 detect 9.7 ms (102 fps);
+  detect + BoT-SORT 27.3 ms (36 fps): the tracker's sparse-optical-flow GMC on CPU costs 18 ms,
+  twice the detector. Confirmation rule 0.08 ms for the whole video.
+- **Whole video through engine.analyse(): 475 s for 15,392 frames = 32.4 fps = 0.54x real
+  time.** A 4.3-min transect takes 7.9 min. Not real time at 60 fps; would be at 30 fps.
+- Roster, batch-1 median ms / batch-32 fps (FP32, 640 unless noted): v8m 8.0/349, v10m 9.3/340,
+  11m 9.7/369, v9m 12.0/298, v10m@1280 12.2/84, 12m 13.1/266, v9m@1280 14.6/74,
+  RT-DETR-L 28.7/164. FP16 gives YOLO11m nothing at batch 1 (9.8 ms): launch-bound.
+- CPU only, 8 threads: YOLO11m 144 ms/frame = 6.9 fps.
+- mmdet five NOT timed: envs/mmdet no longer exists on disk (would need a rebuild).
+- Not in the paper. If added: one sentence in 3.3 (32 fps on an A100, tracker-bound).
+
+## 14. App engine did not match the paper's script; fixed and verified (2026-09-14)
+The whole-video timing run confirmed 0 of 2 deer on OikosRd where the paper counts 1.
+- Cause 1 (real): `src/app/engine.py` defaulted to `botsort_deer.yaml` (track_high 0.25,
+  new_track 0.30). Every pool-C job (`dtai_count_orphan.sbatch`, `delta_determinism.sbatch`)
+  used `botsort_deer_recall.yaml` (0.15 / 0.15). Orphan-link radius was 3x box scale vs the
+  script's 2.5x. Both fixed; span_s now inclusive (+1) like count_deer.py.
+- Verified (job 22059646, same A100, same env): engine and `count_deer.py` give the same 212
+  tracks on OikosRd, identical frame counts and top-5 confidences. Script: `src/eval/verify_engine.py`.
+- Every app demo before 2026-09-14 (app_test/out*, 3 Sep) ran the stricter tracker and so
+  undercounted relative to the paper.
+
+## 15. Counts differ across GPU platforms (2026-09-14)
+Same script, weights, arguments; GH200 + wildlife_gh_venv (paper's pool C, dtai) vs A100 +
+envs/wildlife (delta_determinism rep1, byte-identical across its 3 reps). Frozen rule applied.
+- GolfDr GT 12: A100 13, GH200 14. NShelbyRd(blue) GT 27: 21 vs 20. NWolfCreek(orange) GT 9:
+  5 vs 5. Robinson GT 7: 6 vs 7. OikosRd GT 2: 0 vs 1 (the GH200 confirmed track has 31
+  frames / topk 0.699; on A100 the same animal is 16 frames / 0.596).
+- Per-track records show the same animal tracked for 47 vs 75 frames; borderline tracks cross
+  the rule on one platform and not the other. Roughly one animal per video.
+- Manuscript 3.3 says counts "were compared only on identical hardware": true, incomplete.
+- Job 22059766 (4x A100) reruns pool C on all 32 videos with count_eval.py for the headline
+  A100 vs GH200 comparison. Result to be appended here.
+- **Result (jobs 22061496-99, four A100-SXM4-40GB, torch 2.5.1+cu121, ultralytics 8.4.80;
+  outputs `results/counting/pool_c_a100/`):** count_eval's sweep re-selected the same rule
+  (20, 0, 0.65) on A100. All 32: MAE 2.00 vs 1.88 (GH200), predicted 212 vs 210, 10/32
+  videos differ. **Held-out 13: MAE 2.38 on both; predicted 56 vs 58; capped COUNTED 54/83
+  (65.1%) vs 55/83 (66.3%); 4/13 videos differ, each by exactly one animal** (GolfDr 13/14,
+  NShelbyRd(blue) 21/20, OikosRd 0/1, Robinson 6/7). Candidate tracks 2264 vs 2211.
+  Reading: same-hardware determinism holds; across platforms the count moves by about one
+  animal per video where a borderline track sits at the rule threshold; the headline
+  (MAE 2.38, ~two thirds counted) is unchanged. Suggested for 3.3 (not yet inserted).
+
+## 13. Journal switch and Springer conversion (2026-09-14)
+Target journal changed from MDPI Journal of Imaging (Q2, APC waiver in hand) to **Neural
+Computing and Applications** (Springer; SJR Q1; hybrid, so $0 on the subscription route, or
+free OA through SIUC's Springer Nature agreement if a 2026 waiver is still available; NCA runs
+double-blind review). Journal shortlist and the reasoning are in the 2026-09-11 chat.
+- Overleaf root is now the Springer version: `sn-jnl` class with `sn-basic,Numbered`;
+  `main.tex` has a `\blindtrue` switch (anonymous author block, declarations withheld) and
+  `title_page.tex` carries authors, ORCIDs and every NCA declaration. `sec/*.tex` converted:
+  MDPI `adjustwidth`/`\fulllength` removed, `[H]` -> `[htbp]` (sn-jnl rejects float's H).
+  Abstract made unstructured (same sentences, ~200 words); keywords 8 -> 6 (NCA allows 4-6).
+  Nothing else cut: 43 pages, 13 tables, 10 figures. Overleaf commit cea142b.
+- Compile-checked locally with TinyTeX (`~/.TinyTeX`, pdflatex+bibtex): 0 errors, 0 undefined
+  references, no overfull box > 10 pt; the three MDPI-wide tables fit the 131 mm Springer
+  text block without rotation. PDFs: `docs/submission/` and
+  `/u/tislam6/wildlife_springer_pdfs_2026-09-14/`.
+- MDPI full version frozen in four places: Overleaf `mdpi_full_version/` (paths patched with
+  the folder prefix so it compiles if chosen as main document), project `overleaf_MDPI/`
+  (byte-identical to Overleaf commit 5aa0568, verified), home backup, and
+  `/u/tislam6/TRACT_MDPI_full_version_2026-09-14.zip`.
+- Before submission: trim for NCA (user), flatten the `\input{}`s into one `.tex`, keep
+  `\blindtrue` for the review copy, add Morelock's ORCID and the Zenodo DOI.

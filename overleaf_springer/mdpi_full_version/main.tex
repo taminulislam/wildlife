@@ -1,0 +1,196 @@
+% FROZEN MDPI (Journal of Imaging) VERSION, 2026-09-14. Not edited after this date.
+% Compiles from the project root: paths below and inside Definitions/mdpi.cls carry the
+% mdpi_full_version/ prefix. The untouched original is in Overleaf history (commit 5aa0568).
+%=================================================================
+% Journal of Imaging (MDPI) submission.
+% Automated counting of white-tailed deer in vehicle-mounted thermal video.
+%
+% Build:  pdflatex main; bibtex main; pdflatex main; pdflatex main
+% Compiler must be pdfLaTeX (Overleaf: Menu -> Settings -> Compiler).
+%
+% Ported from the WACV two-column draft. Structural differences worth knowing:
+%   * single column, so every \table*/\figure* became \table/\figure with [H]
+%   * wide tables sit in \begin{adjustwidth}{-\extralength}{0cm} with \fulllength
+%   * the WACV appendix has been folded into the main text; only the ablation
+%     catalogue remains in Appendix A, because MDPI imposes no page limit
+%=================================================================
+\documentclass[jimaging,article,submit,moreauthors]{mdpi_full_version/Definitions/mdpi}
+
+%------------------------------------------------------------------
+% MDPI internal commands - do not modify
+%------------------------------------------------------------------
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+\datereceived{ }
+\daterevised{ }
+\dateaccepted{ }
+\datepublished{ }
+
+%------------------------------------------------------------------
+% Extra packages. The MDPI class already loads graphicx, amsmath, amssymb,
+% booktabs, xcolor, multirow, array, tabularx, caption, natbib, hyperref and
+% cleveref, so only xspace is genuinely new -- it is what lets \reachedq and
+% friends be written without a trailing brace pair.
+%------------------------------------------------------------------
+\usepackage{xspace}
+
+% The three quantities the paper is built around. Defined once so a rename never
+% has to be applied by hand across six section files.
+\newcommand{\reachedq}{\textsc{reached}\xspace}
+\newcommand{\primaryq}{\textsc{primary}\xspace}
+\newcommand{\countedq}{\textsc{counted}\xspace}
+% ablation verdict marks: shape carries the meaning, colour is decoration only,
+% so the table stays readable in greyscale
+\newcommand{\yes}{\textcolor[rgb]{0.05,0.45,0.20}{\checkmark}}
+\newcommand{\no}{\textcolor[rgb]{0.70,0.10,0.10}{$\boldsymbol{\times}$}}
+\newcommand{\same}{\textcolor{gray}{--}}
+
+%------------------------------------------------------------------
+% Title and authors
+%------------------------------------------------------------------
+\Title{Automated Counting of White-Tailed Deer in Vehicle-Mounted Thermal Video: Detector Benchmarking and a Staged Error Decomposition}
+
+% ORCIDs. Morelock's is not yet known: when it is, uncomment C and add \orcidC{}
+% after his name. Never use the template's dummy ID, which links to a nonexistent record.
+\newcommand{\orcidauthorA}{0000-0002-7803-4564} % Islam
+\newcommand{\orcidauthorB}{0000-0003-2482-8059} % Sarker
+%\newcommand{\orcidauthorC}{0000-0000-0000-0000} % Morelock
+\newcommand{\orcidauthorD}{0000-0001-6799-639X} % Bastille-Rousseau
+\newcommand{\orcidauthorE}{0000-0002-3707-4316} % Ahmed
+
+\Author{Taminul Islam $^{1,}$*\orcidA{}, Toqi Tahamid Sarker $^{1}$\orcidB{}, Seth J. Morelock $^{2}$,
+Guillaume Bastille-Rousseau $^{2}$\orcidD{} and Khaled R. Ahmed $^{1}$\orcidE{}}
+
+\AuthorNames{Taminul Islam, Toqi Tahamid Sarker, Seth J. Morelock, Guillaume
+Bastille-Rousseau and Khaled R. Ahmed}
+
+\address{%
+$^{1}$ \quad School of Computing, Southern Illinois University, Carbondale, IL 62901, USA;
+toqitahamid.sarker@siu.edu (T.T.S.); khaled.ahmed@siu.edu (K.R.A.)\\
+$^{2}$ \quad Center for Wildlife Sustainability, Southern Illinois University, Carbondale,
+IL 62901, USA; seth.morelock@siu.edu (S.J.M.); gbr@siu.edu (G.B.-R.)}
+
+\corres{Correspondence: taminul.islam@siu.edu}
+
+%------------------------------------------------------------------
+% Abstract and keywords
+%------------------------------------------------------------------
+\abstract{(1) Background: wildlife surveys often aim to estimate the abundance of animals in an
+area, yet automated pipelines are usually judged as object detectors, by how well they locate
+animals in individual frames rather than by how many distinct animals they count. We test
+whether detection accuracy predicts counting accuracy on thermal road-transect video.
+(2) Methods: we introduce 32 fully annotated FLIR thermal road transects containing 236
+individually tracked white-tailed deer, benchmark twelve detectors, and build TRACT, a
+counting pipeline whose error we decompose into detection, association and confirmation. The
+confirmation rule is fitted on training videos and frozen before evaluation on videos the
+detector never saw. (3) Results: scored per animal rather than per box, detection is close
+to solved. The reported pipeline finds 89.2\% of held-out animals, gives 79.5\% a distinct
+track and counts 66.3\%; the richest candidate pool we built reaches 98.8\% and counts fewer
+still, at 62.7\%. Every configuration that enriches the candidate pool makes the final count worse, and learned confirmation heads all lose to a three-parameter rule.
+(4) Conclusions: in this survey, detection is not the bottleneck; confirmation is. At this
+corpus size it is limited by supervision rather than model capacity, because the extra
+candidates a better detector supplies are re-sightings of animals already counted.}
+
+\keyword{thermal imaging; wildlife survey; animal counting; object detection; multi-object
+tracking; white-tailed deer; benchmark dataset; error decomposition}
+
+%=================================================================
+\begin{document}
+
+% cleveref names, per the MDPI class instruction to declare these after \begin{document}.
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
+\crefname{figure}{Figure}{Figures}
+\Crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{appendix}{Appendix}{Appendices}
+\Crefname{appendix}{Appendix}{Appendices}
+
+\input{mdpi_full_version/sec/1_intro}
+\input{mdpi_full_version/sec/2_related}
+\input{mdpi_full_version/sec/3_methods}
+\input{mdpi_full_version/sec/4_results}
+\input{mdpi_full_version/sec/5_discussion}
+\input{mdpi_full_version/sec/6_conclusions}
+
+%=================================================================
+% Back matter
+%=================================================================
+\vspace{6pt}
+
+% Roles as specified by the corresponding author; co-authors should still confirm their own.
+\authorcontributions{Conceptualization, T.I., G.B.-R. and K.R.A.; methodology, T.I. and
+K.R.A.; software, T.I. and T.T.S.; validation, T.I.; formal analysis, T.I.; investigation,
+T.I., S.J.M., G.B.-R. and K.R.A.; resources, S.J.M., G.B.-R. and K.R.A.; data curation, T.I.
+and S.J.M.; writing---original draft preparation, T.I.; writing---review and editing, T.I.,
+T.T.S., S.J.M., G.B.-R. and K.R.A.; visualization, T.I.; supervision, G.B.-R. and K.R.A.;
+project administration, G.B.-R. and K.R.A.; funding acquisition, G.B.-R. and K.R.A. All
+authors have read and agreed to the published version of the manuscript.}
+
+\funding{This research was funded by the Federal Aid Wildlife Restoration Fund, grant number
+W87R.}
+
+\institutionalreview{Ethical review and approval were not required for this study because it
+was purely observational: all footage was recorded from public roads with a vehicle-mounted
+thermal camera, and no animal was approached, handled, captured or otherwise disturbed.}
+
+
+\informedconsent{Not applicable.}
+
+\dataavailability{The corpus, the per-individual track annotations, the evaluation harness
+and the decomposition tooling will be deposited in Zenodo upon acceptance, and the DOI will be
+provided at that point.}
+
+\acknowledgments{We thank the Illinois Department of Natural Resources. This work used the
+Delta and DeltaAI systems at the National Center for Supercomputing Applications.}
+
+\conflictsofinterest{The authors declare no conflicts of interest.}
+
+\abbreviations{Abbreviations}{%
+The following abbreviations are used in this manuscript:\\
+
+\noindent
+\begin{tabular}{@{}ll}
+AP & Average precision\\
+AUC & Area under the ROC curve\\
+CLAHE & Contrast-limited adaptive histogram equalization\\
+CVAT & Computer Vision Annotation Tool\\
+ECE & Expected calibration error\\
+FLIR & Forward-looking infrared\\
+GMC & Global motion compensation\\
+HOTA & Higher-order tracking accuracy\\
+IoU & Intersection over union\\
+LOSO & Leave-one-site-out\\
+MAE & Mean absolute error\\
+NMS & Non-maximum suppression\\
+RMSE & Root mean square error\\
+TRACT & Thermal Road-transect Animal Counting and Tracking\\
+UAV & Uncrewed aerial vehicle
+\end{tabular}
+}
+
+%=================================================================
+\appendixtitles{yes}
+\appendixstart
+\appendix
+\input{mdpi_full_version/sec/7_appendix}
+
+%=================================================================
+\begin{adjustwidth}{-\extralength}{0cm}
+
+\reftitle{References}
+
+% The MDPI class sets the bibliography style itself -- declaring it again here makes
+% BibTeX abort with "Illegal, another \bibstyle command".
+\bibliography{mdpi_full_version/main}
+
+\end{adjustwidth}
+\end{document}
