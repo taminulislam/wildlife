@@ -1742,3 +1742,8 @@ double-blind review). Journal shortlist and the reasoning are in the 2026-09-11 
   `/u/tislam6/TRACT_MDPI_full_version_2026-09-14.zip`.
 - Before submission: trim for NCA (user), flatten the `\input{}`s into one `.tex`, keep
   `\blindtrue` for the review copy, add Morelock's ORCID and the Zenodo DOI.
+- **GitHub (2026-09-14):** everything since 9447487 pushed as f1cc1a6 (84 files) from a clone
+  in home, `/u/tislam6/wildlife_gh`, because the project's `.git` can no longer write objects
+  under the storage quota. Until NCSA fixes the quota, commits are made there after rsyncing
+  the project tree; the project's own `.git` still shows HEAD 9447487 and should be re-synced
+  with `git fetch && git reset origin/main` once writes work again.
