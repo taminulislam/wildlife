@@ -1777,3 +1777,17 @@ Springer version only (mdpi_full_version/ untouched). Overleaf commit after this
   updated); buckland2023wildlife article number. Text fixes from the audit: the NWD IoU
   numbers in 2.2 were misattributed (1-px vs 4-px shifts), DINO/RT-DETR characterisation,
   Guo et al. studied classifiers not detectors.
+
+## 15. Submission package for NCA (2026-09-15)
+- `scripts/make_submission_package.sh <overleaf_tree> <out>`: flattens main.tex into one file
+  (Springer wants no \input), copies only the figures used plus cls/bst/bib, compiles
+  stand-alone, keeps main.bbl, checks the blinded PDF for author names/addresses and PDF
+  metadata, zips. Output today: /u/tislam6/NCA_submission_2026-09-15.zip (14 MB; kept in home
+  because writes that size fail under the project quota) and the unpacked folder beside it.
+- `docs/submission/NCA_submission_checklist.md`: what Editorial Manager asks for, what is
+  ready, what is left (Seth's ORCID, Zenodo reserved DOI, reviewer suggestions, AI-use
+  statement per Springer policy, confirm no MDPI submission), plus a cover-letter draft.
+- `figures/evidence_two.jpg` re-rendered at 2x via a new `--scale` option in
+  `src/viz/evidence_figure.py` (1682x636 px, 379 dpi at its 112.7 mm print width; was 190 dpi).
+  Same frames and confidences as before. All other raster figures were already >= 430 dpi.
+- Blinded PDF: 44 pages, fonts embedded, no /Author metadata, no author name or siu.edu string.

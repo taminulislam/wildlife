@@ -90,10 +90,15 @@ def main() -> None:
                                         "phaseC_orphan_yolo11m_conf0.10")
     ap.add_argument("--source", default="data/raw")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--scale", type=int, default=1,
+                    help="render at this multiple of the native crop size; 2 lifts the figure "
+                         "above Springer's 300 dpi at its print width (thermal pixels are "
+                         "upsampled, boxes and labels are drawn crisp at the new size)")
     ap.add_argument("--individual", action="store_true",
                     help="also write each panel as its own file, unlabelled,\n"
                          "for composing the figure by hand")
     args = ap.parse_args()
+    S = args.scale
 
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     rows_img = []
@@ -140,13 +145,15 @@ def main() -> None:
                 x2, y2 = min(x1 + CROP, W), min(y1 + CROP, H)
                 x1, y1 = x2 - CROP, y2 - CROP
                 crop = cv2.cvtColor(img[y1:y2, x1:x2], cv2.COLOR_GRAY2BGR)
-                bx1, by1 = int(round(xc - w / 2)) - x1, int(round(yc - h / 2)) - y1
-                bx2, by2 = int(round(xc + w / 2)) - x1, int(round(yc + h / 2)) - y1
-                cv2.rectangle(crop, (bx1, by1), (bx2, by2), (0, 235, 0), 2)
+                if S > 1:
+                    crop = cv2.resize(crop, (CROP * S, CROP * S), interpolation=cv2.INTER_CUBIC)
+                bx1, by1 = (int(round(xc - w / 2)) - x1) * S, (int(round(yc - h / 2)) - y1) * S
+                bx2, by2 = (int(round(xc + w / 2)) - x1) * S, (int(round(yc + h / 2)) - y1) * S
+                cv2.rectangle(crop, (bx1, by1), (bx2, by2), (0, 235, 0), 2 * S)
                 # label bar BELOW the image, never over the thermal pixels
-                bar = np.full((22, CROP, 3), 18, np.uint8)
-                cv2.putText(bar, f"t={fr/60.0:5.1f}s  conf {cf:.2f}", (4, 15),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.36, (245, 245, 245), 1,
+                bar = np.full((22 * S, CROP * S, 3), 18, np.uint8)
+                cv2.putText(bar, f"t={fr/60.0:5.1f}s  conf {cf:.2f}", (4 * S, 15 * S),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.36 * S, (245, 245, 245), S,
                             cv2.LINE_AA)
                 panels[fr] = cv2.vconcat([crop, bar])
                 # also write the panel on its own, for hand-composition in a drawing tool
@@ -160,7 +167,7 @@ def main() -> None:
         cap.release()
 
         strip = [panels[f] for f in sorted(panels)]
-        strip = [cv2.copyMakeBorder(p, 0, 0, 0, 5, cv2.BORDER_CONSTANT, value=(255, 255, 255))
+        strip = [cv2.copyMakeBorder(p, 0, 0, 0, 5 * S, cv2.BORDER_CONSTANT, value=(255, 255, 255))
                  for p in strip[:-1]] + [strip[-1]]
         row = cv2.hconcat(strip)
         # Row label rotated into the left margin. A horizontal caption line above each row
@@ -170,18 +177,18 @@ def main() -> None:
         # result is 24 px wide and exactly as tall as the row, so hconcat lines up without
         # a resize. Building it at the final orientation and resizing, as a first version
         # did, squashed the glyphs into an unreadable smear.
-        lab = np.full((24, row.shape[0], 3), 255, np.uint8)
+        lab = np.full((24 * S, row.shape[0], 3), 255, np.uint8)
         # Centre on the IMAGERY, not on the row. The row is CROP px of thermal plus a
         # 22 px label bar, and centring across the whole 154 px puts the text 11 px below
         # where the eye reads the middle of the picture.
-        (tw, _th), _bl = cv2.getTextSize(caption, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 1)
-        cv2.putText(lab, caption, (max((CROP - tw) // 2, 2), 17),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (20, 20, 20), 1, cv2.LINE_AA)
+        (tw, _th), _bl = cv2.getTextSize(caption, cv2.FONT_HERSHEY_SIMPLEX, 0.55 * S, S)
+        cv2.putText(lab, caption, (max((CROP * S - tw) // 2, 2), 17 * S),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55 * S, (20, 20, 20), S, cv2.LINE_AA)
         lab = cv2.rotate(lab, cv2.ROTATE_90_COUNTERCLOCKWISE)
         rows_img.append(cv2.hconcat([lab, row]))
         print(f"[ok] {caption}: {video} trk{tid}, {len(strip)} panels", flush=True)
 
-    gap = np.full((10, rows_img[0].shape[1], 3), 255, np.uint8)
+    gap = np.full((10 * S, rows_img[0].shape[1], 3), 255, np.uint8)
     sheet = cv2.vconcat([rows_img[0], gap, rows_img[1]])
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     cv2.imwrite(args.out, sheet, [cv2.IMWRITE_JPEG_QUALITY, 95])
