@@ -11,7 +11,7 @@ Guidelines checked 2026-09-15 at https://link.springer.com/journal/521/submissio
 | Manuscript PDF (blinded) | `main.pdf` from the package | built; author metadata checked |
 | Title page (separate file) | `title_page.pdf` (authors, affiliations, ORCIDs, corresponding author, all declarations, acknowledgements) | ready |
 | Cover letter | text below, pasted into the EM box | draft below |
-| Figures | embedded in the LaTeX source; Springer may ask for TIFF/EPS at production | all raster figures >= 300 dpi at print width except `evidence_two.jpg` (190 dpi), see below |
+| Figures | embedded in the LaTeX source; Springer may ask for TIFF/EPS at production | all raster figures >= 300 dpi at print width (`evidence_two.jpg` re-rendered at 379 dpi on 2026-09-15) |
 | Supplementary material | none | n/a |
 
 ## Manuscript requirements
@@ -29,8 +29,8 @@ Guidelines checked 2026-09-15 at https://link.springer.com/journal/521/submissio
 ## Still to do before pressing Submit
 
 1. Decide whether to trim further (optional; no limit).
-2. `figures/evidence_two.jpg` is 190 dpi at its print width; regenerate at >= 300 dpi
-   (`src/viz/evidence_figure.py`) or accept a production request later.
+2. Data availability statements say "deposited in Zenodo upon acceptance"; if the corpus goes to
+   Hugging Face instead, change the wording (and add the dataset URL) in title_page.tex and main.tex.
 3. Seth Morelock's ORCID (optional; only the corresponding author's is used by the system).
 4. Zenodo: the data statement promises deposit on acceptance. A reserved Zenodo DOI (embargoed deposit)
    before submission would let the statement carry a link, which the policy prefers.
