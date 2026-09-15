@@ -5,10 +5,10 @@
 \label{sec:detection}
 
 Twelve architectures spanning two-stage, one-stage and query-based designs were trained on
-the identical site-stratified split with identical preprocessing, which bounds how much of the
-counting error any choice of backbone could account for. Eleven appear in \cref{tab:detectors};
-Deformable DETR exhausted GPU memory at epoch 5 and was not rerun at a smaller batch, so it has
-no comparable numbers and every count of models in this section is eleven.
+the identical site-stratified split with identical preprocessing. That bounds how much of
+the counting error any choice of backbone could account for. Eleven appear in
+\cref{tab:detectors}. Deformable DETR exhausted GPU memory at epoch 5 and was not rerun at a
+smaller batch, so every count of models in this section is eleven.
 
 \begin{table}[htbp]
 \caption{\textbf{Detection on the held-out test split} (3725 images, 2792 boxes) at
@@ -41,48 +41,42 @@ RTMDet-m & 0.466 & 0.339 & 0.411 & 0.437 & 0.325 & \textbf{0.779} & 0.459 & 0.36
 \end{table}
 
 F1 rises monotonically across \cref{tab:detectors} as the matching rule relaxes, uniformly
-rather than favouring particular architectures (\cref{sec:criterion}).
-\Cref{tab:detectors} shows first how little separates them: AP$_{50}$ spans 0.365--0.510,
-with the top three within 0.004, across designs as different as Faster R-CNN, DINO and
-YOLO12m. That narrow spread is the signature of a data-limited rather than an
-architecture-limited regime, and \cref{fig:training} shows it is not an artefact of any
-model being under-trained: within the budget each run either plateaus or passes its peak,
-and the plateaus sit on top of one another. Two patterns in that figure matter for what
-follows. Precision settles near 0.65--0.70 while recall settles near 0.40--0.45 in every
-panel, which is the precision-heavy operating point \cref{sec:choosing} argues the counting
-stage needs; and several models peak early and then decline, so the figures we report come
-from the best checkpoint rather than the last. 
+rather than favouring particular architectures (\cref{sec:criterion}). Little separates the
+models. AP$_{50}$ spans 0.365--0.510, with the top three within 0.004, across designs as
+different as Faster R-CNN, DINO and YOLO12m. That narrow spread is the signature of a
+data-limited rather than an architecture-limited regime. \Cref{fig:training} shows it is
+not an artefact of under-training: within the budget each run either plateaus or passes
+its peak, and the plateaus sit on top of one another. Two patterns in that figure matter
+later. Precision settles near 0.65--0.70 while recall settles near 0.40--0.45 in every
+panel, the precision-heavy operating point \cref{sec:choosing} argues the counting stage
+needs. Several models peak early and then decline, so we report the best checkpoint rather
+than the last.
 
-The absolute values are low for two reasons, neither of them a model failure. The first
-quantifies \cref{sec:criterion}: for axis-aligned boxes of side $s$ offset by $d$ pixels,
-$\mathrm{IoU}=(s-d)/(s+d)$, so at the corpus median $s=27$ a four-pixel centre error already
-fails a 0.75 threshold and nine pixels fails 0.50. The second is that these metrics count
-boxes rather than animals: an animal visible for 100 frames contributes 100 ground-truth
-boxes, and one found in half of them scores 0.5 recall even though counting requires a single
-detection. The 11,476 background frames contribute nothing either way, since precision, recall
-and F1 have no true-negative term.
+The absolute values are low for two reasons, neither of them a model failure. The first is
+\cref{prop:iou}: at the corpus median of 27 pixels a four-pixel centre error already fails
+IoU 0.75, and an error of more than nine pixels fails 0.50. The second is that these
+metrics count boxes rather than animals. An animal visible for 100 frames contributes 100
+ground-truth boxes, and one found in half of them scores 0.5 recall even though counting
+requires a single detection. The 11,476 background frames contribute nothing either way,
+since precision, recall and F1 have no true-negative term.
 
-The last column of \cref{tab:detectors} closes that gap. Measured per animal rather than per
-box, recall runs from 0.821 to 0.996: \emph{every} architecture we trained finds between 82\%
-and 99.6\% of the 235 detectable individuals in at least one frame, including models whose box recall
-sits near 0.45, and the full pipeline reaches 82 of 83 on held-out video
-(\cref{sec:counting}). Over 235 animals these are the paper's tighter estimates, YOLO11m's
-98.7\% carrying a 95\% interval of $\pm2.4$ points. At the level a survey cares about, detection is very nearly solved
-\emph{on this corpus}, and the animals that go uncounted are lost after it. \Cref{sec:loso} tests how far that
-survives a change of site and finds it weakens rather than holds, which is where the
-qualification belongs. It also re-ranks the table a third time. RTMDet-m leads at
-0.996 and every mmdetection model places above every YOLO variant, which is not an argument
-for adopting one: their coverage is bought with false positives that the confirmation stage
-cannot absorb, as \cref{sec:inversion} shows and \cref{sec:choosing} anticipates. What the
-column establishes is that the choice between these detectors is not a choice about which
-animals can be found.
+The last column of \cref{tab:detectors} closes that gap. Measured per animal rather than
+per box, recall runs from 0.821 to 0.996. \emph{Every} architecture we trained finds between
+82\% and 99.6\% of the 235 detectable individuals in at least one frame, including models
+whose box recall sits near 0.45, and the full pipeline reaches 82 of 83 on held-out video
+(\cref{sec:counting}). Over 235 animals these are the paper's tighter estimates; YOLO11m's
+98.7\% carries a 95\% interval of $\pm2.4$ points. At the level a survey cares about,
+detection is very nearly solved \emph{on this corpus}, and the animals that go uncounted are
+lost after it. \Cref{sec:loso} tests how far that survives a change of site and finds that
+it weakens. The column also re-ranks the table a third time. RTMDet-m leads at 0.996 and
+every mmdetection model places above every YOLO variant. That is not an argument for
+adopting one, because their coverage is bought with false positives that the confirmation
+stage cannot absorb (\cref{sec:inversion}).
 
-A third pattern belongs to individual rows rather than to the table as a whole, and it is
-what makes an entry like YOLO12m's 0.929 precision against 0.452 recall look
-self-contradictory. It is not. The two numbers describe one conservative operating point:
-of YOLO12m's errors at confidence 0.25, 1530 are missed boxes and 96 are false ones, so
-\textbf{94\% of its error is silence rather than mistake}. A model that is quiet is not a
-model that is wrong, and the distinction matters downstream, because the two failures cost
+A third pattern belongs to individual rows. YOLO12m's 0.929 precision against 0.452 recall
+looks self-contradictory, and it is not. The two numbers describe one conservative
+operating point: of YOLO12m's errors at confidence 0.25, 1530 are missed boxes and 96 are
+false ones, so \textbf{94\% of its error is silence rather than mistake}. The distinction matters downstream, because the two failures cost
 the confirmation stage very different amounts.
 
 \begin{table}[htbp]
@@ -108,20 +102,14 @@ achieves.\label{tab:threshold}}
 
 \Cref{tab:threshold} gives the sensitivity. At 0.10 the same YOLO12m weights score 0.711
 precision and 0.653 recall, so the low recall in \cref{tab:detectors} is a property of the
-reporting threshold rather than of the model. This also means the figure in
-\cref{tab:detectors} is not the operating point of the system this paper describes:
-\textbf{the counting pipeline runs its detector at confidence 0.10}, where the recall of
-YOLO11m, the detector it uses, rises from 0.503 to 0.576 and that of YOLO12m by 20 points; 0.25
-is reported only because it is the conventional threshold for a detection table. Recall is further understated by the matching rule: relaxing IoU$\geq$0.50 to presence cuts YOLO12m's false positives from 307 to 96 while its misses fall only from
-1741 to 1530, because a looser criterion can credit a box that was placed a few pixels off
-an animal but cannot recover an animal the detector never fired on.
-
-The ordering of \cref{tab:threshold} is for reading rather than a verdict; \cref{sec:choosing}
-selects on the precision-weighted $F_{0.5}$ instead. What matters more than the size of the
-trade is its direction, which is not symmetric: a detector already at high recall has nowhere
-left to go. Dropping
-RT-DETR-L to 0.10 buys 231 additional true boxes and costs 7433 false ones, reducing precision to 0.187, not a candidate pool any confirmation stage can work with, which is the
-argument of \cref{sec:inversion} arriving one stage earlier.
+reporting threshold rather than of the model. Nor is 0.25 the operating point of the system
+this paper describes. \textbf{The counting pipeline runs its detector at confidence 0.10},
+where the recall of YOLO11m rises from 0.503 to 0.576 and that of YOLO12m by 20 points;
+0.25 is reported only because it is the conventional threshold for a detection table. The
+matching rule understates recall further. Relaxing IoU$\geq$0.50 to presence cuts YOLO12m's false positives from 307 to 96, while its misses fall only from 1741 to 1530. A looser criterion can credit a box placed a few pixels off an animal, but it cannot recover an animal the detector never fired on. The trade is also asymmetric, since a detector already
+at high recall has nowhere left to go. Dropping RT-DETR-L to 0.10 buys 231 additional true
+boxes and costs 7433 false ones, reducing precision to 0.187, a candidate pool no
+confirmation stage can work with.
 
 \begin{figure}[htbp]
   \centering
@@ -134,54 +122,52 @@ argument of \cref{sec:inversion} arriving one stage earlier.
 \end{figure}
 
 The query-based detectors underperform on every criterion, although for DINO R50 this is a
-failure to converge rather than a settled comparison: trained for 36 epochs, three times its
-native schedule, its validation score was still oscillating when training ended, and its 0.365
-AP$_{50}$ comes from the best validation checkpoint, below plain Faster R-CNN. RT-DETR-L,
-which targets exactly this, recovers only to 0.434.
+failure to converge rather than a settled comparison. Trained for 36 epochs, three times its
+native schedule, its validation score was still oscillating when training ended. Its 0.365
+AP$_{50}$ comes from the best validation checkpoint, below plain Faster R-CNN. RT-DETR-L, the
+real-time member of the family, recovers only to 0.434.
 
 \subsection{Choosing a Detector for Counting}
 \label{sec:choosing}
 
 The narrow spread in aggregate scores conceals a substantial difference in operating point.
-YOLO12m and YOLOv9m sit at 0.929 and 0.917 precision against roughly 0.45 recall, while
-RTMDet-m and Faster R-CNN R50 occupy the opposite end, reaching 0.779 and 0.723 recall at
-0.33 and 0.39 precision. Since a matching criterion determines how errors of each type are
-counted, rank depends on which criterion is applied. Comparing the two orderings in
-\cref{tab:detectors}, seven of eleven models move at least two places between them: YOLOv10m
-falls from 2nd to 8th and ATSS R50 climbs from 8th to 2nd, a six-place exchange between a
+YOLO12m and YOLOv9m sit at 0.929 and 0.917 precision against roughly 0.45 recall. RTMDet-m
+and Faster R-CNN R50 occupy the opposite end, reaching 0.779 and 0.723 recall at 0.33 and
+0.39 precision. Since a matching criterion determines how errors of each type are counted,
+rank depends on which criterion is applied. Between the two orderings in
+\cref{tab:detectors}, seven of eleven models move at least two places. YOLOv10m falls from
+2nd to 8th and ATSS R50 climbs from 8th to 2nd, a six-place exchange between a
 precision-tuned and a recall-tuned model. Selecting a detector on its detection metric does
 not select the model that counts best.
 
 Both AP$_{50}$ and F1 weight precision and recall equally, which does not reflect the cost
 structure of the stage that consumes these detections. The confirmation step must reject
 tens of thousands of false candidates against roughly two hundred true ones
-(\cref{sec:counting}), so a false positive and a false negative are not equally expensive to
-it, and \cref{sec:inversion} shows that enlarging the candidate pool lowers the final count rather than raising it. We therefore summarize with the precision-weighted
-$F_{0.5}$ in the last column of \cref{tab:detectors}, fixing $\beta$ at its conventional
-value rather than selecting it, so $F_{0.5}=1.25\,PR/(0.25P+R)$. YOLO11m ranks first at
-0.775, ahead of YOLO12m at 0.767 and YOLOv9m at 0.759. That margin of 0.008 makes the top three effectively equivalent; the
-substantive separation is from the recall-oriented models at 0.368--0.433. We adopt
-\textbf{YOLO11m at 640\,px} as the production detector, and every counting result in this
-paper uses it.
+(\cref{sec:counting}), so a false positive costs it far more than a false negative. \Cref{sec:inversion} shows that enlarging the candidate pool lowers the final count. We
+therefore summarize with the precision-weighted $F_{\beta}$
+score~\cite{vanrijsbergen1979information} at its conventional value $\beta=0.5$,
+\begin{equation}
+F_{0.5}=\frac{(1+0.5^{2})\,PR}{0.5^{2}P+R}=\frac{1.25\,PR}{0.25P+R},
+\label{eq:fhalf}
+\end{equation}
+in the last column of \cref{tab:detectors}. YOLO11m ranks first at 0.775, ahead of YOLO12m
+at 0.767 and YOLOv9m at 0.759. That margin of 0.008 makes the top three effectively
+equivalent; the substantive separation is from the recall-oriented models at 0.368--0.433.
+We adopt \textbf{YOLO11m at 640\,px} as the production detector, and every counting result
+in this paper uses it.
 
 Resolution is the one lever that behaves unpredictably, and it does not favour a larger
-input. Moving YOLOv10m from 640 to 1280\,px lowers it on every metric, from 0.543 to 0.525 F1
-and 0.510 to 0.469 AP$_{50}$, with AP-small falling from 0.117 to 0.093 alongside. YOLOv9m
-moves the other way over the same change, from 0.547 to 0.595 F1 and 0.506 to 0.516
-AP$_{50}$: at 640 the two architectures are within 0.004 AP$_{50}$, at 1280 they diverge by
-0.047. Extra resolution therefore buys overall precision and recall on some architectures and
-costs them on others, and on neither does it buy the smallest animals. (These are the
-detector validator's own metrics at IoU$\geq$0.50 rather than the any-overlap counting
-criterion of \cref{tab:detectors}, so they are not comparable with that table's precision and
-recall columns.)
-
-That gain does not survive the pipeline. YOLOv9m at 1280\,px is the strongest detector this
-section produced, so we ran it through the complete counting pipeline under the protocol of
-\cref{sec:heldout}. It counts \emph{fewer} animals: MAE 2.54 and 54 of 83 held-out animals,
-against 2.38 and 55 of 83 for YOLO11m at 640\,px. An advantage in detection accuracy becomes a
-small deficit in counting accuracy, which is why the production detector is not the one this
-section ranks highest, and the first direct evidence for the divergence the rest of the paper
-characterizes.
+input. Moving YOLOv10m from 640 to 1280\,px lowers it on every metric, from 0.543 to 0.525
+F1 and 0.510 to 0.469 AP$_{50}$, with AP-small falling from 0.117 to 0.093. YOLOv9m moves
+the other way over the same change, from 0.547 to 0.595 F1 and 0.506 to 0.516 AP$_{50}$.
+At 640 the two architectures are within 0.004 AP$_{50}$; at 1280 they diverge by 0.047.
+Extra resolution therefore buys precision and recall on some architectures and costs them
+on others, and on neither does it buy the smallest animals. These figures are the detector validator's own metrics at IoU$\geq$0.50, so they are not comparable with the any-overlap columns of \cref{tab:detectors}. The gain does not survive the pipeline. YOLOv9m at
+1280\,px is the strongest detector this section produced, so we ran it through the
+complete counting pipeline under the protocol of \cref{sec:heldout}. It counts \emph{fewer}
+animals: MAE 2.54 and 54 of 83 held-out animals, against 2.38 and 55 of 83 for YOLO11m at
+640\,px. An advantage in detection accuracy becomes a small deficit in counting accuracy.
+It is the first direct evidence for the divergence the rest of the paper characterizes.
 
 \subsection{End-to-End Counting}
 \label{sec:counting}
@@ -203,9 +189,10 @@ All 32 videos (optimistic) & 1.88 & $-0.81$ & 81.8 \\
 \end{table}
 
 \Cref{tab:counting} is the end-to-end result: \textbf{MAE $2.38 \pm 1.29$ animals per video
-and $66.3 \pm 10.7\%$ of held-out animals counted}, with a bias of $-1.92 \pm 1.57$
-(95\% intervals; \cref{sec:decomposition}). The system under-counts systematically
-and over-counts almost never, which for management purposes is the safe direction, since a survey that never inflates its estimate is preferable to one that occasionally does.
+and $66.3 \pm 10.7\%$ of held-out animals counted}, with a bias of $-1.92 \pm 1.57$ (95\%
+intervals; \cref{sec:decomposition}). The system under-counts systematically and
+over-counts almost never. For management purposes that is the safe direction, since a
+survey that never inflates its estimate is preferable to one that occasionally does.
 
 \begin{table}[htbp]
 \caption{\textbf{Per-video breakdown on the 13 held-out videos.} GT is the annotated
@@ -237,41 +224,38 @@ SIron & SHW & 1 & 1 & 1 & 2 & $+1$ \\
 \end{table}
 
 \Cref{tab:pervideo} gives the breakdown per video, and reading a row left to right
-attributes that video's loss to a stage. The error concentrates in dense-group footage: SHB
-contributes 9 of the 25 net missing animals from three videos, and its group-heavy NShelbyRd
-transect alone accounts for 7, losing 5 animals to detection and a further 6 to association.
-Only two videos over-count, GolfDr and SIron, and both do so with complete reach and
-primary counts, so their error is confirmation accepting spurious tracks rather than anything
-upstream. NShelbyRd is the largest single loss in the corpus, shedding 5 animals to detection
-(27$\to$22) and a further 6 to association (22$\to$16), which is why dense-group video
-dominates the error.
+attributes that video's loss to a stage. The error concentrates in dense-group footage. SHB
+contributes 9 of the 25 net missing animals from three videos. Its group-heavy NShelbyRd
+transect alone accounts for 7, shedding 5 animals to detection (27$\to$22) and a further 6
+to association (22$\to$16), the largest single loss in the corpus. Only two videos
+over-count, GolfDr and SIron, and both do so with complete reach and primary counts, so
+their error is confirmation accepting spurious tracks. Two videos return a count of zero.
+AquaCultureRd holds 3 animals and reaches 1; TouchofNature holds 2 and reaches 1. Both are
+\emph{detection} failures, with animals at the sensor's limit near the 20\,px median of the
+never-detected group in \cref{sec:analysis}, so no adjustment to the counting rule recovers
+them. They also show why a per-video error of 3 and 2 animals understates how these rows
+read. On a transect holding three animals, missing all three leaves the count at zero, and
+the mean absolute error of 2.38 conceals that a small-count transect can be off by 100\%
+while contributing little to the mean.
 
-Two videos return a count of zero, and they are worth naming rather than leaving for the
-reader to find. AquaCultureRd holds 3 animals and reaches 1; TouchofNature holds 2 and
-reaches 1. Both are \emph{detection} failures: the animals are at the sensor's limit, near
-the 20\,px median of the never-detected group in \cref{sec:analysis}, and not confirmation
-failures, so no adjustment to the counting rule recovers them. They also show why a per-video
-error of 3 and 2 animals understates how these rows read: on a transect holding three animals,
-missing all three leaves the count at zero, and the mean absolute error of 2.38 animals per video
-in \cref{tab:counting} conceals that a small-count transect can be off by 100\% while
-contributing little to the mean. This is the strongest argument in the paper for reporting the
-decomposition per video rather than only in aggregate.
-
-Under the stricter identity-matched criterion of \cref{sec:decomposition}, animals
-covered by an \emph{accepted} track, rather than per-video count agreement, and by it the figure is 47/83 = 56.6\%. The 10-point gap is coincidental agreement: accepted tracks that do not land
-on an animal offsetting animals that were missed. The capped aggregate is our headline
-figure, for comparability with the counting literature; the identity-matched figure is
-reported alongside it because the two answer different questions.
+Under the identity-matched criterion of \cref{sec:decomposition}, animals credited with
+their own \emph{accepted} track, the figure is 47/83 = 56.6\%. By \cref{prop:identity} the
+10-point gap is $\sum_v\min(D_v,M_v)$, eight animals of coincidental agreement in which
+accepted tracks that land on no animal offset animals that were missed. The capped
+aggregate is our headline figure, for comparability with the counting literature; the
+identity-matched figure is reported alongside it because the two answer different
+questions.
 
 \subsection{Improving Candidate Generation Makes Counting Worse}
 \label{sec:inversion}
 
 We enriched the candidate pool in three configurations and measured the effect on the
 decomposition and on the final count. Pool E lowers the detector threshold and removes the
-tracker's initialization gate, and pools F and G each add one further change to E, so the three
-are nested rather than independent;
-\cref{fig:funnel} shows the decomposition for each pool and \cref{fig:inversion} the same
-pools ordered by how many candidates they generate.
+tracker's initialization gate, and pools F and G each add one further change to E, so the
+three are nested rather than independent. \Cref{fig:funnel} shows the decomposition for each
+pool, \cref{fig:inversion} orders the same pools by how many candidates they generate, and
+\cref{tab:ablationmain} gives one row per intervention, with the pools labelled C, E, F and
+G throughout. Each intervention does what it was designed to do:
 
 \begin{figure}[htbp]
   \centering
@@ -291,36 +275,30 @@ pools ordered by how many candidates they generate.
   axis.\label{fig:inversion}}
 \end{figure}
 
-\Cref{tab:ablationmain} and \cref{fig:inversion} give the result, one row per
-intervention; the four candidate pools are labelled C, E, F and G there and referred to by
-those letters throughout. Each
-does what it was designed to do:
-
 \begin{itemize}[leftmargin=*,labelsep=4.5mm]
 \item \textbf{Lowering detector confidence} 0.10$\to$0.02 and \textbf{removing the tracker's
-track-ini\-tial\-i\-za\-tion gate} raised \reachedq from 74 to 79. Lowering confidence \emph{alone}
-recovered zero additional animals: the gate, not the threshold, was the binding constraint: BoT-SORT will extend a track from a low-confidence detection but will not \emph{start}
-one, so faint animals were invisible to counting regardless of detector threshold.
+track-ini\-tial\-i\-za\-tion gate} raised \reachedq from 74 to 79. Lowering confidence
+\emph{alone} recovered zero additional animals. The gate was the binding constraint:
+BoT-SORT will extend a track from a low-confidence detection but will not \emph{start} one,
+so faint animals were invisible to counting regardless of detector threshold.
 \item \textbf{Loosening NMS} to IoU 0.90 addressed animals standing close enough that one
 box suppressed another; it added 4 \primaryq at the cost of $5\times$ the candidates.
-\item \textbf{Appearance matching} produced the best pool by every measure: 82 of
-83 animals reached, 73 with their own track, at 27,679 candidates, fewer than a third of
-pool F's for four more \primaryq. It genuinely works: it merges fragments of one animal
-rather than merely adding candidates.
+\item \textbf{Appearance matching} produced the best pool by every measure: 82 of 83 animals
+reached and 73 with their own track, at 27,679 candidates, fewer than a third of pool F's
+for four more \primaryq. It merges fragments of one animal rather than merely adding
+candidates.
 \end{itemize}
 
-And the count falls, monotonically in candidate volume: 55, 54, 52, 41.
-
-With 83 animals, a difference of two
-or three is not resolvable: the 95\% interval on pool C's 55 is $\pm$9 animals, and pools E and
-G lie inside it. No single pairwise comparison in this table is individually significant, and
-we do not claim one. The evidence is the \emph{direction}: every richer pool counted fewer animals than the
-baseline, and pool F's 41 of 83 falls outside pool C's interval. Because the pools are nested,
-that consistency is not a formal test, and we attach no probability to it. A reader should take from this that improving the pool never helped, not that any
-particular pool is significantly worse than another. The confirmation
-stage cannot exploit a pool it did not shrink. Each intervention adds far more negatives than positives: pool G has 219 positive tracks against 27,460 negatives, and a
-three-parameter rule tuned to survive that ratio must be aggressive enough to reject real
-animals along with the noise.
+And the count falls, monotonically in candidate volume: 55, 54, 52, 41. With 83 animals a
+difference of two or three is not resolvable. The 95\% interval on pool C's 55 is $\pm$9
+animals, and pools E and G lie inside it. No single pairwise comparison is significant, and
+we do not claim one. The evidence is the \emph{direction}: every richer pool counted fewer
+animals than the baseline, and pool F's 41 of 83 falls outside pool C's interval. Because
+the pools are nested, that consistency is not a formal test, and we attach no probability
+to it. The mechanism is the ratio the
+confirmation stage sees. Each intervention adds far more negatives than positives, pool G
+has 219 positive tracks against 27,460 negatives, and a rule tuned to survive that ratio
+must be aggressive enough to reject real animals along with the noise.
 
 \subsection{Pipeline Ablations}
 \label{sec:ablations}
@@ -361,39 +339,34 @@ G & \quad $+$ appearance matching & 27,679 & \textbf{82/83} & \textbf{73/83} & 5
   0.3\,s apart; the other four are separate scenes.\label{fig:qualitative}}
 \end{figure}
 
-\Cref{tab:ablationmain} gives the pipeline ablation with one stage changed per row, and the
-pattern is uniform: \emph{no change to detection, tracking or association improves the count}.
-Appearance matching produces the best candidate pool by a wide margin (82 of 83 animals reached and 73 given their own track, at less than a third of the loose-NMS candidate volume) and still counts three fewer animals than the baseline. The only row that changes
-the confirmation stage is also the only place a substantial loss appears without a
-corresponding pool change, and \cref{tab:confirmers} expands that comparison across four
-methods and two pools. One entry from the wider set is worth isolating: lowering detector confidence from 0.10 to 0.05 added
-3807 candidates and recovered \emph{zero} additional animals, which ruled out the detector
-threshold and pointed us at the tracker's initialization gate.
+\Cref{tab:ablationmain} changes one stage per row, and the pattern is uniform: \emph{no
+change to detection, tracking or association improves the count}. Appearance matching produces the best candidate pool by a wide margin: 82 of 83 animals reached and 73 given their own track, at less than a third of the loose-NMS candidate volume. It still counts three fewer animals than the baseline. The only row that changes the confirmation stage is
+the only place a substantial loss appears without a pool change, and \cref{tab:confirmers}
+expands that comparison across four methods and two pools. One entry from the wider set is
+worth isolating. Lowering detector confidence from 0.10 to 0.05 added 3807 candidates and
+recovered \emph{zero} additional animals, which ruled out the detector threshold and
+pointed us at the tracker's initialization gate.
 
-\Cref{fig:qualitative} shows what the association stage does on held-out video under the two
-conditions that make counting fail. The first is overlap. When two animals stand close
+\Cref{fig:qualitative} shows what the association stage does on held-out video under the
+two conditions that make counting fail. The first is overlap. When two animals stand close
 enough that their boxes intersect, a tracker that leans on spatial proximity will hand both
-to one identity, and the pair is counted once; the first two panels and the centre panel of
-the lower row each contain such a pair, and in every case the animals are carried as separate
-tracks with separate identities. Those first two panels are the same scene 0.3\,s apart, with
-five animals tracked and five counted in both, and tracks 3035 and 3041 keep their identities
-across the pair while the camera translates beneath them. The second is low contrast. In the centre panel of the lower row two animals of 42 and 50\,px sit
-against an almost uniform thermal field, overlapping in image space and individually close to indistinguishable, near the point where a human reader would hesitate to call them animals at all. They are still carried as two tracks. Overlap and low contrast are the two
-conditions under which a counting system silently merges individuals into one, and neither
-does so here. Persistence
-is visible directly in the first two panels: they are 0.3\,s apart, the whole scene
-translates between them as the vehicle moves, and the identities survive the translation
-because motion compensation removes the camera's contribution before association. The
-lower-left panel shows the range spread a single transect frame can contain (87\,px and 22\,px animals simultaneously), with the calibrated score falling as the animal recedes,
-which is the behaviour a per-track posterior is meant to have.
+to one identity, and the pair is counted once. The first two panels and the centre panel of
+the lower row each contain such a pair, and in every case the animals are carried as
+separate tracks. The first two panels are the same scene 0.3\,s apart, with five animals
+tracked and five counted in both; tracks 3035 and 3041 keep their identities across the
+pair because motion compensation removes the camera's contribution before association. The
+second condition is low contrast. In the centre panel of the lower row two animals of 42
+and 50\,px sit against an almost uniform thermal field, overlapping and close to indistinguishable. A human reader would hesitate to call them animals at all. They are still carried as two tracks. The lower-left panel shows the range spread a
+single frame can contain, 87\,px and 22\,px animals at once, with the calibrated score falling as the animal recedes.
 
 \subsection{What the Confidence Condition Buys}
 \label{sec:sensitivity}
 
-The confirmation rule's three parameters are chosen by grid search on the training videos, and the confidence condition
-$c\ge0.65$ is the one a reader is most likely to challenge. The detector did find those
-animals; discarding a candidate because its five best frames average below 0.65 looks like
-throwing away recall that was already paid for. Measured directly, the condition turns out not to be a recall filter at all.
+The confirmation rule's parameters come from the grid search of \cref{eq:gridsearch}, and
+the confidence condition $c\ge0.65$ is the one a reader is most likely to challenge. The
+detector did find those animals, and discarding a candidate because its five best frames
+average below 0.65 looks like throwing away recall that was already paid for. Measured
+directly, the condition is not a recall filter at all.
 
 \begin{table}[htbp]
 \caption{\textbf{Deleting the confidence condition, all else fixed.} The published operating
@@ -420,48 +393,35 @@ trade-off.\label{tab:confsens}}
 \end{tabularx}
 \end{table}
 
-\Cref{tab:confsens} holds the other two parameters at their published values and moves only
-$c$. Three things follow.
-
-First, \textbf{the objection is half right}. Removing the condition entirely raises held-out
-coverage from 66.3\% to 89.2\%. That is the largest coverage gain produced by any single
-change in this paper, larger than all four candidate-generation interventions of
-\cref{sec:inversion}, none of which raised coverage at all. Those animals really were being
-discarded, and they really do come back.
-
-Second, \textbf{they do not come back alone}. The pipeline predicts 111 animals where 83
-exist. Over-counts rise from 3 to 37 while under-counts fall only from 28 to 9, so MAE rises from 2.38 to 3.54 and the bias flips from $-1.92$ to $+2.15$. In animals: 53
-additional tracks are accepted, of which 19 are animals that were previously missed and 34
-are not, so the pipeline buys each recovered animal at the price of roughly two duplicates.
-
-Third, and this is the substantive point, \textbf{the condition is a duplicate suppressor
-rather than a detector threshold}. A fragment sitting on an animal that has already been
-counted is a true detection, since an animal really is there, so nothing in the question
-``is this a deer?'' separates it from a first sighting. Sustained high confidence across a
-track is the cheapest signal available that does separate them, because a duplicate fragment is typically short and low-scoring where the animal's primary track is neither. That is
-why $c$ cannot be relaxed to recover recall: recall and duplicate suppression are being
-bought with the same parameter.
-
-The bias column carries a consequence for deployment rather than for this measurement, and
-\cref{sec:operating} takes it up: the MAE-optimal setting is deliberately conservative, and a
-survey wanting an approximately unbiased estimator should not use it.
+\Cref{tab:confsens} holds the other two parameters at their published values and moves
+only $c$. Three things follow. First, \textbf{the objection is half right}. Removing the
+condition raises held-out coverage from 66.3\% to 89.2\%, the largest coverage gain from any
+single change in this paper; none of the four candidate-generation interventions of
+\cref{sec:inversion} raised coverage at all. Second, \textbf{they do not come back alone}. The pipeline
+predicts 111 animals where 83 exist. Over-counts rise from 3 to 37 while under-counts fall
+only from 28 to 9, so MAE rises from 2.38 to 3.54 and the bias flips from $-1.92$ to
+$+2.15$. In the terms of \cref{prop:identity}, 53 additional tracks are accepted, of which
+19 credit animals that were previously missed and 34 are duplicates or false tracks, so
+each recovered animal costs roughly two duplicates. Third, \textbf{the condition is a
+duplicate suppressor rather than a detector threshold}. A fragment sitting on an animal
+that has already been counted is a true detection, so nothing in the question ``is this a
+deer?'' separates it from a first sighting. Sustained high confidence across a track is the
+cheapest signal that does, because a duplicate fragment is typically short and low-scoring
+where the animal's primary track is neither. That is why $c$ cannot be relaxed to recover
+recall: recall and duplicate suppression are bought with the same parameter. \Cref{sec:operating} takes up the bias column: the MAE-optimal setting is deliberately conservative, and a survey wanting an unbiased estimator should not use it.
 
 One objection remains: that \cref{tab:confsens} moves a single parameter and therefore
 overstates its importance. We repeated the sweep with $m$ and $s$ re-fitted on the 19
 detector-training videos for \emph{each} value of $c$, so the confidence condition is never
-blamed for a companion parameter left at a stale value. The conclusion strengthens rather
-than softens. Given the freedom to compensate, the grid search responds to a lowered $c$ by
-tightening the span constraint from 0 to 1\,s, buying precision with duration instead, and the substitution does not pay: at $c=0$ the held-out MAE is 3.69 against 2.38, and
-coverage falls to 60.2\%, \emph{below} the frozen variant, because a one-second minimum
-discards short tracks belonging to real animals. Across the full $7\times6\times9=378$-cell
-grid only two values of $c$, 0.55 and 0.65, appear among the twelve best cells by fit MAE.
-
-That sweep also exposes a redundancy we report rather than hide. The three best cells in the
-grid are the same $c=0.65$ rule with the span parameter at 0, 0.1 and 0.25, all giving
-identical fits: $s$ is \emph{inert} at the operating point, so the published rule is
-effectively two parameters wearing a third. We keep the third because it is what the sweep
-uses to compensate when $c$ is lowered, which is the behaviour that makes the re-fitted
-comparison informative.
+blamed for a companion parameter left at a stale value. The conclusion strengthens. Given
+the freedom to compensate, the grid search responds to a lowered $c$ by tightening the span
+constraint from 0 to 1\,s, buying precision with duration instead, and the substitution
+does not pay. At $c=0$ the held-out MAE is 3.69 against 2.38, and coverage falls to
+60.2\%, \emph{below} the frozen variant, because a one-second minimum discards short tracks
+belonging to real animals. Across the full 378-cell grid only two values of $c$, 0.55 and
+0.65, appear among the twelve best cells by fit MAE. The sweep also exposes a redundancy we
+report rather than hide. The three best cells are the same $c=0.65$ rule with the span
+parameter at 0, 0.1 and 0.25, all giving identical fits. So $s$ is \emph{inert} at the operating point, and the published rule is effectively two parameters wearing a third.
 
 \begin{figure}[htbp]
   \centering
@@ -472,66 +432,52 @@ comparison informative.
 \end{figure}
 
 \Cref{fig:rulegrid} lays out the full $m\times c$ plane with $s\ge0$, error on the training
-videos beside error on the held-out ones; the held-out panel is for inspection only, since
-choosing a cell by it would be selecting on the test set. It answers
-the natural objection that a more permissive rule would simply remove the bottleneck. It
-would not. A rule of $m\ge2$ and $c\ge0.3$ never under-counts a held-out video, but it
-accepts 477 tracks where 83 animals exist, an MAE of 30.3, which is roughly six tracks per
-animal. The published cell is the single minimum of fit-set error, and on held-out video the
-whole $c=0.65$ column forms a flat valley, with MAE between 2.31 and 2.38 for every $m$ from 2
-to 20, so once $c$ is set the minimum track length barely matters. The converse does not hold:
-a rule of length alone, $m\ge40$ with no confidence condition, fits the training videos
-almost as well (MAE 2.4) but generalizes poorly (3.8). The confidence condition is what
-transfers.
-
-Changing how many frames the score averages leaves the picture unchanged. Re-fitting $(m,c)$
-on the training videos with the score averaged over the best $k=1$, 2, 3, 5 or 10 frames
-selects $c=0.65$ every time, with held-out MAE between 2.23 and 2.62, all inside the 95\%
-interval of the published rule; averaging over 20 frames reaches the lowest fit error and the
-worst held-out error, which is over-fitting. Fewer, higher frames fail outright: no held-out
-track's two best frames average 0.85, so that rule accepts nothing.
-
-The claim of this section is therefore not that these particular values limit the count. It
-is that every setting of the confirmation stage trades missed animals against duplicates
-along a single curve, and the published values sit at its minimum-error point on the training
-videos. The learned confirmers of \cref{sec:learned}, which have no hand-set values at all,
-land on the same curve.
+videos beside error on the held-out ones. The held-out panel is for inspection only, since
+choosing a cell by it would be selecting on the test set. It answers the natural objection
+that a more permissive rule would simply remove the bottleneck. A rule of $m\ge2$ and
+$c\ge0.3$ never under-counts a held-out video, but it accepts 477 tracks where 83 animals
+exist, an MAE of 30.3, roughly six tracks per animal. The published cell is the single
+minimum of fit-set error. On held-out video the whole $c=0.65$ column forms a flat valley,
+with MAE between 2.31 and 2.38 for every $m$ from 2 to 20, so once $c$ is set the minimum
+track length barely matters. The converse does not hold: a rule of length alone, $m\ge40$
+with no confidence condition, fits the training videos almost as well (MAE 2.4) but
+generalizes poorly (3.8). The confidence condition is what transfers. Changing how many
+frames the score averages leaves the picture unchanged. Re-fitting $(m,c)$ with $k=1$, 2,
+3, 5 or 10 in \cref{eq:topk} selects $c=0.65$ every time, with held-out MAE between 2.23 and
+2.62, all inside the 95\% interval of the published rule. Averaging over $k=20$ frames reaches the lowest fit error and the worst held-out error, which is over-fitting. Fewer, higher frames fail
+outright: no held-out track's two best frames average 0.85, so that rule accepts nothing.
+Every setting of the confirmation stage therefore trades missed animals against duplicates along a single curve. The published values sit at its minimum-error point on the training videos, and the learned confirmers of \cref{sec:learned}, which have no hand-set values at all, land on the same curve.
 
 \subsection{The Rule Is Not the Bottleneck}
 \label{sec:learned}
 
-\Cref{sec:sensitivity} shows the rule's parameters are load-bearing rather than arbitrary.
-The remaining question is whether the \emph{form} of the rule is what limits the count. If
-so, replacing it with a learned confirmer should help. We tested that under three protocols
-and it does not.
+\Cref{sec:sensitivity} shows that the rule's parameters are load-bearing rather than
+arbitrary. The remaining question is whether the \emph{form} of the rule limits the count.
+We tested a learned confirmer under three
+protocols and it does not. Because a negative result about learning is only as strong as
+the learners behind it, we state them in full. Every confirmer consumes the same input, one candidate track as a variable-length sequence of ten per-detection features. These are confidence, box centre, width, height, $\sqrt{\text{area}}$, the frame-to-frame deltas of
+centre and $\sqrt{\text{area}}$, and the time gap to the previous detection. Positions and
+sizes are normalised by frame size, so flicker appears as a large time gap and ego-motion
+as a systematic centre drift. Eight further features describe the track's \emph{competing
+group}, the tracks overlapping it in time whose mean boxes intersect it. They are the group size, the
+track's length as a fraction of the longest in its group, and the group's confidence and
+duration statistics. These are the features a duplicate must be separated on, since a
+duplicate differs from its primary not in appearance but in being the shorter, weaker
+member of a group. Appearance is excluded, because \cref{sec:reid} shows it carries little
+signal at this pixel scale and because embeddings would let a 60k-parameter model memorise
+32 videos.
 
-Because a negative result about learning is only as strong as the learners behind it, we
-state them in full. Every confirmer consumes the same input: one candidate track as a
-variable-length sequence of ten per-detection features: confidence, box centre, width, height, $\sqrt{\text{area}}$, the frame-to-frame deltas of centre and $\sqrt{\text{area}}$,
-and the time gap to the previous detection, with positions and sizes normalised by frame
-size, so that flicker appears as a large time gap and ego-motion as a systematic centre
-drift. Eight further features describe the track's \emph{competing group}, the tracks
-overlapping it in time whose mean boxes intersect it: group size, the track's length as a
-fraction of the longest in its group, and the group's confidence and duration statistics.
-These are the features a duplicate must be separated on, since a duplicate differs from its
-primary not in appearance but in being the shorter, weaker member of a group. Appearance is
-deliberately excluded, both because \cref{sec:reid} shows it carries little signal at this
-pixel scale and because embeddings would let a 60k-parameter model memorise 32 videos.
-
-The learners span three orders of magnitude in capacity: logistic regression on pooled
-summary statistics (13 parameters); gradient boosting, both depth-3 at 200 iterations
-($\sim$$10^3$) and depth-1 stumps ($\sim$40 effective parameters); and a temporal transformer
-(2 pre-norm encoder layers, $d_{\text{model}}=64$, 4 heads, dropout 0.2, sinusoidal position
-encoding, masked attention pooling so a 3-detection track and a 300-detection track pool
-comparably, cross-track context fused after pooling; $6\times10^4$ parameters). Class
-imbalance, 207 primary tracks against 6801 duplicates and false candidates in pool C, is
-handled by inverse-frequency positive weighting in the loss
-($w_+=N_-/N_+\approx33$); splits are by video throughout, reusing the detector's assignment so
-no video appears in two splits. We did \emph{not} attempt hard-negative mining or
-cost-sensitive losses beyond that weighting. We report this as a limitation rather than a
-defence: it is possible that a better-tuned learner closes the gap, but the monotone capacity
-trend below is evidence about sample size rather than about tuning, and a tuning fix would
-have to explain why the \emph{smallest} models do best.
+The learners span three orders of magnitude in capacity. Logistic regression on pooled
+summary statistics has 13 parameters. Gradient boosting is run at depth 3 for 200
+iterations (about $10^3$ parameters) and as depth-1 stumps (about 40 effective
+parameters). The temporal transformer has 2 pre-norm encoder layers, $d_{\text{model}}=64$,
+4 heads, dropout 0.2 and sinusoidal position encoding. Masked attention pooling lets a 3-detection track and a 300-detection track pool comparably, and cross-track context is fused after pooling, for $6\times10^4$ parameters in all. Class imbalance, 207 primary tracks
+against 6801 duplicates and false candidates in pool C, is handled by inverse-frequency
+positive weighting in the loss ($w_+=N_-/N_+\approx33$). Splits are by video throughout,
+reusing the detector's assignment. We did \emph{not} attempt hard-negative mining or
+cost-sensitive losses beyond that weighting, and we report this as a limitation. A better-tuned learner might close the gap, but the monotone capacity trend
+below is evidence about sample size rather than about tuning, and a tuning fix would have
+to explain why the \emph{smallest} models do best.
 
 \begin{table}[htbp]
 \caption{\textbf{Held-out confirmation comparison.} All methods trained and thresholded on
@@ -556,60 +502,60 @@ predicting 102 animals where 83 exist.\label{tab:confirmers}}
 \end{tabularx}
 \end{table}
 
-\Cref{tab:confirmers} gives the held-out comparison. Every learned method loses on pool C: gradient boosting and the temporal transformer both at 2.85 MAE and logistic regression at 3.00, against the rule's 2.38. On the richer pool G the transformer only ties, at 2.77. Every learned variant \emph{under-counts harder} than the rule, indicating that they
-reject additional candidates rather than recovering the animals the rule discards.
-
-Two further protocols agree. Under 8-fold cross-validation over videos the rule again wins (1.88 MAE; the per-fold search
-re-selects the published values in all eight folds, which is why this matches the all-video
-figure of \cref{tab:counting}), and the pattern across that sweep is diagnostic: performance declines monotonically with model capacity: logistic regression at 13 parameters reaches 3.41,
-gradient boosting at $10^3$ reaches 2.41--2.66, and the transformer at $6\times10^4$ reaches
-2.81, while shrinking a gradient-boosted model to depth-1 stumps ($\sim$40 effective
-parameters) recovers nearly the whole gap and achieves the best root-mean-square error of any method. This is
-a variance limit, not an architectural one.
-
-We also trained directly on the counting objective, letting fragments share probability mass
-so the loss is $|\sum_i p_i - c|$ rather than per-track cross-entropy. It ranked last of the variants tested, which rules out ``the rule wins because it optimizes MAE directly'' as the
-explanation.
-
-Having established \emph{where} the animals are lost, we ask \emph{which} animals and why.
+\Cref{tab:confirmers} gives the held-out comparison. Every learned method loses on pool C:
+gradient boosting and the temporal transformer at 2.85 MAE and logistic regression at 3.00,
+against the rule's 2.38. On the richer pool G the transformer only ties, at 2.77. Every
+learned variant \emph{under-counts harder} than the rule, so they reject additional
+candidates rather than recovering the animals the rule discards. Two further protocols
+agree. Under 8-fold cross-validation over videos the rule again wins, at 1.88 MAE; the
+per-fold search re-selects the published values in all eight folds, which is why this
+matches the all-video figure of \cref{tab:counting}. The pattern across that sweep is
+diagnostic. Performance declines monotonically with capacity: logistic regression at 13
+parameters reaches 3.41, gradient boosting at $10^3$ reaches 2.41--2.66, and the transformer at $6\times10^4$ reaches 2.81. Depth-1 stumps (about 40 effective parameters) recover nearly the whole gap and achieve the best root-mean-square error of
+any method. This is a variance limit, not an architectural one. We also trained directly on
+the counting objective, letting fragments share probability mass so the loss is
+$|\sum_i p_i - c|$ rather than per-track cross-entropy. It ranked last of the variants
+tested, which rules out ``the rule wins because it optimizes MAE directly'' as the
+explanation. The remaining sections ask whether duplicate suppression can be improved
+directly, how the pipeline transfers across sites, and which animals are lost.
 
 \subsection{Duplicate Suppression at the Frame and Track Level}
 \label{sec:nms}
 
 Since the negatives that limit counting are duplicates, the natural question is whether
 better duplicate suppression solves it. We tested the two levels at which suppression can
-act, and neither reaches the duplicates that matter.
+act, and neither reaches the duplicates that matter. At the \emph{frame} level,
+non-maximum suppression is already the mechanism, and \cref{tab:ablationmain} contains the
+sweep. Raising the NMS IoU threshold from 0.50 to 0.90, which suppresses less so that more
+overlapping boxes survive, multiplies the candidate pool thirteenfold and produces the worst
+count in the paper, 41 of 83. Frame-level suppression is therefore load-bearing in the
+direction of \emph{more} suppression, not less. We did not test
+Soft-NMS~\cite{bodla2017softnms} or Confluence~\cite{shuai2021confluence}, and the reason
+is structural rather than incidental. Both decide between boxes present in the same frame,
+while the duplicates that cost counts here are separate tracks on the same animal, often
+seconds apart, that no frame-level rule can see.
 
-At the \emph{frame} level, non-maximum suppression is already the mechanism, and
-\cref{tab:ablationmain} contains the sweep: raising the NMS IoU threshold from 0.50 to 0.90 (suppressing less, so that more overlapping boxes survive) multiplies the candidate pool
-thirteenfold and produces the worst count in the paper, 41 of 83. Frame-level suppression is
-therefore load-bearing in the direction of \emph{more} suppression, not less. We did not test
-Soft-NMS~\cite{bodla2017softnms} or Confluence~\cite{shuai2021confluence}, and the reason is
-structural rather than incidental: both decide between boxes present in the same frame, while
-the duplicates that cost counts here are separate tracks on the same animal, often seconds
-apart, that no frame-level rule can see. A frame-level method could at best change how
-candidates are formed, and \cref{sec:inversion} shows that every change to candidate formation
-we made left the count unchanged or lower.
-
-At the \emph{track} level we did test clustering, which is the operation matching the problem:
-accept tracks that lie on an animal, then merge the accepted tracks into animals. Stage one becomes an easier learning problem: ``is this track on a deer at all'' has 632 unambiguous
-positives instead of 207 contested ones, and stage two is geometry: tracks overlapping in
-time within a box-scale of each other are one animal, and the count is the number of clusters.
-It reaches MAE 3.66 against the rule's 1.88 on the same 32-video protocol, and the error
-changes character rather than shrinking: bias falls to $-0.34$ from $-0.81$, but over-counts
-rise to 53 and under-counts to 64, against 17 and 43. The clustering is nearly unbiased and
-much noisier, which is what happens when merging decisions are made on geometry alone at 27
-pixels. This is the same trade as \cref{tab:confsens}: the methods that recover animals admit
-duplicates at a similar rate, and the published rule sits where the two costs balance.
+At the \emph{track} level we did test clustering, which is the operation matching the
+problem: accept tracks that lie on an animal, then merge the accepted tracks into animals.
+Stage one becomes an easier learning problem, since ``is this track on a deer at all'' has
+632 unambiguous positives instead of 207 contested ones. Stage two is geometry: tracks
+overlapping in time within a box-scale of each other are one animal, and the count is the
+number of clusters. It reaches MAE 3.66 against the rule's 1.88 on the same 32-video
+protocol, and the error changes character rather than shrinking. Bias falls to $-0.34$
+from $-0.81$, but over-counts rise to 53 and under-counts to 64, against 17 and 43. The
+clustering is nearly unbiased and much noisier, which is what happens when merging
+decisions are made on geometry alone at 27 pixels. This is the same trade as
+\cref{tab:confsens}: the methods that recover animals admit duplicates at a similar rate,
+and the published rule sits where the two costs balance.
 
 \subsection{Generalization Across Sites}
 \label{sec:loso}
 
 The held-out protocol of \cref{sec:heldout} splits by video, so a held-out video may come
-from a site the detector has seen. \Cref{fig:loso} asks the stricter question: train on three sites, count on the fourth, four
-times over, so every one of the 235 detectable animals is scored by a detector that never saw its site,
-across 8 videos per fold. The confirmation rule is \emph{not} refitted per fold: the published $(m,s,c)$ is applied unchanged, which is the honest reading of ``does this
-pipeline transfer''.
+from a site the detector has seen. \Cref{fig:loso} asks the stricter question: train on
+three sites and count on the fourth, four times over, 8 videos per fold. Every one of the 235 detectable animals is then scored by a detector that never saw its site. The
+confirmation rule is \emph{not} refitted per fold; the published $(m^{*},s^{*},c^{*})$ is
+applied unchanged, which is the honest reading of ``does this pipeline transfer''.
 
 \begin{figure}[htb]
   \centering
@@ -619,44 +565,41 @@ pipeline transfer''.
   parentheses.\label{fig:loso}}
 \end{figure}
 
-\Cref{fig:loso} puts the three stages on one set of axes, and the shapes are what carry the
-result: detection and association hold a large and nearly regular quadrilateral across all
-four sites, while the counted polygon is lopsided and pinches to a point at MAS. Sites run
-clockwise by corpus size and every vertex is labelled, since a radar encodes value as radius
-while the eye reads area. Per-fold MAE is 7.38, 4.00, 3.38 and 1.88 animals per video for SHB,
-TON, SHW and MAS. Two things follow,
-and the second is the more useful. First, detection transfers well but not
+\Cref{fig:loso} puts the three stages on one set of axes, and the shapes carry the result.
+Detection and association hold a large and nearly regular quadrilateral across all four
+sites, while the counted polygon is lopsided and pinches to a point at MAS. Per-fold MAE is 7.38, 4.00, 3.38 and 1.88 animals per video for
+SHB, TON, SHW and MAS. Two things follow. First, detection transfers well but not
 perfectly. Pooled over the four folds, \reachedq falls from the within-site 98.8\% to
 $91.1 \pm 3.7\%$, \primaryq from 88.0\% to $78.3 \pm 5.2\%$, \countedq from 66.3\% to
-$51.9 \pm 6.4\%$, and MAE rises from 2.38 to 4.16 animals per video. These are measured over all 235 detectable animals rather than the 83 of
-the main protocol, so they are the tighter estimates in the paper. The claim that detection is
-near-saturated should therefore be read as within-corpus; across sites a real detection gap
-opens, and \cref{sec:discussion} treats that as the boundary of the claim rather than a
-detail.
+$51.9 \pm 6.4\%$, and MAE rises from 2.38 to 4.16 animals per video. These are measured
+over all 235 detectable animals rather than the 83 of the main protocol, so they are the
+tighter estimates in the paper. The claim that detection is near-saturated should
+therefore be read as within-corpus; across sites a real detection gap opens, and
+\cref{sec:discussion} treats that as the boundary of the claim.
 
 Second, \countedq falls further and unevenly, from 69\% of SHB's animals down to none of
-MAS's, and the per-fold score ceiling names the cause. The highest \texttt{topk\_conf} any long
-track attains is 0.862 on the SHB fold, 0.782 on TON, 0.752 on SHW and 0.585 on MAS. The confirmation rule's
-$c\ge0.65$ is an \emph{absolute} threshold on a detector score, and a detector trained without
-a site scores that site systematically lower: on the MAS fold no track anywhere reaches 0.585,
-so a threshold at 0.65 accepts nothing and the pipeline returns zero on 15 animals it detected
-12 of. We cannot attribute that shift to site as such. Each of the four sites was surveyed on
-a single night, so a fold removes a site together with that night's conditions: ambient
-temperature, humidity and wind all differ between nights, and they set how far an animal's
-heat signature stands above the background. A lower thermal contrast shrinks the region the
-detector responds to, changing both the box it draws and the confidence it assigns. The shift
-is therefore between deployment conditions, of which site is only one, and separating them
-would need the same site surveyed on several nights. This is not a new failure mode but the one \cref{sec:sensitivity} already identified,
-arriving through a different door: the confidence condition is doing duplicate suppression on
-a score scale that itself depends on deployment conditions.
+MAS's, and the per-fold score ceiling names the cause. The highest track score $\bar{c}_5$
+any long track attains is 0.862 on the SHB fold, 0.782 on TON, 0.752 on SHW and 0.585 on
+MAS. The rule's $c\ge0.65$ is an \emph{absolute} threshold on a detector score, and a
+detector trained without a site scores that site systematically lower. On the MAS fold no
+track exceeds 0.585, so a threshold at 0.65 accepts nothing, and the pipeline returns zero
+on 15 animals it detected 12 of. We cannot attribute that shift to site as such. Each site
+was surveyed on a single night, so a fold removes a site together with that night's ambient
+temperature, humidity and wind, which set how far an animal's heat signature stands above
+the background. The shift is therefore
+between deployment conditions, of which site is only one, and separating them would need
+the same site surveyed on several nights. This is the failure mode \cref{sec:sensitivity}
+already identified: the confidence condition is doing duplicate suppression on a score
+scale that itself depends on deployment conditions.
 
-The obvious repair does not work, which is informative. Replacing the absolute threshold with a fold-relative one, accepting the same \emph{fraction} of long tracks that $c\ge0.65$ accepts on pool C, restores coverage to $80.9 \pm 5.1\%$ and destroys the count, at MAE 8.88 and a
-bias of $+6.06$ animals per video against $-2.91$ for the frozen rule. The cross-site folds
-generate more long tracks than the within-site pool, so a fixed acceptance fraction admits
-duplicates faster than it recovers animals. That is the inversion of \cref{sec:inversion}
-reappearing across sites, and it says that transferring this pipeline to a new site or survey night requires re-fitting the threshold on labelled data from it, not a scale-free reformulation of
-it. Quantifying how much labelled data that takes is the most practically valuable open
-question this corpus leaves.
+The obvious repair does not work, which is informative. A fold-relative threshold accepts the same \emph{fraction} of long tracks that $c\ge0.65$ accepts on pool C. It restores coverage to $80.9 \pm 5.1\%$ and destroys the count, at MAE
+8.88 and a bias of $+6.06$ animals per video against $-2.91$ for the frozen rule. The
+cross-site folds generate more long tracks than the within-site pool, so a fixed
+acceptance fraction admits duplicates faster than it recovers animals. That is the
+inversion of \cref{sec:inversion} reappearing across sites. Transferring this pipeline to a
+new site or survey night therefore requires re-fitting the threshold on labelled data from
+it, and quantifying how much labelled data that takes is the most practically valuable
+open question this corpus leaves.
 
 \subsection{Which Animals Are Missed}
 \label{sec:analysis}
@@ -672,48 +615,42 @@ question this corpus leaves.
 
 Of the 83 held-out animals, the detector never fires on 9 (median 20\,px, at the sensor's
 limit) and the rule rejects 27 that it did find. Of those 27, \textbf{26 fail the confidence
-condition} and one fails purely on track length: their five best detections average below
+condition} and one fails purely on track length. Their five best detections average below
 0.65, though five do reach 0.65 in a single frame, so the failure is one of sustained rather
-than peak confidence. Those 26 are the entire remaining opportunity, though \cref{sec:sensitivity} shows they cannot be recovered by moving the threshold that
-rejects them, since doing so admits roughly two duplicates for each. We verified by direct
-inspection that none of the 36 are annotation errors: each was rendered with its ground-truth box at three points in its track, and all are real animals.
-
-The three groups are separated by degree rather than by kind, which is the reason
-\cref{sec:learned} finds what it finds. Counted animals have a median box of 38.1\,px, 102
-annotated frames and candidate confidence 0.76; the rejected group sits at 28.0\,px, 47
-frames and 0.52; the undetected at 19.9\,px and 47 frames. The rejected animals lie between
-the other two on every measure, so no threshold on any one of them separates them cleanly.
+than peak confidence. Those 26 are the entire remaining opportunity, and
+\cref{sec:sensitivity} shows they cannot be recovered by moving the threshold that rejects
+them, since doing so admits roughly two duplicates for each. We verified by direct
+inspection that none of the 36 are annotation errors: each was rendered with its
+ground-truth box at three points in its track, and all are real animals. The three groups
+are separated by degree rather than by kind, which is why \cref{sec:learned} finds what it
+finds. Counted animals have a median box of 38.1\,px, 102 annotated frames and candidate
+confidence 0.76; the rejected group sits at 28.0\,px, 47 frames and 0.52; the undetected at
+19.9\,px and 47 frames. The rejected animals lie between the other two on every measure,
+so no threshold on any one of them separates them cleanly.
 
 Turned around, the same data give the probability that an animal is found and counted as a
-function of its size, which is the form a survey needs. Taking each animal's median box side
-as a proxy for its range, the detector finds 78\% of the 235 detectable animals below 20\,px
-and essentially all of them above 30\,px, but counting falls off far faster: 81\% of animals
-at 30--40\,px are counted, 57\% at 20--30\,px, where the corpus median sits, and 22\% below
-20\,px. On the 83 held-out animals alone the 20--30\,px figure is lower still, at 36\%. The
-loss that range causes is therefore mostly a confirmation loss rather than a detection loss,
-the paper's central finding reappearing as a function of distance. Above 100\,px the counted
-rate falls back to 50\%, the training-distribution gap described next. Box size also carries
-body size, pose and thermal contrast, so this is a size-based detection function rather than
-a strict distance function, but it is the empirical input a distance-sampling estimate of
-abundance would need.
+function of its size, which is the form a survey needs. With each animal's median box side
+as the range proxy of \cref{sec:rangeproxy}, the detector finds 78\% of the 235 detectable
+animals below 20\,px and essentially all of them above 30\,px. Counting falls off far faster: 81\% of animals at 30--40\,px are counted, 57\% at 20--30\,px, where the corpus
+median sits, and 22\% below 20\,px. On the 83 held-out animals alone the 20--30\,px figure
+is 36\%. The loss that range causes is therefore mostly a confirmation loss rather than a
+detection loss. Above 100\,px the counted rate falls back to 50\%, the
+training-distribution gap described next. Box size also carries body size, pose and thermal
+contrast, so this is a size-based detection function rather than a strict distance
+function, but it is the empirical input a distance-sampling estimate of abundance would
+need.
 
-That inspection produced an unexpected finding. Three of the missed animals are not small but
-very \emph{large}: 104, 149 and 157\,px against a corpus median of 27, and the 149\,px animal
-was never detected at all. \Cref{fig:scale} gives the likely explanation: the largest
-training box is 95.6\,px and the split contains \emph{zero} boxes at or above 100\,px, so all
-three sit outside the annotated size distribution. Scale augmentation does present enlarged
-copies, so the detector is not strictly unexposed to large objects, but under the symmetric
-sampling used here an enlargement beyond $1.5\times$ is never drawn. The mirror image of the
-small-object problem is visible here: detector performance tracks example density, and is lowest where examples are scarcest.
-
-The remedy is straightforward to state, and we do not evaluate it here. Covering the upper
-tail requires sampling the resize factor from an explicit asymmetric range rather than
-symmetrically about unity, so that a 96\,px box can be presented at twice its size without
-the same draw shrinking a 27\,px animal to sub-pixel; Ultralytics supports such a range from
-version 8.4. Whether it recovers these animals is left to future work. The loss is
-concentrated in any case: the one video containing them counts 3 of 8, three of its five
-misses being the oversized individuals, so this is worth roughly 4 points of the headline
-figure.
+That inspection produced an unexpected finding. Three of the missed animals are not small
+but very \emph{large}: 104, 149 and 157\,px against a corpus median of 27, and the 149\,px
+animal was never detected at all. \Cref{fig:scale} gives the likely explanation. The largest
+training box is 95.6\,px and the split contains \emph{zero} boxes at or above 100\,px, so
+all three sit outside the annotated size distribution. Scale augmentation does present
+enlarged copies, but under the symmetric sampling used here an enlargement beyond
+$1.5\times$ is never drawn. The remedy is straightforward to state, and we do not evaluate it. Covering the upper tail
+requires sampling the resize factor from an explicit asymmetric range, so that a 96\,px box
+can be presented at twice its size without the same draw shrinking a 27\,px animal to sub-pixel. Ultralytics supports such a range from version 8.4. The loss is concentrated in
+any case: the one video containing them counts 3 of 8, three of its five misses being the
+oversized individuals, so this is worth roughly 4 points of the headline figure.
 
 \subsection{Appearance Carries No Identity Signal at 27 Pixels}
 \label{sec:reid}
@@ -745,31 +682,28 @@ Trained thermal encoder & \textbf{0.899} \\
 A word on terms before the result. \emph{Recognising an individual animal} is the task this
 subsection tests and rejects. \emph{Appearance matching}, the ablated component that uses
 appearance to help associate detections within one video, is a different and much easier
-operation. The reported system performs neither (\cref{sec:pipeline}).
+operation. The reported system performs neither (\cref{sec:pipeline}). Appearance-based
+recognition is the natural proposal for the association stage, and it is the one component
+we tested and \emph{rejected on the evidence}. At this pixel scale appearance carries less
+identity information than a two-number bounding box, and a system built on it would be
+reporting range, not identity. We evaluate closed-set identity matching, under the standard protocol, on \textbf{69 animals
+in 7 videos the detector never trained on}: each track is split temporally, the first half
+forms the gallery and the second half the query. Within video is the \emph{ceiling}, since
+both halves share range, pose and thermal calibration, so a low score is decisive.
 
-Appearance-based recognition of individual animals is the natural proposal for the association stage, and it is the one component we tested and \emph{rejected on the evidence}. This
-subsection records why, because the negative result is more useful than the proposal: at this
-pixel scale appearance carries less identity information than a two-number bounding box, and
-a system built on it would be reporting range, not identity. Because the annotation gives one
-track per individual, the corpus already contains identity labels and the question can be
-settled empirically rather than argued. We evaluate closed-set identity matching, under the standard protocol for this question, on \textbf{69 animals in 7 videos the detector never trained on}: each
-track is split temporally, the first half forms the gallery and the second half the query.
-Within video is the \emph{ceiling}, since both halves share range, pose and thermal
-calibration, so a low score is decisive.
-
-A trained thermal encoder reaches rank-1 $0.899 \pm 0.093$ (\cref{tab:reid}), which sounds like working individual recognition until the decomposition. \textbf{Box size alone reaches
-$0.638 \pm 0.118$}, and within
-a video an animal's range changes slowly, so most of what looks like identification is
-matching \emph{distance}. Appearance in isolation carries little signal: mean intensity carries exactly
-chance information, silhouette with scale removed reaches 0.435, and a pretrained CNN lands
-below plain geometry. At a median $29\times24$ pixels there is not enough detail to key an
-identity to, so we describe the system as performing \emph{track association}, preventing
-double counting within a survey, and make no individual-identification claim. Appearance
-does help the \emph{association} stage, which is a far easier problem: enabling it gives the
-best candidate pool in the paper, 82 of 83 animals reached and 73 given their own track
-(\cref{tab:ablationmain}). That pool still counts three fewer animals than the baseline,
-so better association does not translate into a better count, the same pattern every other
-pool improvement follows. The conclusion for practice is therefore double, and both halves
-are negative: appearance cannot identify individual deer at this resolution, and even where
-it demonstrably improves association it does not improve the count. \textbf{The reported system uses neither appearance matching nor any form of individual recognition}, and we would advise against building a
-thermal survey pipeline on it until the imagery is several times larger than 27 pixels.
+A trained thermal encoder reaches rank-1 $0.899 \pm 0.093$ (\cref{tab:reid}), which sounds
+like working individual recognition until the decomposition. \textbf{Box size alone reaches
+$0.638 \pm 0.118$}, and within a video an animal's range changes slowly, so most of what
+looks like identification is matching \emph{distance}. Appearance in isolation carries
+little signal: mean intensity carries exactly chance information, silhouette with scale
+removed reaches 0.435, and a pretrained CNN lands below plain geometry. At a median
+$29\times24$ pixels there is not enough detail to key an identity to, so we describe the
+system as performing \emph{track association}, preventing double counting within a survey,
+and make no individual-identification claim. Appearance does help the \emph{association}
+stage, which is a far easier problem. Enabling it gives the best candidate pool in the
+paper, 82 of 83 animals reached and 73 given their own track (\cref{tab:ablationmain}), and
+that pool still counts three fewer animals than the baseline. Both halves of the conclusion are negative: appearance cannot identify individual
+deer at this resolution, and even where it improves association it does not improve the
+count. \textbf{The reported system uses neither appearance matching nor any form of
+individual recognition}, and we would advise against building a thermal survey pipeline on
+it until the imagery is several times larger than 27 pixels.

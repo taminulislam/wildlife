@@ -1,27 +1,22 @@
 \section{Materials and Methods}
 \label{sec:methods}
 
-This section describes the corpus, the counting system, and the instrument we use to
-measure it. The pipeline is deliberately conventional; the measurement is not.
-
 \subsection{Dataset: Corpus, Annotation and Splits}
 \label{sec:dataset}
 
-The corpus is 32 nocturnal road-transect videos recorded with a vehicle-mounted FLIR
-thermal camera across four sites in southern Illinois, eight videos per site. Frames are
-$640\times512$ single-channel thermal at 60\,fps; the vehicle travels at 25--90\,km/h, so
-the background translates continuously and the same animal is visible for a few seconds at
-most. \Cref{fig:dataset} shows representative frames with their annotation, and
-\cref{tab:dataset} summarizes the corpus. Showing the raw and annotated rows together is the
-point: the annotation looks unambiguous once drawn, but the top row is what a detector
-actually receives, and in its third and fourth panels the animals are a few dozen pixels of
-slightly warmer texture against thermal clutter. The median animal is $29\times24$\,px,
-approximately the smallest box in the third panel.
-
-Thermal transects carry low and drifting global contrast, so every frame is normalized with contrast-limited adaptive histogram equalisation (CLAHE)~\cite{reza2004realization} before use, identically at training and inference and for
-every model reported here. This single preprocessing choice is worth more than any architectural one we tested: test mAP50 falls from $0.519$ to $0.299$ without it, which
-is why the figures in this paper show normalized rather than raw frames: they are the pixels
-the detectors actually consume.
+The corpus is 32 nocturnal road-transect videos recorded with a vehicle-mounted FLIR thermal
+camera at four sites in southern Illinois, eight videos per site. Frames are $640\times512$
+single-channel thermal at 60\,fps. The vehicle travels at 25--90\,km/h, so the background
+translates continuously and the same animal is visible for a few seconds at most.
+\Cref{fig:dataset} shows representative frames with their annotation and \cref{tab:dataset}
+summarizes the corpus. The top row is what a detector receives: in the third and fourth panels the animals are a few dozen pixels of slightly warmer texture against thermal clutter. The median animal is $29\times24$\,px, roughly the smallest box in
+the third panel. Thermal transects carry low and drifting global contrast, so every frame is
+normalized with contrast-limited adaptive histogram equalisation
+(CLAHE)~\cite{reza2004realization} before use, identically at training and inference and for
+every model reported here. This single preprocessing choice is worth more than any
+architectural one we tested: test mAP50 falls from $0.519$ to $0.299$ without it. The figures
+in this paper therefore show normalized rather than raw frames, because they are the pixels
+the detectors consume.
 
 \begin{figure}[htbp]
 \centering
@@ -66,51 +61,49 @@ Test  &  9 &  3725 & 1490 & 2235 & 2792 \\
 \end{table}
 
 Two frame counts appear in this paper and they measure different things. The 32 videos
-contain 521,930 frames in total, and \emph{every} deer in \emph{every} frame of all 32 is
-annotated in the Computer Vision Annotation Tool (CVAT) as a member of an individual track: that annotation is the 236 tracks and
-21,646 boxes quoted above, and it is what ``fully annotated'' refers to. Training a detector
-on all 521,930 frames would be wasteful rather than helpful, because at 60\,fps consecutive frames are near-duplicates, so the detector dataset of \cref{tab:dataset} is an extraction from
-that annotation: 18,914 frames sampled around annotated activity together with explicit
-negatives, carrying the 12,903 boxes that fall inside them. The 21,646 figure is therefore the
-size of the ground truth, the 12,903 the size of the detector's training signal, and the
-counting evaluation of \cref{sec:counting} always runs against the former, on whole videos
-decoded end to end, never against the sampled subset.
+contain 521,930 frames, and \emph{every} deer in \emph{every} frame is annotated in the
+Computer Vision Annotation Tool (CVAT) as a member of an individual track. That annotation is
+the 236 tracks and 21,646 boxes quoted above, and it is what ``fully annotated'' means here.
+At 60\,fps consecutive frames are near-duplicates, so the detector dataset of \cref{tab:dataset} is an extraction from the annotation: 18,914 frames sampled around annotated activity together
+with explicit negatives, carrying the 12,903 boxes that fall inside them. The 21,646 figure
+is the size of the ground truth and the 12,903 the size of the detector's training signal.
+The counting evaluation of \cref{sec:counting} always runs against the former, on whole
+videos decoded end to end. Of the 18,914 extracted frames, 7438 contain at least one deer
+and 11,476 are explicit negatives; background frames matter, since a survey system must not
+fire on warm rocks or structures.
 
-Of the 18,914 extracted frames, 7438 contain at least one deer and 11,476 are explicit
-negatives; background frames matter, since a survey system must not fire on warm rocks or
-structures. The 236 animals are unevenly distributed across the four sites: SHB contributes 132 (56\% of
-the corpus), TON 51, SHW 38 and MAS 15. One TON track is marked outside on every frame, the
-animal being occluded throughout, so it can never be detected; \textbf{235 animals are
-detectable and every detection and counting denominator in this paper is 235}, while 236
-remains the count of annotated individuals. That imbalance is not incidental: SHB is the dense-group site where most of our counting error concentrates
+The 236 animals are unevenly distributed across the four sites: SHB contributes 132 (56\% of
+the corpus), TON 51, SHW 38 and MAS 15. One TON track is marked outside the frame on every
+frame, the animal being occluded throughout, so it can never be detected. \textbf{235 animals
+are therefore detectable, and every detection and counting denominator in this paper is
+235}, while 236 remains the count of annotated individuals. The imbalance is not incidental.
+SHB is the dense-group site where most of the counting error concentrates
 (\cref{sec:counting}), and MAS is small enough that its per-site figures should be read as
-indicative only.
+indicative only. Every individual deer is annotated as a distinct \emph{track}, and this is
+the property the paper depends on. One track is one animal, so the same annotation serves as
+per-frame detection ground truth, as association ground truth and as count ground truth,
+the number of tracks in a video. In \cref{sec:reid} it also serves as identity labels.
 
-Every individual deer is annotated in CVAT as a distinct \emph{track}. This is the property
-the paper depends on: one track is one animal, so the same annotation simultaneously serves
-as per-frame detection ground truth, as association ground truth, as count ground truth
-(the number of tracks in a video), and, as \cref{sec:analysis} exploits, as identity labels for the appearance analysis of \cref{sec:reid}.
-
-We split by \emph{video}, never by frame, and stratify by site so all four sites appear in
-each split, the deployment target is these same sites, and a frame-level split would leak
-near-duplicate frames across the boundary. The result is 19 training videos (12,852 images),
-4 validation (2337) and 9 test (3725), allocated by animal count to roughly 65/19/16\%.
-
-Throughout the paper, \textbf{``held out'' means the 13 validation and test videos the
-detector never trained on}, containing 83 of the 236 deer. \Cref{sec:counting} shows why
-this distinction is not pedantic: counting accuracy measured over all 32 videos, 19 of which
-trained the detector, is 15.5 points higher than on held-out video alone.
+We split by \emph{video}, never by frame, and stratify by site so that all four sites appear
+in each split. The deployment target is these same sites, and a frame-level split would leak
+near-duplicate frames across the boundary. The result is 19 training videos (12,852
+images), 4 validation (2337) and 9 test (3725), allocated by animal count to roughly
+65/19/16\%. Throughout the paper, \textbf{``held out'' means the 13 validation and test
+videos the detector never trained on}, containing 83 of the 236 deer. \Cref{sec:heldout}
+shows why the distinction matters: counting accuracy measured over all 32 videos, 19 of
+which trained the detector, is 15.5 points higher than on held-out video alone.
 
 \subsection{Object Scale}
 \label{sec:scale}
 
-The animals are small and the distribution is one-sided: median box $29\times24$ pixels
-($\sqrt{\text{area}}=26.8$), 71\% below the COCO~\cite{lin2014coco} small-object threshold
-of $32^2$, and \emph{zero} boxes in the COCO-large category. Resolution is therefore the
-strongest single accuracy lever, which motivates the ablation in \cref{sec:detection}. The
-one-sidedness has a second consequence, developed in \cref{sec:analysis}: no box in the
-training split exceeds 96 pixels, and detector performance falls on the few animals that appear larger: the upper tail of the scale distribution is as under-served as the lower
-one, and is far less often checked.
+The animals are small and the distribution is one-sided. The median box is $29\times24$
+pixels ($\sqrt{\text{area}}=26.8$), 71\% of boxes fall below the COCO~\cite{lin2014coco}
+small-object threshold of $32^2$, and \emph{zero} boxes reach the COCO-large category.
+Resolution is therefore the strongest single accuracy lever, which motivates the ablation in
+\cref{sec:detection}. The one-sidedness has a second consequence, developed in
+\cref{sec:analysis}: no box in the training split exceeds 96 pixels, and detector
+performance falls on the few animals that appear larger. The upper tail of the scale
+distribution is as under-served as the lower one, and it is far less often checked.
 
 \subsection{Counting Pipeline}
 \label{sec:pipeline}
@@ -124,87 +117,129 @@ detected per frame, associated into candidate tracks, and filtered by a three-pa
   ablated and are not used. Frames are illustrative.\label{fig:pipeline}}
 \end{figure}
 
-\Cref{fig:pipeline} shows the system, which we refer to as \textbf{TRACT} (Thermal
-Road-transect Animal Counting and Tracking). The name denotes a composition rather than an
-architecture: every component is standard, and the assembly (contrast normalisation, detection, motion-compensated tracking, orphan recovery and a calibrated confirmation rule) is what is arranged for counting rather than for detection. Detections from YOLO11m at
-640\,px are associated by
-BoT-SORT~\cite{aharon2022botsort} with sparse-optical-flow global motion compensation (mandatory here, since the whole frame translates as the vehicle moves), producing candidate tracks. One point of terminology belongs here, because the association stage is easily
-mistaken for something it is not. \textbf{The reported system runs with BoT-SORT's appearance term disabled and does not attempt to recognise individual animals.} It associates detections into tracks within
-a single video using motion and geometry, which prevents an animal from being counted twice in
-one transect; it makes no claim to recognise an individual animal, and could not, since
-\cref{sec:reid} shows that at a median $29\times24$ pixels a two-number size descriptor
-out-performs a pretrained appearance backbone. We call this \emph{track association} throughout. Where appearance appears in this paper it is an
-\emph{ablation} (pool G of \cref{sec:inversion}) or a probe of how much identity signal the
-imagery carries (\cref{tab:reid}), never a component of the counting results we report.
+\Cref{fig:pipeline} shows the system, which we call \textbf{TRACT} (Thermal Road-transect
+Animal Counting and Tracking). Every component is standard; the assembly of contrast normalisation, detection, motion-compensated tracking, orphan recovery and a calibrated confirmation rule is what is arranged for counting rather than for detection. Detections from YOLO11m at 640\,px are
+associated by BoT-SORT~\cite{aharon2022botsort} with sparse-optical-flow global motion
+compensation, which is mandatory here because the whole frame translates as the vehicle
+moves. The result is a set of candidate tracks. One point of terminology belongs here,
+because the association stage is easily mistaken for something it is not. \textbf{The
+reported system runs with BoT-SORT's appearance term disabled and does not attempt to
+recognise individual animals.} It associates detections into tracks within a single video
+using motion and geometry, which prevents an animal from being counted twice in one
+transect. It could not recognise individuals in any case, since \cref{sec:reid} shows that
+at a median $29\times24$ pixels a two-number size descriptor out-performs a pretrained
+appearance backbone. We call this \emph{track association} throughout. Where appearance
+appears in this paper it is an \emph{ablation} (pool G of \cref{sec:inversion}) or a probe
+of how much identity signal the imagery carries (\cref{tab:reid}), never a component of the
+reported counts.
 
-Only one component of the system is gradient-trained. The tracker's Kalman filter,
-motion compensation and association carry no weights at all, and the confirmation rule's three
-parameters are fitted by grid search rather than by training. The pipeline also has no
-stochastic component at inference. Run three times on the same GPU over four held-out videos
-holding 55 of the 83 held-out animals, it produced byte-identical detections, tracks and
-counts, so a count is a fixed function of the video rather than a draw from a distribution,
-and repeating a run cannot reduce its error. Across platforms, one of the benchmarked detectors
-evaluated on an NVIDIA GH200, with a different processor architecture and different PyTorch
-and CUDA builds, reproduced its A100 keyframe AP$_{50}$ of 0.670; counts themselves were
-compared only on identical hardware. The detector is also not the one
-with the best AP$_{50}$, and the choice is deliberate:
-\cref{sec:choosing} selects on the precision-weighted $F_{0.5}$ instead, because the
-confirmation stage that consumes these detections must reject tens of thousands of false
-candidates against roughly two hundred true ones and therefore pays far more for a false
-positive than for a false negative. That section also verifies the choice end to end, running
-the highest-AP$_{50}$ model through this same pipeline and finding that it counts fewer
-animals. A confirmation stage then decides which candidates are real, distinct animals. The
-count is the number of accepted candidates.
+Only the detector is gradient-trained. The tracker's Kalman filter, motion compensation and
+association carry no weights, and the confirmation rule's three parameters are fitted by
+grid search. The pipeline also has no stochastic component at inference. Run three times on
+the same GPU over four held-out videos holding 55 of the 83 held-out animals, it produced
+byte-identical detections, tracks and counts. A count is therefore a fixed function of the
+video, and repeating a run cannot reduce its error. Across platforms, one benchmarked
+detector evaluated on an NVIDIA GH200, with a different processor architecture and different
+PyTorch and CUDA builds, reproduced its A100 keyframe AP$_{50}$ of 0.670; counts themselves
+were compared only on identical hardware. The detector is not the one with the best
+AP$_{50}$, and the choice is deliberate. \Cref{sec:choosing} selects on the
+precision-weighted $F_{0.5}$ instead. The confirmation stage must reject tens of thousands
+of false candidates against roughly two hundred true ones, so it pays far more for a false
+positive than for a false negative. That section also verifies the choice end to end: the
+highest-AP$_{50}$ model run through this same pipeline counts fewer animals.
 
-The confirmation baseline is a three-parameter rule: accept a candidate if it persists for
-at least $m$ frames, spans at least $s$ seconds, and the mean of its five highest per-frame
-detector confidences is at least $c$. The values are not set by hand. They are chosen by a
-grid search that minimizes counting error on the 19 detector-training videos, over
-$m\in\{1,2,3,5,8,12,20\}$ frames, $s\in\{0,0.1,0.25,0.5,1,2\}$\,s and $c$ from 0 to 0.85,
-and are frozen before any held-out video is scored (\cref{sec:heldout}). The search selects
-$m\ge20$, $s\ge0$, $c\ge0.65$. At that operating point the span condition imposes nothing,
-since $s\ge0$ accepts a track of any duration, so the rule is in effect two parameters; we keep
-$s$ because it is the parameter the search uses to compensate when $c$ is lowered
-(\cref{sec:sensitivity}), and \cref{fig:rulegrid} shows the whole search. Note that $c$ is a property of the
-\emph{track}, not of any single frame: a low-confidence frame is never discarded, it
-continues to extend the track, and a candidate is rejected only when its five \emph{best}
-frames average below $c$. \Cref{sec:sensitivity} measures what each of the three
-parameters is worth.
-
-We additionally recover \emph{orphan} detections, those the tracker returns without a
-track identity, by linking detections within a temporal gap and a scale-normalized
-distance into pseudo-tracks. Without this, single-frame animals are discarded entirely; with
-it, 17 animals are recovered.
+The confirmation stage decides which candidate tracks are real, distinct animals, and the
+count is the number it accepts. Let a candidate track $\tau$ consist of $m(\tau)$
+detections spanning $s(\tau)$ seconds, with per-frame detector confidences ordered as
+$c_{(1)}\ge c_{(2)}\ge\cdots\ge c_{(m)}$. Its track score is the mean of its $k$ highest
+confidences,
+\begin{equation}
+\bar{c}_k(\tau)=\frac{1}{k}\sum_{j=1}^{k} c_{(j)},\qquad k=5,
+\label{eq:topk}
+\end{equation}
+and the rule accepts $\tau$ when three conditions hold at once,
+\begin{equation}
+a(\tau)=\ind\!\left[m(\tau)\ge m^{*}\right]\,\ind\!\left[s(\tau)\ge s^{*}\right]\,
+\ind\!\left[\bar{c}_5(\tau)\ge c^{*}\right],
+\qquad
+\hat{c}_v=\sum_{\tau\in\mathcal{T}_v} a(\tau),
+\label{eq:rule}
+\end{equation}
+where $\ind[\cdot]$ is the indicator function, $\mathcal{T}_v$ is the candidate set of video
+$v$ and $\hat{c}_v$ is its count. The score is a property of the \emph{track}: a
+low-confidence frame is never discarded, it continues to extend the track, and a candidate
+is rejected only when its five best frames average below $c^{*}$. The three thresholds are
+not set by hand. They minimise counting error over the 19 detector-training videos
+$\mathcal{V}_{\mathrm{fit}}$,
+\begin{equation}
+(m^{*},s^{*},c^{*})=\operatorname*{arg\,min}_{(m,s,c)\in\mathcal{G}}\;
+\frac{1}{|\mathcal{V}_{\mathrm{fit}}|}\sum_{v\in\mathcal{V}_{\mathrm{fit}}}
+\bigl|\hat{c}_v(m,s,c)-N_v\bigr|,
+\label{eq:gridsearch}
+\end{equation}
+where $N_v$ is the annotated number of animals in $v$ and the grid $\mathcal{G}$ is
+$m\in\{1,2,3,5,8,12,20\}$ frames, $s\in\{0,0.1,0.25,0.5,1,2\}$\,s and
+$c\in\{0,0.15,0.25,\dots,0.85\}$, 378 cells in all. The values are frozen before any
+held-out video is scored (\cref{sec:heldout}). The search selects $m^{*}=20$, $s^{*}=0$ and
+$c^{*}=0.65$. At that operating point the span condition imposes nothing, since $s\ge0$
+accepts a track of any duration, so the rule is in effect two parameters. We keep $s$
+because it is the parameter the search uses to compensate when $c$ is lowered
+(\cref{sec:sensitivity}), and \cref{fig:rulegrid} shows the whole search. We additionally
+recover \emph{orphan} detections, those the tracker returns without a track identity, by
+linking detections within a temporal gap and a scale-normalized distance into pseudo-tracks.
+Without this, single-frame animals are discarded entirely; with it, 17 animals are
+recovered.
 
 \subsection{Calibrated Per-Animal Confidence}
 \label{sec:calibration}
 
-A survey system that cannot say how sure it is cannot be audited. We calibrate a per-track
-posterior for ``this track is on a real animal'' and report it with every counted animal:
-\textbf{92.1\% of counted animals carry confidence $\ge0.80$} (mean 0.965, area under the ROC curve 0.893), and
-793 low-confidence tracks are flagged for human review rather than auto-counted. We also propagate the per-track probabilities into a Poisson-binomial standard deviation on
-each video's count. That quantity is narrower than it looks. It expresses uncertainty about
-whether the tracks already accepted are real animals and says nothing about animals that
-were never detected or never accepted, so on held-out video its nominal 95\% band contains the
-true count in only one of thirteen videos. It should not be read as an interval on abundance,
+We calibrate a per-track
+posterior for ``this track is on a real animal'' and report it with every counted animal.
+\textbf{92.1\% of counted animals carry confidence $\ge0.80$} (mean 0.965, area under the
+ROC curve 0.893), and 793 low-confidence tracks are flagged for human review rather than
+auto-counted. The calibrator is \textbf{isotonic regression fitted on the validation videos
+only}~\cite{zadrozny2002transforming}: a monotone step function $p=\phi(\bar{c}_5)$ that
+maps the confirmer's raw score to a probability by least squares under a monotonicity
+constraint. No held-out video contributes to the fit. We prefer isotonic to Platt scaling
+because the raw score is not sigmoidal in the log-odds, and a monotone step function makes
+no shape assumption. The cost is that the output takes a finite number of levels, 46 of
+them on held-out video. We also propagate the per-track probabilities into an uncertainty
+on each video's count. If the accepted tracks of video $v$ carry probabilities
+$p_1,\dots,p_{\hat{c}_v}$ and are treated as independent, the number of real animals among
+them is Poisson-binomial~\cite{hong2013poisson}, with
+\begin{equation}
+\mathrm{Var}\bigl[\hat{c}_v\bigr]=\sum_{i=1}^{\hat{c}_v} p_i\,(1-p_i).
+\label{eq:pb}
+\end{equation}
+That quantity is narrower than it looks. It expresses uncertainty about whether the tracks
+already accepted are real animals and says nothing about animals that were never detected
+or never accepted. On held-out video its nominal 95\% band therefore contains the true
+count in only one of thirteen videos. It should not be read as an interval on abundance,
 which would need a model of the probability that an animal is detected and counted at all.
 
-The calibrator is \textbf{isotonic regression fitted on the validation videos only}, mapping
-the confirmer's raw score to a probability; no held-out video contributes to the fit. Isotonic
-rather than Platt scaling because the raw score is not sigmoidal in the log-odds and a
-monotone step function makes no shape assumption; the cost is that the output takes a finite
-number of levels, 46 of them on held-out video.
-
-\Cref{tab:calib} reports whether the resulting number behaves like a probability on videos the
-calibrator never saw, scoring a track as positive when it is the \emph{primary} track of a real animal; duplicates count as negatives, which is the decision the counting stage
-actually makes. Over all 2211 held-out candidate tracks the expected calibration error (ECE) is 0.004 and the Brier score 0.017 against 0.029 for a constant predictor at the base rate. That
-aggregate is generous, because 74\% of candidates sit at the isotonic floor where no decision
-is ever taken; restricted to the 316 tracks in the decision region the expected calibration
-error is 0.034 and the Brier score 0.093 against 0.148. Both are honest and the second is the
-one a practitioner should read. One caveat belongs with them: isotonic saturates, so the top
-level reports 1.000 on 13 held-out tracks whose true positive rate is 0.846. Confidence at the
-very top of the scale is optimistic by roughly 15 points, and the flag-for-review band, not
-the top of the scale, is where the calibrated number earns its keep.
+\Cref{tab:calib} reports whether the calibrated number behaves like a probability on videos
+the calibrator never saw. A track scores as positive when it is the \emph{primary} track of a
+real animal; duplicates count as negatives, which is the decision the counting stage makes.
+We use the two standard summaries~\cite{guo2017calibration}. With the $n$ scored tracks
+partitioned into $B=10$ equal-count bins $\mathcal{B}_b$ by predicted probability, the
+expected calibration error~\cite{naeini2015obtaining} and the Brier
+score~\cite{brier1950verification} are
+\begin{equation}
+\mathrm{ECE}=\sum_{b=1}^{B}\frac{|\mathcal{B}_b|}{n}\,\bigl|\,\overline{y}_b-\overline{p}_b\bigr|,
+\qquad
+\mathrm{BS}=\frac{1}{n}\sum_{i=1}^{n}\bigl(p_i-y_i\bigr)^2,
+\label{eq:ece}
+\end{equation}
+where $y_i\in\{0,1\}$ is the label, $p_i$ the calibrated probability, and $\overline{y}_b$
+and $\overline{p}_b$ the mean label and mean probability in bin $b$. Over all 2211 held-out
+candidate tracks the ECE is 0.004 and the Brier score 0.017, against 0.029 for a constant
+predictor at the base rate. That aggregate is generous, because 74\% of candidates sit at
+the isotonic floor where no decision is ever taken. Restricted to the 316 tracks in the
+decision region the ECE is 0.034 and the Brier score 0.093 against 0.148. The second is the one a practitioner should read. One caveat belongs with them:
+isotonic regression saturates, so the top level reports 1.000 on 13 held-out tracks whose
+true positive rate is 0.846. Confidence at the very top of the scale is optimistic by
+roughly 15 points, and the flag-for-review band, not the top of the scale, is where the
+calibrated number earns its keep.
 
 \begin{table}[htbp]
 \caption{\textbf{Reliability of the per-track posterior} on the 13 held-out videos, against
@@ -225,14 +260,12 @@ Fit videos, for reference & 4797 & 0.029 & 0.003 & 0.017 & 0.029 \\
 \end{tabularx}
 \end{table}
 
-Raw detector confidence cannot serve this purpose: no track in the corpus exceeds 0.90 and
-the median counted track sits at 0.74, because the animals are 27 pixels. The requirement is
-only meaningful against a calibrated posterior. \Cref{fig:evidence} shows why a score must be
-per track rather than per frame: the raw confidence varies by 0.15 across frames of the same
-animal (Animal B, 0.66--0.81) even where every frame is a clean detection, so no single
-frame's value characterises the track. It also shows the audit trail: every counted animal is exported as a contact sheet of its own track, one panel per sampled frame with elapsed time
-and per-frame score beneath, so a human can verify any individual count against the frames
-that produced it.
+Raw detector confidence cannot serve this purpose. No track in the corpus exceeds 0.90 and
+the median counted track sits at 0.74, because the animals are 27 pixels, so the requirement
+is only meaningful against a calibrated posterior. \Cref{fig:evidence} shows why a score
+must be per track rather than per frame. The raw confidence varies by 0.15 across frames of
+the same animal (Animal B, 0.66--0.81) even where every frame is a clean detection, so no
+single frame's value characterises the track. Every counted animal is also exported as a contact sheet of its own track, one panel per sampled frame with elapsed time and per-frame score, so a human can verify any count against the frames that produced it.
 
 \begin{figure}[htbp]
   \centering
@@ -246,62 +279,115 @@ that produced it.
 \label{sec:criterion}
 
 A detection metric asks whether a predicted box \emph{localizes} an animal; a survey asks
-whether the animal was \emph{noticed}. On a 27-pixel target these diverge sharply: a box
-offset by six pixels falls below IoU 0.5 and is scored as both a false positive and a false
-negative, while for counting it has correctly found the animal. We therefore evaluate under four matching rules: intersection over union (IoU) $\geq$0.50, IoU$\geq$0.30, centre-in-box and \emph{any overlap}, and treat the last as the counting criterion, reporting it as presence or counting recall
-and never as mAP, with the strict criterion alongside it everywhere.
+whether the animal was \emph{noticed}. Intersection over union (IoU), the standard
+localization score~\cite{everingham2010pascal,lin2014coco}, diverges sharply from the survey
+question on a 27-pixel target, and the divergence can be made exact.
 
-The criterion is validated against centre-in-box, an independent counting-oriented rule that
-accepts a prediction only when its centre falls inside the animal and so rejects oversized
-boxes outright. The two agree to within 0.032 F1 across all eleven models, so the
-conclusions rest on two criteria agreeing rather than on one being chosen. Precision is
-reported alongside recall throughout, which additionally constrains box quality.
+\begin{proposition}[IoU under a centre offset]
+\label{prop:iou}
+Let a predicted box and a ground-truth box be axis-aligned squares of equal side $s$ whose
+centres differ by $d<s$ pixels along one axis. Then
+\begin{equation}
+\mathrm{IoU}(d)=\frac{s-d}{s+d},
+\qquad\text{so that}\qquad
+\mathrm{IoU}(d)\ge t \iff d\le s\,\frac{1-t}{1+t}.
+\label{eq:iou}
+\end{equation}
+\end{proposition}
+\begin{proof}
+The intersection is a rectangle of sides $s$ and $s-d$, with area $s(s-d)$. The union is
+the sum of the two areas minus the intersection, $2s^{2}-s(s-d)=s(s+d)$. The ratio gives
+the first equality, and solving $(s-d)/(s+d)\ge t$ for $d$ gives the second.
+\end{proof}
+
+At the corpus median $s=27$, \cref{eq:iou} says that a centre error of more than 9 pixels
+fails IoU$\ge$0.50 and one of more than 3.9 pixels fails IoU$\ge$0.75. A box offset by six
+pixels is therefore scored as both a false positive and a false negative at IoU 0.5, while
+for counting it has correctly found the animal. We therefore evaluate under four matching
+rules: IoU$\geq$0.50, IoU$\geq$0.30, centre-in-box and \emph{any overlap}. The last is the
+counting criterion, reported as presence or counting recall and never as mAP, with the
+strict criterion alongside it everywhere. The criterion is validated against
+centre-in-box, an independent counting-oriented rule that accepts a prediction only when
+its centre falls inside the animal and so rejects oversized boxes outright. The two agree
+to within 0.032 F1 across all eleven models, so the conclusions rest on two criteria
+agreeing rather than on one being chosen. Precision is reported alongside recall
+throughout, which further constrains box quality.
 
 \subsection{Decomposing Counting Error}
 \label{sec:decomposition}
 
- Let $G$ be the ground-truth animals in a video and $C$
-the candidate tracks a pipeline produces. For each $g\in G$ we define:
-
+Let $G_v$ be the ground-truth animals in video $v$, $N_v=|G_v|$, and $\mathcal{T}_v$ the
+candidate tracks the pipeline produces. For each animal $g\in G_v$ we define three
+indicators:
 \begin{itemize}[leftmargin=*,labelsep=4.5mm]
-\item \reachedq: $g$ is touched, on at least one frame, by at least one candidate. If
-an animal is not \reachedq, no downstream stage can recover it; this measures
+\item $R(g)=1$ (\reachedq) if $g$ is touched, on at least one frame, by at least one
+candidate. If an animal is not reached, no downstream stage can recover it; this measures
 \textbf{detection and tracking}.
-\item \primaryq: among the candidates touching $g$, the one that covers $g$ on the most
-frames is not simultaneously the best cover for some other animal. Two animals sharing a
-single best-covering candidate are indistinguishable to any decision rule that emits one
-count per track; this measures \textbf{association}.
-\item \countedq: the confirmation stage accepted a candidate covering $g$. This measures
-\textbf{confirmation}, and it is the end-to-end result.
+\item $P(g)=1$ (\primaryq) if, among the candidates touching $g$, the one that covers $g$ on
+the most frames is not also the best cover for some other animal. Two animals sharing a
+single best-covering candidate are indistinguishable to any rule that emits one count per
+track; this measures \textbf{association}.
+\item $K(g)=1$ (\countedq) if the confirmation stage accepted a candidate covering $g$.
+This measures \textbf{confirmation}, and it is the end-to-end result.
 \end{itemize}
+The stage rates are the means of these indicators over the animals under evaluation,
+$\rho=\overline{R}$, $\pi=\overline{P}$ and $\kappa=\overline{K}$. An accepted candidate
+is a candidate, so $K\le R$ and $P\le R$ by construction, and in every configuration we
+report $\kappa\le\pi\le\rho$, so the three read as a funnel whose steps attribute error to
+the three stages. We report all three for every configuration; reporting only the last, as
+is conventional, makes a detection miss and a confirmation miss look identical.
 
-The three are nested, $\countedq \le \primaryq \le \reachedq \le |G|$, and the gaps
-attribute error to the three stages. We report all three for every configuration; reporting
-only the last, as is conventional, makes a detection miss and a confirmation miss look identical.
+The video-level error has an exact decomposition of its own. Credit each accepted track to
+at most one animal, the one it covers on the most frames, and each animal to at most one
+accepted track, and let $A_v$ be the number of animals credited in video $v$. A track that
+covers two animals credits only one of them, so the pair contributes one credited animal and
+one miss. Write $D_v=\hat{c}_v-A_v\ge0$ for the accepted tracks that credit no new animal
+(duplicates of an animal already credited, and tracks on no animal) and $M_v=N_v-A_v\ge0$ for
+the animals with no credited track.
 
-We report mean absolute error in animals per video (MAE), signed bias, and a \emph{counted}
-fraction. The latter is $\sum_v \min(\hat{c}_v, c_v) / \sum_v c_v$, capped per video so that
-over-counting in one video cannot mask misses in another.
+\begin{proposition}[Signed error is duplicates minus misses]
+\label{prop:identity}
+For every video, $\hat{c}_v-N_v=D_v-M_v$, and
+$\min(\hat{c}_v,N_v)=A_v+\min(D_v,M_v)$.
+\end{proposition}
+\begin{proof}
+Both follow from $\hat{c}_v=A_v+D_v$ and $N_v=A_v+M_v$. Subtracting gives the first
+identity; taking the minimum of the two and factoring out $A_v$ gives the second.
+\end{proof}
 
-We also report a stricter identity-matched variant, the fraction of individual animals
-covered by an \emph{accepted} candidate, which \cref{sec:counting} shows is 10 points
-lower; the capped aggregate credits a video for predicting the right \emph{number} even
-when the accepted tracks do not land on the animals.
-
-Counting quantities carry 95\% intervals throughout. Proportions over the 83 held-out animals
-use the Wilson score interval, and means over the 13 held-out videos use a $t$-interval on the
-per-video values. These are sampling intervals over the corpus, and with 83 animals they are
-wide: a three-animal difference is not resolvable. We deliberately do \emph{not} attach
-intervals to the detection metrics of \cref{sec:detection}. Each architecture was trained
-once, so a bootstrap over the test images would produce a narrow interval that describes
-test-set sampling while saying nothing about the training variance that actually separates one
-architecture from another, a precision the experiment does not support.
+\Cref{prop:identity} is the bookkeeping the rest of the paper relies on. A count is unbiased
+only when the duplicates it admits equal the animals it misses, which is the trade
+\cref{sec:sensitivity} measures, and every intervention that recovers animals is judged by
+whether it lowers $M_v$ faster than it raises $D_v$. The aggregate metrics over a set of
+videos $\mathcal{V}$ are
+\begin{equation}
+\mathrm{MAE}=\frac{1}{|\mathcal{V}|}\sum_{v\in\mathcal{V}}\bigl|\hat{c}_v-N_v\bigr|,
+\qquad
+\mathrm{Bias}=\frac{1}{|\mathcal{V}|}\sum_{v\in\mathcal{V}}\bigl(\hat{c}_v-N_v\bigr),
+\qquad
+\kappa_{\mathrm{cap}}=\frac{\sum_{v}\min(\hat{c}_v,N_v)}{\sum_{v}N_v},
+\label{eq:metrics}
+\end{equation}
+where $\kappa_{\mathrm{cap}}$ is the \emph{counted} fraction, capped per video so that
+over-counting in one video cannot mask misses in another. By \cref{prop:identity} it exceeds
+the identity-matched fraction $\sum_v A_v/\sum_v N_v$ by exactly $\sum_v\min(D_v,M_v)/\sum_v
+N_v$. The capped aggregate thus credits a video for predicting the right \emph{number} even
+when some accepted tracks do not land on the animals, and \cref{sec:counting} shows the two
+differ by 10 points. Counting quantities carry 95\% intervals throughout. Proportions over
+the 83 held-out animals use the Wilson score interval~\cite{wilson1927probable}, and means
+over the 13 held-out videos use a $t$-interval on the per-video values. These are sampling
+intervals over the corpus, and with 83 animals they are wide: a three-animal difference is
+not resolvable. We deliberately do \emph{not} attach intervals to the detection metrics of
+\cref{sec:detection}. Each architecture was trained once, so a bootstrap over the test
+images would give a narrow interval that describes test-set sampling while saying nothing
+about the training variance that separates one architecture from another.
 
 \subsection{Held-Out Protocol}
 \label{sec:heldout}
 
-Counting runs process all 32 videos, but the detector trained on 19 of them, and the confirmation rule is conventionally swept on the same videos it is reported on.
-Both leaks inflate the result. Our protocol closes both: \textbf{sweep the rule on the 19
+Counting runs process all 32 videos, but the detector trained on 19 of them, and the
+confirmation rule is conventionally swept on the same videos it is reported on. Both leaks
+inflate the result. Our protocol closes both: \textbf{sweep the rule on the 19
 detector-training videos, freeze it, and report on the 13 held-out videos}. Learned
 confirmers are trained and thresholded under the identical split, so the comparison in
 \cref{sec:learned} is like-for-like.
@@ -324,9 +410,57 @@ All 32 (the default) & 32 & 236 & 81.8\% \\
 \end{table}
 
 The protocol is worth 15.5 points (\cref{tab:leak}): counting accuracy measured over all 32
-videos is 81.8\%, and on the 13 held-out videos it is 66.3\%. Four of the 13 held-out videos are the detector's \emph{validation} split. No gradient was computed on them, but
-they were used for checkpoint selection, so they are held out in the sense that matters for
-the confirmation rule and only partly held out for the detector. They carry 45 of the 83
-animals. We state this rather than reporting on the 9 test videos alone because the
-confirmation rule, the subject of the paper, saw none of the 13, and because splitting
-the held-out set further would leave 38 animals to carry every counting conclusion.
+videos is 81.8\%, and on the 13 held-out videos it is 66.3\%. Four of the 13 held-out videos
+are the detector's \emph{validation} split. No gradient was computed on them, but they were
+used for checkpoint selection, so they are held out in the sense that matters for the
+confirmation rule and only partly held out for the detector. They carry 45 of the 83
+animals. We state this rather than reporting on the 9 test videos alone, for two reasons.
+The confirmation rule, the subject of the paper, saw none of the 13, and splitting the
+held-out set further would leave 38 animals to carry every counting conclusion.
+
+\subsection{Box Size as a Range Proxy}
+\label{sec:rangeproxy}
+
+The corpus records no range to the animals, so box size stands in for it in
+\cref{sec:analysis,sec:operating}. The relation follows from the pinhole
+camera~\cite{hartley2004multiple}: an animal of physical length $L$ at range $r$ subtends
+\begin{equation}
+s=\frac{fL}{r}
+\label{eq:pinhole}
+\end{equation}
+pixels, where $f$ is the focal length in pixels. Box size is therefore inversely
+proportional to range for animals of similar size, and it conflates range with body size and
+posture, a caveat that applies wherever the proxy is used. The proxy also yields a null
+expectation for how many animals should be annotated at each size, which
+\cref{sec:operating} uses to test the ground truth itself for range-dependent censoring.
+
+\begin{proposition}[Availability law for box size]
+\label{prop:availability}
+Suppose animals of length $L$ are distributed with uniform density $\lambda$ per unit ground
+area inside the camera's horizontal field of view of angle $\theta$, and every animal in view
+is annotated. Then the expected number of annotated animals with box size in $[a,b)$ is
+\begin{equation}
+E[a,b)=\frac{\lambda\theta\,(fL)^{2}}{2}\left(\frac{1}{a^{2}}-\frac{1}{b^{2}}\right),
+\label{eq:availability}
+\end{equation}
+so the density of animals per unit box size falls as $s^{-3}$. If instead the animals lie
+in a strip of fixed width $w$ along the road, $E[a,b)=\lambda w fL\,(1/a-1/b)$, a density
+falling as $s^{-2}$.
+\end{proposition}
+\begin{proof}
+The ground in view between ranges $r$ and $r+dr$ is a circular sector of area
+$\theta r\,dr$, holding $\lambda\theta r\,dr$ animals in expectation. By \cref{eq:pinhole},
+$r=fL/s$ and $|dr|=fL\,s^{-2}\,ds$, so the expected number with box size in $[s,s+ds)$ is
+$\lambda\theta (fL)^{2}s^{-3}\,ds$. Integrating from $a$ to $b$ gives
+\cref{eq:availability}. In a strip of width $w$ the ground between $r$ and $r+dr$ has area
+$w\,dr$, and the same substitution gives $\lambda w fL\,s^{-2}\,ds$, whose integral is
+$\lambda w fL\,(1/a-1/b)$.
+\end{proof}
+
+The constant in front is unknown, but it cancels in ratios. Fitting it to the number of
+animals observed in a reference size range predicts the number expected in every other
+range, which is how \cref{sec:operating} applies the result. Distance sampling makes the
+same uniform-density assumption for animals relative to a transect
+line~\cite{buckland2015distance,thomas2010distance}, and a road transect can violate
+it~\cite{diefenbach2025accounting}, which is why the strip law is carried along as the more
+conservative alternative.

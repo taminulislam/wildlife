@@ -7,115 +7,116 @@ The two negative results of \cref{sec:inversion} and \cref{sec:learned} have a s
 explanation, and it is a property of the data rather than of the methods. The confirmation
 stage receives roughly two hundred positive tracks against 7000--28,000 negatives, and the
 negatives are not a homogeneous class. They divide into false candidates, which are easy,
-and \emph{duplicate} tracks on animals already counted, which are not: a duplicate is a
-correct detection of a real animal, and \cref{sec:analysis} shows that duplicates sit
-between the positives and the false candidates on every feature we measured: box size, track length, candidate confidence alike.
-
-A confirmer therefore receives contradictory supervision on exactly the examples that
-distinguish counting from detection. That is why capacity does not help: the capacity trend in \cref{sec:learned} declines monotonically from 13 parameters to $6\times10^4$, and
-shrinking a gradient-boosted model to depth-1 stumps recovers nearly the whole gap. It is also why every improvement to candidate generation costs count. Growing the pool grows the
-ambiguous middle of the negative class far faster than it grows the positives, so a rule
-tuned to survive the new ratio must be more aggressive, and aggression costs real animals.
-Extrapolating the capacity trend puts the crossover in the low thousands of positive
-tracks, an order of magnitude beyond this corpus, and a concrete target for the next
-dataset rather than for a better architecture.
+and \emph{duplicate} tracks on animals already counted, which are not. A duplicate is a
+correct detection of a real animal. \Cref{sec:analysis} shows that duplicates sit between
+the positives and the false candidates on every feature we measured: box size, track
+length and candidate confidence alike. A confirmer therefore receives contradictory
+supervision on exactly the examples that distinguish counting from detection. That is why
+capacity does not help. The capacity trend in \cref{sec:learned} declines monotonically
+from 13 parameters to $6\times10^4$, and shrinking a gradient-boosted model to depth-1
+stumps recovers nearly the whole gap. It is also why every improvement to candidate
+generation costs count. Growing the pool grows the ambiguous middle of the negative class
+far faster than it grows the positives, so a rule tuned to survive the new ratio must be
+more aggressive, and aggression costs real animals. Extrapolating the capacity trend puts
+the crossover in the low thousands of positive tracks, an order of magnitude beyond this corpus.
 
 \subsection{Recall and Duplicate Suppression Are Bought with One Parameter}
 
-\Cref{sec:sensitivity} makes the same mechanism visible in a single parameter and is, we
-think, the most transferable observation in the paper. Deleting the confidence condition
-raises held-out coverage by 23 points, more than any other change we made, and simultaneously
-turns a systematic under-count into a systematic over-count, because roughly two duplicates
-are admitted for each genuine animal recovered. The condition is not filtering non-animals.
-It is the only cheap signal separating a first sighting from a re-sighting, and the recall it
-appears to be discarding is the price of that separation.
-
-This reframes what a practitioner should tune. The question is not ``how low can the
-confidence threshold go before false positives appear'', the usual detection framing, under
-which $c=0$ looks free because coverage rises and the extra tracks are all on real animals. It
-is ``at what point does the estimator's bias cross zero'', a different quantity with a
-different optimum, which the next subsection locates and costs.
+\Cref{sec:sensitivity} makes the same mechanism visible in a single parameter. Deleting the confidence condition
+raises held-out coverage by 23 points, more than any other change we made. It also turns a
+systematic under-count into a systematic over-count, because roughly two duplicates are
+admitted for each genuine animal recovered. The condition is not filtering non-animals. It
+is the only cheap signal separating a first sighting from a re-sighting, and the recall it
+appears to discard is the price of that separation. This reframes what a practitioner
+should tune. The usual detection framing asks how low the confidence threshold can go
+before false positives appear, and under it $c=0$ looks free, because coverage rises and
+the extra tracks are all on real animals. By \cref{prop:identity} the question is instead
+at what point admitted duplicates equal missed animals, the point where the estimator's
+bias crosses zero, which the next subsection locates and costs.
 
 \subsection{Choosing an Operating Point for Abundance Estimation}
 \label{sec:operating}
 
-A survey ecologist and a per-transect report want different things from this system, and the
-confirmation threshold is where the difference is settled.
-
-Our headline rule minimises mean absolute error per video, and it under-counts: 58 animals
-predicted where 83 exist across the 13 held-out transects, a shortfall of 25. For an abundance estimate that is not the quantity to optimise. Setting $c=0.45$ instead, at the point where signed bias crosses zero in \cref{tab:confsens}, makes the same pipeline predict \textbf{81 animals against 83}, an aggregate error of 2.4\%. Individual transects are
-less accurate, with mean absolute error rising from 2.38 to 3.38 animals per video, but the
-errors are now two-sided and cancel across a survey rather than accumulating in one direction.
-Under-counting by 25 becomes over- and under-counting that nets to two.
+A survey ecologist and a per-transect report want different things from this system, and
+the confirmation threshold is where the difference is settled. Our headline rule minimises
+mean absolute error per video, and it under-counts: 58 animals predicted where 83 exist
+across the 13 held-out transects, a shortfall of 25. For an abundance estimate that is not
+the quantity to optimise. Setting $c=0.45$ instead, where signed bias crosses zero in
+\cref{tab:confsens}, makes the same pipeline predict \textbf{81 animals against 83}, an
+aggregate error of 2.4\%. Individual transects are less accurate, with MAE rising from 2.38
+to 3.38 animals per video, but the errors are now two-sided and cancel across a survey
+rather than accumulating in one direction.
 
 Which is preferable depends on the downstream statistic, and the two are not
-interchangeable. A management unit's population total is a sum over transects, so unbiasedness
-matters and per-transect variance largely averages out; a report of how many animals were seen
-on a particular road on a particular night is a per-transect quantity, and there the
-low-variance rule is correct. We report the minimum-error rule as our headline because it is
-the conventional choice for a counting system, and record the unbiased setting here because it
-is the one an abundance study should use.
-
-This distinction is obscured by our own headline metric. The capped fraction of
-\cref{sec:decomposition} deliberately prevents an over-count in one video from offsetting a
-miss in another, which suits a per-video counter but not a population total, where that cancellation is the point. Under the capped metric $c=0.45$ scores
-72.3\%; under the aggregate it recovers 97.6\% of the animals present.
+interchangeable. A management unit's population total is a sum over transects, so
+unbiasedness matters and per-transect variance largely averages out. A report of how many
+animals were seen on a particular road on a particular night is a per-transect quantity,
+and there the low-variance rule is correct. We report the minimum-error rule as our
+headline because it is the conventional choice for a counting system, and record the
+unbiased setting here because it is the one an abundance study should use. Our own headline
+metric obscures the distinction. The capped fraction of \cref{eq:metrics} deliberately
+prevents an over-count in one video from offsetting a miss in another, which suits a
+per-video counter but not a population total, where that cancellation is the point. Under
+the capped metric $c=0.45$ scores 72.3\%; under the aggregate it recovers 97.6\% of the
+animals present.
 
 One route we expected to work does not. The standard remedy for a known undercount is a
 sightability correction: estimate the detected fraction and divide by it. The held-out
 protocol makes that estimate impossible to obtain honestly from our own data. On the 19
-detector-training videos the pipeline predicts 152 animals against 153, so a correction factor
-fitted there is 1.007, effectively no correction, while the held-out videos need 1.43. The
-contamination that inflates coverage on seen video also destroys any correction estimated from
-it. A sightability factor for this system would have to be fitted on video the detector never
-trained on, which is to say on data that could have been used to train it instead.
+detector-training videos the pipeline predicts 152 animals against 153, so a correction
+factor fitted there is 1.007, effectively no correction, while the held-out videos need
+1.43. The contamination that inflates coverage on seen video also destroys any correction
+estimated from it. A sightability factor for this system would have to be fitted on video
+the detector never trained on, which is to say on data that could have been used to train
+it instead.
 
-A second limit on any abundance estimate lies upstream of the pipeline, in the ground truth.
-As in any visual survey, an annotated animal is one a reviewer could see in the footage, so
-every figure in this paper measures the pipeline against what is visible rather than against
-the animals present. We tested how strongly this depends on range, with box size as the range
-proxy of \cref{sec:analysis}. If deer were spread evenly over the ground in view, the number of
-animals per size bin would grow steeply as boxes shrink, because the area in view grows with
-distance. The 235 annotated animals follow that law closely between 30 and 60\,px but fall
-short of it below about 25\,px: 29 animals are annotated at 15--20\,px where the geometry
-predicts about 210, and about 90 even under the most conservative assumption, a fixed-width
-strip along the road. The annotated tracks do not shorten significantly with range
-(Kruskal--Wallis $p=0.24$ across size quartiles), so a distant animal, once visible, is
-followed about as long as a near one. The likely cause is what the sensor can resolve: at
-$640\times512$ a distant deer is a few warm pixels, often partly behind vegetation or terrain,
-the same fall in detectability with range that spotlight counts
-face~\cite{vercauteren2011managing}. The comparison assumes deer are spread evenly with
-distance from the road, which a road transect cannot guarantee~\cite{diefenbach2025accounting},
-and box size also varies with body size and posture. An abundance estimate built on this
-system would therefore need both factors: the pipeline's size curve of \cref{sec:analysis}
-and a detection function for the survey itself.
+A second limit on any abundance estimate lies upstream of the pipeline, in the ground
+truth. As in any visual survey, an annotated animal is one a reviewer could see in the
+footage, so every figure in this paper measures the pipeline against what is visible rather
+than against the animals present. \Cref{prop:availability} gives the null expectation for
+how many animals should be annotated at each box size if deer were spread evenly over the
+ground in view. We fitted its constant to the 91 animals annotated at 30--60\,px. Within
+that range the law holds closely, the 30--40 and 40--60\,px bins standing in a ratio of
+1.39 against a predicted 1.40. Below about 25\,px the annotation falls short of it: 29
+animals are annotated at 15--20\,px where \cref{eq:availability} predicts about 210, and
+about 90 even under the strip law, the more conservative alternative. The annotated tracks
+do not shorten significantly with range (Kruskal--Wallis $p=0.24$ across size quartiles),
+so a distant animal, once visible, is followed about as long as a near one. The likely cause
+is what the sensor can resolve. At $640\times512$ a distant deer is a few warm pixels, often
+partly behind vegetation or terrain, the same fall in detectability with range that
+spotlight counts face~\cite{vercauteren2011managing}. The comparison assumes deer are spread
+evenly with distance from the road, which a road transect cannot
+guarantee~\cite{diefenbach2025accounting}, and box size also varies with body size and
+posture (\cref{eq:pinhole}). An abundance estimate built on this system would therefore
+need both factors: the pipeline's size curve of \cref{sec:analysis} and a detection function
+for the survey itself.
 
 \subsection{Implications for Practice}
 
 What follows are consequences of the measurements above rather than recommendations drawn
-from survey experience, and they are scoped to what this corpus can support: one sensor, four
-sites, one winter, one species, 236 individuals. Within that scope, four of them run against
-the field's default.
-
-Selecting a detector by its detection metric did not select the model that counts best here.
-The counting criterion re-ranks seven of eleven models by two or more places
-(\cref{sec:choosing}), and the best model by AP$_{50}$ counted worse than the fourth-best.
-Evaluating on video the detector had trained on inflated coverage by 15.5 points
-(\cref{tab:leak}), which is what makes a held-out protocol worth its cost. A larger candidate
-pool was not a better one in any of the four attempts we made (\cref{tab:ablationmain}). And a learned confirmation stage did not beat a three-parameter rule at this data scale, with the capacity
-trend placing the crossover an order of magnitude beyond 236 individuals
-(\cref{tab:confirmers}).
+from survey experience, and they are scoped to what this corpus can support: one sensor,
+four sites, one winter, one species, 236 individuals. Within that scope, four findings run
+against the field's default. Selecting a detector by its detection metric did not select
+the model that counts best here. The counting criterion re-ranks seven of eleven models by
+two or more places (\cref{sec:choosing}), and the best model by AP$_{50}$ counted worse than
+the fourth-best. Evaluating on video the detector had trained on inflated coverage by 15.5
+points (\cref{tab:leak}). A larger
+candidate pool was not a better one in any of the four attempts we made
+(\cref{tab:ablationmain}). And a learned confirmation stage did not beat a three-parameter
+rule at this data scale, with the capacity trend placing the crossover an order of magnitude
+beyond 236 individuals (\cref{tab:confirmers}).
 
 Three observations point the other way. Contrast normalization was worth more than any
-architectural choice we tested, 0.519 against 0.299 test mAP50, a larger effect than the entire 0.365--0.510 spread across eleven architectures. The upper tail of the object-scale
-distribution repaid the attention normally reserved for the lower one: three of our misses are
-animals \emph{larger} than anything in the training split (\cref{fig:scale}), a failure mode a
-small-object-focused evaluation would not surface. And an absolute confidence threshold did not
-transfer between sites, since a detector trained without a site scored that site systematically lower and a threshold
-fitted elsewhere rejected every track on one fold (\cref{sec:loso}), a shift this corpus cannot
-separate from the different nights on which the sites were surveyed.
-Whether a small labelled sample from each new site or survey night is the right remedy is a question this
-corpus can pose but not answer.
+architectural choice we tested, 0.519 against 0.299 test mAP50, a larger effect than the
+entire 0.365--0.510 spread across eleven architectures. The upper tail of the object-scale
+distribution repaid the attention normally reserved for the lower one: three of our misses
+are animals \emph{larger} than anything in the training split (\cref{fig:scale}), a failure
+mode a small-object-focused evaluation would not surface. And an absolute confidence
+threshold did not transfer between sites. A detector trained without a site scored that site
+systematically lower, and a threshold fitted elsewhere rejected every track on one fold
+(\cref{sec:loso}). This corpus cannot separate that shift from the different nights on
+which the sites were surveyed. Whether a small labelled sample from each new site or survey
+night is the right remedy is a question this corpus can pose but not answer.
 
 \subsection{Limitations}
 \label{sec:limitations}
@@ -123,9 +124,9 @@ corpus can pose but not answer.
 Several limits bound these claims. The ground truth contains only animals visible in the
 footage, and it thins out with range (\cref{sec:operating}), so every figure measures the
 pipeline against what the video shows rather than against the animals present. The corpus is
-small and narrow: 236 animals of one species from four sites in one winter, each site
-surveyed on a single night so that site and night are confounded, one site contributing
-56\% of the animals, and a single tracker (BoT-SORT). Four of the 13 held-out videos are the
+small and narrow: 236 animals of one species from four sites in one winter, with one site
+contributing 56\% of the animals, and a single tracker (BoT-SORT). Each site was surveyed on
+a single night, so site and night are confounded. Four of the 13 held-out videos are the
 detector's validation split and influenced checkpoint selection (\cref{sec:heldout}). The
 headline count is a per-video aggregate; the identity-matched figure is 10 points lower. No
 animal appears in more than one video, so cross-session identification could not be

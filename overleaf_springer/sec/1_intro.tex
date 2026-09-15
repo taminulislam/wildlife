@@ -1,79 +1,74 @@
 \section{Introduction}
 \label{sec:intro}
 
-Wildlife management is based on reliable estimates of wildlife abundance. White-tailed deer
-are among the most intensively managed ungulates in North America, and their density informs
-hunting quotas, culling decisions and vehicle-collision mitigation. The stakes extend beyond
-harvest. Surveillance for chronic wasting disease is most efficient when it concentrates on
-where infection risk is highest~\cite{jennelle2018applying}, and deer-to-human transmission of
-SARS-CoV-2 was identified in animals sampled during routine surveillance of exactly that
+Wildlife management rests on reliable estimates of abundance. White-tailed deer are among the
+most intensively managed ungulates in North America. Their density sets hunting quotas,
+culling decisions and vehicle-collision mitigation, and the stakes extend beyond harvest.
+Surveillance for chronic wasting disease is most efficient where infection risk is
+highest~\cite{jennelle2018applying}. Deer-to-human transmission of SARS-CoV-2 was identified
+in animals sampled during routine surveillance of exactly that
 kind~\cite{pickering2022divergent}. Each of these decisions depends on knowing how many
 animals are present.
 
-For larger species such as deer, one established way of estimating abundance is for
-observers to drive transects at night with spotlights or handheld thermal scopes. Road
-transects are practical but not neutral. Spotlight surveys along roads carry a known
-bias~\cite{vercauteren2011managing}, and a road used as a transect line can violate the
-assumption, central to distance sampling, that animals are distributed uniformly with respect
-to the line, because deer may be drawn to or kept away from the road
-itself~\cite{diefenbach2025accounting}. Thermal imaging extends the survey into darkness by
-detecting emitted heat, but it brings constraints of its own: contrast falls as the ground
-approaches body temperature, vegetation hides animals, and a distant deer occupies only a few
-pixels~\cite{burke2019optimizing}. Any automated survey inherits all of these at once.
+For deer, one established way of estimating abundance is to drive transects at night with
+spotlights or handheld thermal scopes. Road transects are practical but not neutral.
+Spotlight surveys along roads carry a known bias~\cite{vercauteren2011managing}. A road used
+as a transect line can also violate a central assumption of distance sampling, that animals
+are distributed uniformly with respect to the line, because deer may be drawn to or kept
+away from the road~\cite{diefenbach2025accounting}. Thermal imaging extends the survey into
+darkness by detecting emitted heat, but it brings constraints of its own. Contrast falls as
+the ground approaches body temperature, vegetation hides animals, and a distant deer
+occupies only a few pixels~\cite{burke2019optimizing}. Any automated survey inherits all of
+these at once.
 
-Automating the survey is an obvious application of modern object detection, and the
-literature has largely treated it as one. From camera traps~\cite{norouzzadeh2018automatically}
-to aerial imagery~\cite{kellenberger2018detecting}, systems are trained on annotated animal
-imagery and judged by per-image accuracy, typically mean average precision (mAP), and the
-survey problem is regarded as addressed once that number is high.
+Automating the survey is an obvious application of object detection, and the literature has
+largely treated it as one. From camera traps~\cite{norouzzadeh2018automatically} to aerial
+imagery~\cite{kellenberger2018detecting}, systems are trained on annotated animal imagery
+and judged by per-image accuracy, typically mean average precision (mAP). The survey problem
+is regarded as addressed once that number is high. This paper argues, and then measures,
+that the two problems come apart. A detector is rewarded for finding animals in
+\emph{frames}. A survey needs the number of distinct \emph{animals}. Between the two sits a
+chain of decisions that no detection metric scores: associating detections into tracks,
+deciding which tracks are real, and deciding which are duplicates of an animal already
+counted.
 
-This paper argues, and then measures, that the two problems come apart. A detector is
-rewarded for finding animals in \emph{frames}. A survey needs the number of distinct
-\emph{animals}. Between those sits a chain of decisions (associating detections into tracks,
-deciding which tracks are real, deciding which are duplicates of an animal already counted)
-that no detection metric scores.
-
-That distinction also fixes the yardstick we use throughout. A survey does not need a box
-placed precisely on an animal; it needs the animal noticed once. We therefore score the
-detection stage \emph{per animal}, over the whole of an animal's track, asking whether any
-frame produced a box touching it, and report it alongside the conventional per-box metrics
+That distinction fixes the yardstick we use throughout. A survey does not need a box placed
+precisely on an animal; it needs the animal noticed once. We therefore score the detection
+stage \emph{per animal}, over the whole of an animal's track, asking whether any frame
+produced a box touching it. We report this alongside the conventional per-box metrics
 rather than in place of them. Per-box mAP remains a valid measure of localization, but it
 answers a question a survey does not ask, and read as a survey metric it can place the
-difficulty in the wrong stage.
-
-Which stage limits a counting system is also not something to assume. In sonar fish counting,
-substituting a perfect detector recovers almost all of the counting error, so there detection
-is the binding constraint~\cite{kay2022caltech}. A thermal deer transect differs in ways that
-could move the constraint elsewhere: the animals are faint, but each is visible over many
-consecutive frames as the vehicle passes, which gives association and confirmation far more
-evidence to work with. Settling the question needs an instrument that attributes error to each
-stage separately, applied to data annotated at the level of individual animals.
+difficulty in the wrong stage. Which stage limits a counting system is not something to
+assume. In sonar fish counting, substituting a perfect detector recovers almost all of the
+counting error, so there detection is the binding constraint~\cite{kay2022caltech}. A
+thermal deer transect differs in ways that could move the constraint elsewhere. The animals
+are faint, but each is visible over many consecutive frames as the vehicle passes, which
+gives association and confirmation far more evidence to work with. Settling the question
+needs an instrument that attributes error to each stage separately, applied to data
+annotated at the level of individual animals.
 
 We study this on a corpus built for the purpose: 32 FLIR thermal road transects from four
 sites in Illinois, 521,930 frames at $640\times512$ and 60\,fps, with every individual deer
-annotated as a distinct track. Because one annotated track is one animal, the corpus supplies
-detection, tracking and count ground truth simultaneously, the property on which the
-decomposition below depends.
+annotated as a distinct track. Because one annotated track is one animal, the corpus
+supplies detection, tracking and count ground truth at once, which is the property the
+decomposition depends on. Our central instrument is a three-stage decomposition of counting
+error. For each ground-truth animal we ask three questions. Is it \reachedq, touched by at least one candidate track? Is it \primaryq, covered by some candidate better than that candidate covers any other animal, so that a one-count-per-track decision \emph{could} count it? And is it finally \countedq? The gaps between these three quantities attribute error to detection,
+to association and to confirmation, and \cref{sec:decomposition} states the decomposition
+formally.
 
-Our central instrument is a three-stage decomposition of counting error. For each
-ground-truth animal we ask whether it is \reachedq (touched by at least one candidate track),
-whether it is \primaryq (some candidate covers it better than it covers any other animal, so a
-one-count-per-track decision \emph{could} count it), and whether it is finally \countedq. The
-gaps between these three quantities attribute error to detection, to association and to
-confirmation respectively.
-
-With the loss localized, we test both remedies a practitioner would reach for. We enrich the candidate pool by lowering the detector's confidence threshold,
-removing the tracker's track-initialization gate, relaxing non-maximum suppression (NMS), and
-adding an appearance term to association. We then replace the rule-based confirmation stage
-with learned alternatives of increasing capacity, under three evaluation protocols. In each
-case the question is the same: does the count improve?
+With the loss localized, we test both remedies a practitioner would reach for. We enrich
+the candidate pool by lowering the detector's confidence threshold, removing the tracker's
+track-initialization gate, relaxing non-maximum suppression (NMS), and adding an appearance
+term to association. We then replace the rule-based confirmation stage with learned
+alternatives of increasing capacity, under three evaluation protocols. In each case the
+question is the same: does the count improve?
 
 The paper contributes three things. The first is the corpus: fully annotated thermal road
 transects with per-individual identity, which makes detection, tracking and counting
-evaluable against one set of annotations, released with the evaluation harness. The second is
-the decomposition, together with a held-out protocol that evaluates counting only on videos
-the detector never trained on. The third is a controlled test of where counting error arises
-and whether improving detection or confirmation reduces it. The remaining analyses (the
-detector benchmark, the matching-criterion analysis, the sensitivity of the confirmation
-rule, the limits of appearance matching at 27 pixels, and the transfer between sites) support
-or qualify these three.
+evaluable against one set of annotations, released with the evaluation harness. The second
+is the decomposition, together with a held-out protocol that evaluates counting only on
+videos the detector never trained on. The third is a controlled test of where counting
+error arises and whether improving detection or confirmation reduces it. The remaining
+analyses support or qualify these three: the detector benchmark, the matching-criterion
+analysis, the sensitivity of the confirmation rule, the limits of appearance matching at 27
+pixels, and the transfer between sites.

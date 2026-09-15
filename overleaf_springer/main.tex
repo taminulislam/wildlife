@@ -21,6 +21,7 @@
 %------------------------------------------------------------------
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
 \usepackage{xcolor}
 \usepackage{textcomp}
 \usepackage{booktabs}
@@ -45,6 +46,13 @@
 \Crefname{appendix}{Appendix}{Appendices}
 \crefname{equation}{Eq.}{Eqs.}
 \Crefname{equation}{Equation}{Equations}
+\crefname{proposition}{Proposition}{Propositions}
+\Crefname{proposition}{Proposition}{Propositions}
+
+% Propositions use the class's own theorem style; proofs come from amsthm.
+\theoremstyle{thmstyleone}
+\newtheorem{proposition}{Proposition}
+\newcommand{\ind}{\mathbf{1}}   % indicator function
 
 % The three quantities the paper is built around.
 \newcommand{\reachedq}{\textsc{reached}\xspace}

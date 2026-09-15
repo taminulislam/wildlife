@@ -1747,3 +1747,33 @@ double-blind review). Journal shortlist and the reasoning are in the 2026-09-11 
   under the storage quota. Until NCSA fixes the quota, commits are made there after rsyncing
   the project tree; the project's own `.git` still shows HEAD 9447487 and should be re-synced
   with `git fetch && git reset origin/main` once writes work again.
+
+## 14. Mathematics added, prose tightened, references audited (2026-09-14)
+Springer version only (mdpi_full_version/ untouched). Overleaf commit after this entry.
+- **Maths (Methods).** Eq. 1-3: track score, confirmation rule as indicator product, grid
+  search objective (378 cells). Eq. 4: Poisson-binomial count variance. Eq. 5: ECE (10
+  equal-count bins, as in calibration_quality.py) and Brier. Prop. 1 + proof: IoU under a
+  centre offset, IoU=(s-d)/(s+d), threshold form d <= s(1-t)/(1+t) (27 px: 9 px fails 0.50,
+  3.9 px fails 0.75). Prop. 2 + proof: per-video signed error = duplicates - misses
+  (D_v - M_v) and min(c_hat,N) = A + min(D,M); explains the 55 vs 47 (capped vs
+  identity-matched) gap as sum_v min(D_v,M_v) = 8 animals. Eq. 7: MAE/bias/capped fraction.
+  New 3.8 "Box Size as a Range Proxy": pinhole s = fL/r and Prop. 3 + proof, the s^-3
+  availability law (s^-2 strip variant) that 5.3's range test uses; anchor ratio 1.39 vs
+  1.40 predicted. Eq. 10: F_0.5. Nine references added, all Crossref-verified
+  (everingham2010pascal, zadrozny2002transforming, naeini2015obtaining,
+  brier1950verification, wilson1927probable, hong2013poisson, hartley2004multiple,
+  buckland2015distance, vanrijsbergen1979information).
+- **Reduction.** Body text 13,708 -> 13,308 words with the ~600 words of maths included
+  (prose alone cut by ~1,000). No table or figure removed; every number preserved
+  (multiset diff of numeric tokens old vs new: only merged repetitions). Sentences over 38
+  words: 44 -> 0; paragraphs under 45 words: none outside equation lead-ins. 44 pages.
+- **Citation audit** (separate agent, Crossref/arXiv/PMLR; docs/citation_audit_2026-09-14.md):
+  77 cited keys checked, 65 OK, 12 corrected: singh2020animal DOI pointed at an unrelated
+  paper; corcoran2019automated was a chimera of two Corcoran papers (now the 2019 koala
+  paper the table row describes); miele2020revisiting title missing "metric";
+  shuai2021confluence, jennelle2018applying, sapkota2025yoloreview, pickering2022divergent
+  missing authors; hidayatullah2025yolov8 and adam2025wildlifereid10k now cite the published
+  versions; kline2024integrating full title; ulhaq2021automated byline "Ulhaq" (text
+  updated); buckland2023wildlife article number. Text fixes from the audit: the NWD IoU
+  numbers in 2.2 were misattributed (1-px vs 4-px shifts), DINO/RT-DETR characterisation,
+  Guo et al. studied classifiers not detectors.

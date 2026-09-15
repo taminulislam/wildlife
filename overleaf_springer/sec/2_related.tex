@@ -2,194 +2,196 @@
 \label{sec:related}
 
 \subsection{Wildlife Survey from Imagery}
-
 \label{sec:rw:survey}
 
 Every field method for estimating abundance carries assumptions whose violation biases the
-result. Distance sampling fits a detection function to distances recorded along transects and
-extrapolates to density; the \emph{Distance} software implements conventional,
-multiple-covariate and mark--recapture engines, each relaxing progressively more assumptions,
-but even the most flexible still requires near-certain detection on the line, no responsive
-movement, and error-free distance measurement~\cite{thomas2010distance}. Buckland et
-al.~\cite{buckland2023wildlife} argue that camera, acoustic and spatial capture--recapture
-survey are displacing classical distance sampling faster than statistical ecology is adapting
-to them. For unmarked populations, N-mixture models estimate abundance from spatially
-replicated counts by treating site-level population size as a latent Poisson
-variable~\cite{royle2004nmixture}; spatial capture--recapture extends this to camera-trap
-encounters but requires individually identifiable animals~\cite{royle2009bayesian}, which
-thermal imagery at our resolution cannot supply. Iijima~\cite{iijima2020review} reviews the full range of abundance estimators available for unmarked populations and concludes that no single estimator is universally applicable. Recent work
-addresses specific biases: movement compensation corrects the detection inflation caused by
-animals encountering a moving observer~\cite{morgan2024wildlife}, a concern that applies
-directly to road transects, and roads used as transect lines violate distance sampling's
-assumption that animals are distributed uniformly with respect to the line, since animals
-may be attracted to or repelled by the road itself~\cite{diefenbach2025accounting}.
+result. Distance sampling fits a detection function to distances recorded along transects
+and extrapolates to density. The \emph{Distance} software implements conventional,
+multiple-covariate and mark--recapture engines, each relaxing more assumptions, but even the
+most flexible still requires near-certain detection on the line, no responsive movement and
+error-free distances~\cite{thomas2010distance}. Buckland et al.~\cite{buckland2023wildlife}
+argue that camera, acoustic and spatial capture--recapture surveys are displacing classical
+distance sampling faster than statistical ecology is adapting. For unmarked populations,
+N-mixture models treat site-level population size as a latent Poisson variable estimated
+from replicated counts~\cite{royle2004nmixture}. Spatial capture--recapture extends this to
+camera-trap encounters but requires individually identifiable
+animals~\cite{royle2009bayesian}, which thermal imagery at our resolution cannot supply.
+Iijima~\cite{iijima2020review} reviews the estimators available for unmarked populations
+and concludes that none is universally applicable. Two recent corrections apply directly
+to road transects. Movement compensation corrects the detection inflation caused by animals
+encountering a moving observer~\cite{morgan2024wildlife}. Animals may also be attracted to
+or repelled by the road itself, which violates the uniform-distribution
+assumption~\cite{diefenbach2025accounting}.
 
-Thermal cameras detect animals by emitted heat, enabling nocturnal survey where visual methods
-fail. Burke et al.~\cite{burke2019optimizing} identify the binding constraints: contrast loss
-as ground temperature approaches body temperature, atmospheric absorption, vegetation
-occlusion, and a requirement of roughly ten pixels on target for species identification, and
-their drone survey of riverine rabbits still needed ground confirmation of every sighting.
-Karp~\cite{karp2020detecting} measured a 36\% detection probability for hare leverets over 109
-handheld searches, with vegetation height dominating. Ul Haq et al.~\cite{ulhaq2021automated}
-showed that transfer learning partially compensates for poor spatial resolution in airborne
-thermal video, and Mowen et al.~\cite{mowen2022improving} classified animal poses from
-vehicle-mounted FLIR imagery at 82\% accuracy while noting that a single-city dataset limits
-generalisation. Reviews of remotely piloted survey~\cite{hyun2020remotely} and of monitoring
-methods for large mammals~\cite{prosekov2020methods} both conclude that thermal sensors detect
-homeothermic animals well but that automated species identification from thermal alone remains
-unreliable. McMahon et al.~\cite{mcmahon2021comparing} compared UAS thermal survey against
-pellet-group counts for white-tailed deer and obtained overlapping but very wide intervals,
-4--24 deer\,km$^{-2}$. Nazir and Kaleem~\cite{nazir2021advances} note that thermal-domain work
-lags the RGB domain in dataset scale and standardisation.
+Thermal cameras detect animals by emitted heat and so allow nocturnal survey where visual
+methods fail. Burke et al.~\cite{burke2019optimizing} identify the binding constraints:
+contrast loss as ground temperature approaches body temperature, atmospheric absorption,
+vegetation occlusion, and roughly ten pixels on target for species identification. Their
+drone survey of riverine rabbits still needed ground confirmation of every sighting.
+Karp~\cite{karp2020detecting} measured a 36\% detection probability for hare leverets over
+109 handheld searches, with vegetation height dominating. Ulhaq et
+al.~\cite{ulhaq2021automated} showed that transfer learning partly compensates for poor
+spatial resolution in airborne thermal video. Mowen et al.~\cite{mowen2022improving}
+classified animal poses from vehicle-mounted FLIR imagery at 82\% accuracy while noting that
+a single-city dataset limits generalisation. Reviews of remotely piloted
+survey~\cite{hyun2020remotely} and of monitoring methods for large
+mammals~\cite{prosekov2020methods} reach the same conclusion: thermal sensors detect
+homeothermic animals well, but automated species identification from thermal imagery alone
+remains unreliable. McMahon et al.~\cite{mcmahon2021comparing} compared UAS thermal survey
+against pellet-group counts for white-tailed deer and obtained overlapping but very wide
+intervals, 4--24 deer\,km$^{-2}$. They remain the closest published comparison for our
+species, and they report density rather than individual counts. Nazir and
+Kaleem~\cite{nazir2021advances} note that thermal work lags the RGB domain in dataset scale
+and standardisation.
 
+Aerial and underwater counting studies show the same reliance on per-frame evaluation.
 Brown et al.~\cite{brown2022automated} tested detection across ground sample distances from
 0.2 to 1.0\,m\,px$^{-1}$ and found that image detail, not network capacity, sets the limit.
 Infantes et al.~\cite{infantes2022automated} built an end-to-end pinniped survey from flight
-planning through orthomosaic to automatic body-size measurement.
-Kline et al.~\cite{kline2024integrating} tracked zebra and giraffe from an autonomous uncrewed aerial vehicle (UAV) but
-restricted analysis to herd centroids rather than individuals, and Mpouziotas et
-al.~\cite{mpouziotas2023automated} reached 91.3\% AP on drone bird footage evaluated per frame
-only. Kilfoil et al.~\cite{kilfoil2020using} found that both human and CNN counts of sea
-cucumbers underestimate at high density. Tarling et al.~\cite{tarling2022deep} applied density
+planning to automatic body-size measurement. Kline et al.~\cite{kline2024integrating}
+tracked zebra and giraffe from an autonomous uncrewed aerial vehicle (UAV) but analysed herd
+centroids rather than individuals, and Mpouziotas et al.~\cite{mpouziotas2023automated}
+reached 91.3\% AP on drone bird footage evaluated per frame only. Kilfoil et
+al.~\cite{kilfoil2020using} found that both human and CNN counts of sea cucumbers
+underestimate at high density. Tarling et al.~\cite{tarling2022deep} applied density
 regression with uncertainty quantification to sonar imagery of fish schools, using
 self-supervised pretraining to compensate for a small labelled set. Automated bird detection
 has also been evaluated for airport strike management~\cite{oviedo2024automatic}.
 
 Deep learning for camera traps was catalysed by Norouzzadeh et
 al.~\cite{norouzzadeh2018automatically}, who matched crowd-sourced labels on 3.2 million
-Snapshot Serengeti images, and by Beery et al.~\cite{beery2018recognition}, who showed that
-models trained at one camera location fail at unseen ones. Kellenberger et
-al.~\cite{kellenberger2018detecting} found the same failure across terrain in aerial survey.
-Singh et al.~\cite{singh2020animal} documented limited transfer from natural to man-made environments, and Beery et al.~\cite{beery2020synthetic} showed synthetic renders reduce error
-for rare classes only. Liu et al.~\cite{liu2023lote} released a twelve-year longitudinal video
-dataset and confirmed that web-image pretraining transfers only partially to camera-trap footage. Adam
-et al.~\cite{adam2025wildlifereid10k} designed a similarity-aware split for a
-re-identification benchmark specifically to prevent the visual-near-duplicate leakage that
-inflates reported accuracy, the same class of contamination our held-out protocol
-(\cref{sec:heldout}) is built to exclude. Throughout this literature the unit of analysis is
-the trigger event, and individual identity is assumed unknown unless the species carries
+Snapshot Serengeti images. Beery et al.~\cite{beery2018recognition} then showed that models
+trained at one camera location fail at unseen ones, and Kellenberger et
+al.~\cite{kellenberger2018detecting} found the same failure across terrain in aerial
+survey. Singh et al.~\cite{singh2020animal} documented limited transfer from natural to
+man-made environments, and Beery et al.~\cite{beery2020synthetic} showed that synthetic
+renders reduce error for rare classes only. Liu et al.~\cite{liu2023lote} released a
+twelve-year longitudinal video dataset and confirmed that web-image pretraining transfers
+only partially to camera-trap footage. Adam et al.~\cite{adam2025wildlifereid10k} designed a
+similarity-aware split for a re-identification benchmark to prevent the near-duplicate
+leakage that inflates reported accuracy, the same contamination our held-out protocol
+(\cref{sec:heldout}) excludes. Throughout this literature the unit of analysis is the
+trigger event, and individual identity is assumed unknown unless the species carries
 distinctive markings.
 
-For white-tailed deer specifically, whose management context the introduction sets out,
-McMahon et al.~\cite{mcmahon2021comparing} remain the closest published comparison for thermal
-survey, and they report density rather than individual counts.
-
 One absence runs through all of it. These methods treat imperfect detection as a parameter
-to be estimated, not as a sequence of pipeline stages whose losses can be separated:
-the abundance estimators model it as a detection function, the imaging studies evaluate per
-frame or per image, and the camera-trap literature takes the trigger event as its unit with
-identity assumed unknown. We found no thermal or camera-based wildlife study that annotates
-individual animals as distinct tracks across continuous video, and none that reports a
-distinct-individual count evaluated against per-individual ground truth. That is the gap this
-paper addresses. Its ground truth is itself subject to imperfect detection, since an annotated
-animal is one a reviewer could see in the footage, so the decomposition attributes the losses
-of an automated pipeline relative to what is visible in the video, not relative to the true
-number of animals present (\cref{sec:operating}).
+to be estimated, not as a sequence of pipeline stages whose losses can be separated. The
+abundance estimators model it as a detection function, the imaging studies evaluate per
+frame, and the camera-trap literature takes the trigger event as its unit. We found no
+thermal or camera-based wildlife study that annotates individual animals as distinct tracks
+across continuous video, and none that reports a distinct-individual count evaluated against
+per-individual ground truth. That is the gap this paper addresses. Its ground truth is
+itself subject to imperfect detection, since an annotated animal is one a reviewer could see
+in the footage. The decomposition therefore attributes the losses of an automated pipeline
+relative to what is visible in the video, not to the true number of animals present
+(\cref{sec:operating}).
 
 \subsection{Detection and Tracking at Small Scale}
-
 \label{sec:rw:detect}
 
-COCO defines small as area below $32^2$~\cite{lin2014coco}, but wildlife at range falls well
-under it. Wang et al.~\cite{wang2021nwd} show that IoU is catastrophically sensitive to
-localisation error at small scale: a one-pixel shift on a $6\times6$ box drops IoU from 0.53 to
-0.06, while the same shift on a $36\times36$ box drops it from 0.90 to 0.65. Their Normalized
-Wasserstein Distance models boxes as Gaussians and gains 6.7 AP on tiny-object benchmarks. Zhu
-et al.~\cite{zhu2021tph} added a transformer prediction head and attention to target the drone
-scale distribution. This analysis bears directly on our result that IoU$\geq$0.50 re-ranks
-detectors relative to a counting criterion (\cref{sec:choosing}): at 27 pixels the strict
-threshold discards detections a counting task would accept.
+COCO defines small objects as area below $32^2$~\cite{lin2014coco}, and wildlife at range
+falls well under it. Wang et al.~\cite{wang2021nwd} show that IoU is extremely sensitive to localisation error at small scale. A one-pixel
+diagonal shift drops the IoU of a $6\times6$ box to 0.53 and a four-pixel shift to 0.06,
+whereas a $36\times36$ box keeps 0.90 and 0.65 under the same shifts. Their
+Normalized Wasserstein Distance models boxes as Gaussians and gains 6.7 AP on tiny-object
+benchmarks. Zhu et al.~\cite{zhu2021tph} added a transformer prediction head and attention
+to target the drone scale distribution. \Cref{sec:criterion} makes the same sensitivity exact
+for our box size, and \cref{sec:choosing} shows its consequence: at 27 pixels the strict
+threshold discards detections a counting task would accept, and IoU$\geq$0.50 re-ranks the
+detectors relative to a counting criterion.
 
-Both one- and two-stage families appear in our benchmark: Faster R-CNN~\cite{ren2015faster} as
-the two-stage baseline, ATSS~\cite{zhang2020atss} and TOOD~\cite{feng2021tood} as
-anchor-assignment refinements, RTMDet~\cite{lyu2022rtmdet} as a modern convolutional one-stage
-design, and the YOLO line~\cite{redmon2016yolo,wang2024yolov9,wang2024yolov10} as the practical
-default. Query-based detectors, DETR~\cite{carion2020detr} and DINO~\cite{zhang2023dino}, converge slowly and struggle on very small objects, which RT-DETR~\cite{zhao2024rtdetr} targets
-directly. Recent reviews trace the YOLO line from v1 to v12~\cite{sapkota2025yoloreview} and
-compare v8 through v11 architecturally, noting that some blocks are unchanged across versions
-and that missing publications for several releases complicate
-reproducibility~\cite{hidayatullah2025yolov8}. Our animals are a median $29\times24$ pixels,
-squarely where these differences matter, and \cref{sec:detection} reports how each family
-transfers under identical preprocessing and splits, a comparison the literature rarely
-offers, because each paper evaluates on its own data and augmentation pipeline.
+Both one- and two-stage families appear in our benchmark: Faster R-CNN~\cite{ren2015faster}
+as the two-stage baseline, ATSS~\cite{zhang2020atss} and TOOD~\cite{feng2021tood} as
+anchor-assignment refinements, RTMDet~\cite{lyu2022rtmdet} as a modern convolutional
+one-stage design, and the YOLO line~\cite{redmon2016yolo,wang2024yolov9,wang2024yolov10} as
+the practical default. Query-based detectors struggle on very small objects: DETR~\cite{carion2020detr}
+also converges slowly, DINO~\cite{zhang2023dino} repairs the convergence, and
+RT-DETR~\cite{zhao2024rtdetr} brings the family to real-time inference. Recent reviews trace the YOLO line from v1
+to v12~\cite{sapkota2025yoloreview} and compare v8 through v11 architecturally, noting that
+some blocks are unchanged across versions and that missing publications for several
+releases complicate reproducibility~\cite{hidayatullah2025yolov8}. Our animals are a median
+$29\times24$ pixels, squarely where these differences matter. \Cref{sec:detection} reports
+how each family transfers under identical preprocessing and splits.
 
 Tracking-by-detection dominates. SORT~\cite{bewley2016sort} and
-DeepSORT~\cite{wojke2017deepsort} established the Kalman-plus-association template;
-ByteTrack~\cite{zhang2022bytetrack} showed that associating low-confidence detections recovers
-substantial recall; BoT-SORT~\cite{aharon2022botsort} added camera-motion compensation and an
-appearance term. Our camera moves at 25--90\,km\,h$^{-1}$, so global motion compensation is not
-optional; we use BoT-SORT with sparse optical-flow compensation and ablate its appearance term
-in \cref{sec:inversion}. Evaluation has moved toward higher-order tracking accuracy (HOTA), which separates detection from
-association accuracy, and Valmadre et al.~\cite{valmadre2021local} argue that global metrics
-mask local failures. MOTRv2~\cite{zhang2023motrv2} shows that even end-to-end transformer
-trackers benefit from strong detection priors. Our \reachedq/\primaryq/\countedq decomposition
-parallels the detection/association split but adds a third axis, confirmation, that these
-metrics do not measure. The distinction matters: Multi-object tracking benchmarks score identity
-\emph{preservation}, not whether an object should be counted at all.
+DeepSORT~\cite{wojke2017deepsort} established the Kalman-plus-association template,
+ByteTrack~\cite{zhang2022bytetrack} showed that associating low-confidence detections
+recovers substantial recall, and BoT-SORT~\cite{aharon2022botsort} added camera-motion
+compensation and an appearance term. Our camera moves at 25--90\,km\,h$^{-1}$, so global
+motion compensation is not optional. We use BoT-SORT with sparse optical-flow compensation
+and ablate its appearance term in \cref{sec:inversion}. Evaluation has moved toward
+higher-order tracking accuracy (HOTA), which separates detection from association accuracy,
+and Valmadre et al.~\cite{valmadre2021local} argue that global metrics mask local failures.
+MOTRv2~\cite{zhang2023motrv2} shows that even end-to-end transformer trackers benefit from
+strong detection priors. Our \reachedq/\primaryq/\countedq decomposition parallels the
+detection/association split but adds a third axis, confirmation, that these metrics do not
+measure. Multi-object tracking benchmarks score identity \emph{preservation}, not whether an
+object should be counted at all.
 
 \subsection{Counting, Identity and Evaluation}
-
 \label{sec:rw:counting}
 
 Density regression, pioneered by MCNN~\cite{zhang2016single}, estimates per-image counts
-without detection, but the estimate is per frame and does not deduplicate across frames. That
-suits dense scenes with hundreds of overlapping instances; ours is the opposite regime, sparse
-instances each of which must be resolved as an individual because survey statistics are
-computed per animal. Video-level counting is structurally different: it requires detection,
-association, and a rule that decides whether an object is \emph{new}. Dolokov et
-al.~\cite{dolokov2023upper} exploit a known maximum animal count to reduce identity switches in
-laboratory mice, but report tracking quality rather than a unique-individual count. Our
-contribution is to show that in the sparse regime the detection-then-count framing is not wrong
-so much as \emph{mis-attributed}: the detector is near-saturated, and the accuracy a
+without detection, but the estimate is per frame and does not deduplicate across frames.
+That suits dense scenes with hundreds of overlapping instances. Ours is the opposite regime:
+sparse instances, each of which must be resolved as an individual because survey statistics
+are computed per animal. Video-level counting is structurally different, since it requires
+detection, association, and a rule that decides whether an object is \emph{new}. Dolokov et
+al.~\cite{dolokov2023upper} exploit a known maximum animal count to reduce identity switches
+in laboratory mice, but report tracking quality rather than a unique-individual count. Our
+contribution is to show that in the sparse regime the detection-then-count framing is not wrong so much as \emph{mis-attributed}. The detector is near-saturated, and the accuracy a
 practitioner would try to buy with a better backbone is lost downstream.
 
 Individual identification from appearance is established for species with high-contrast
-markings: photo-identification networks reach high accuracy on coat
+markings. Photo-identification networks reach high accuracy on coat
 patterns~\cite{miele2020revisiting}, deformable transformers reach 85\% mAP on cross-camera
 tiger data~\cite{li2024redeformtr}, and WildlifeReID-10k spans 33 species and 10{,}000
 identities~\cite{adam2025wildlifereid10k}. All operate on high-resolution crops of
-distinctively patterned animals. \Cref{sec:reid} tests whether this transfers and finds that it
-does not: at a median 27-pixel animal, appearance carries less identity signal than a
+distinctively patterned animals. \Cref{sec:reid} tests whether this transfers and finds that
+it does not: at a median 27-pixel animal, appearance carries less identity signal than a
 two-number size descriptor, and an ImageNet backbone scores \emph{below} plain geometry. We
 therefore make no individual-identification claim and do not use appearance matching in the
 reported system.
 
-Nguyen et al.~\cite{nguyen2023trustworthy} show that detection rankings fluctuate with the IoU
-threshold and propose formal requirements that average precision does not satisfy. LRP
+Nguyen et al.~\cite{nguyen2023trustworthy} show that detection rankings fluctuate with the
+IoU threshold and propose formal requirements that average precision does not satisfy. LRP
 Error~\cite{oksuz2022lrp} separates localisation from classification quality and yields a
 deployment threshold. Cai and Vasconcelos~\cite{cai2021cascade} document the high-quality
 detection paradox, where raising the training IoU threshold causes overfitting as positives
-vanish; Boundary IoU~\cite{cheng2021boundary} shows that mask IoU over-penalises small objects.
-Our finding that IoU$\geq$0.50 re-ranks seven of eleven detectors by two or more places, and
-that the best AP$_{50}$ model counts fewer animals than the one we adopt, instantiates exactly
-the concern Nguyen et al.\ raise. On the calibration side, Rahman et
+vanish, and Boundary IoU~\cite{cheng2021boundary} shows that mask IoU over-penalises small
+objects. Our finding that IoU$\geq$0.50 re-ranks seven of eleven detectors by two or more
+places, and that the best AP$_{50}$ model counts fewer animals than the one we adopt,
+instantiates exactly the concern Nguyen et al.\ raise. On the calibration side, Rahman et
 al.~\cite{rahman2021perframe} predict per-frame mAP from internal features to monitor
-deployment without ground truth, and Tarling et al.~\cite{tarling2022deep} show that
-uncertainty quantification improves both training and downstream biological decisions, the
-role our calibrated per-track posterior plays in \cref{sec:calibration}.
+deployment without ground truth. Tarling et al.~\cite{tarling2022deep} show that
+uncertainty quantification improves both training and downstream biological decisions,
+which is the role our calibrated per-track posterior plays in \cref{sec:calibration}.
 \label{sec:othermodalities}
 
 The closest methodological comparison is the Caltech Fish Counting
-benchmark~\cite{kay2022caltech}, which poses the same problem in sonar: count distinct individuals in continuous video, not detections per frame. Its conclusion is the opposite of
-ours: substituting a perfect detector recovers almost all of the counting error, so in that
-setting detection is the binding constraint. We take the contrast seriously rather than
-treating our result as universal. Sonar imagery has a low signal-to-noise ratio and the reported failures are
-generalization failures of detection across deployments, whereas a thermal deer at 27 pixels
-is faint but consistently present, and a vehicle transect gives every animal tens to hundreds
-of frames of visibility with strong ego-motion cues for association. What generalizes from
-this paper is therefore not ``detection is solved'' but the \emph{instrument}: a staged
-decomposition that reports which stage binds, so that a practitioner in a new modality can
-measure rather than assume. Our \cref{sec:loso} results reinforce the point, since detection
-recovers some of its lost ground as a bottleneck once sites change.
+benchmark~\cite{kay2022caltech}, which poses the same problem in sonar: count distinct
+individuals in continuous video, not detections per frame. Its conclusion is the opposite of
+ours. Substituting a perfect detector recovers almost all of the counting error, so in that
+setting detection is the binding constraint. Sonar imagery has a low signal-to-noise ratio, and the
+reported failures are generalization failures of detection across deployments. A thermal
+deer at 27 pixels is faint but consistently present, and a vehicle transect gives every
+animal tens to hundreds of frames of visibility with strong ego-motion cues for association.
+What generalizes from this paper is therefore not ``detection is solved'' but the
+\emph{instrument}: a staged decomposition that reports which stage binds, so that a
+practitioner in a new modality can measure rather than assume. \Cref{sec:loso} reinforces
+the point, since detection recovers some ground as a bottleneck once sites change.
 
 That framing also identifies the literature our confirmation stage should be read against.
-Duplicate suppression at the detection level is a mature topic: Soft-NMS re-scores rather than discards overlapping boxes~\cite{bodla2017softnms}, and Confluence replaces the IoU criterion entirely with a proximity measure that behaves better on small objects~\cite{shuai2021confluence}. All of it, however, operates \emph{within} a frame. The
-duplicates that limit counting here are between \emph{tracks}, separated in time, on the same
-animal; \cref{sec:nms} tests whether the frame-level tools reach that far. Calibration is the
-other relevant thread: modern detectors are systematically overconfident~\cite{guo2017calibration},
-which is why \cref{sec:calibration} reports a calibrated per-track posterior rather than a raw
-score, and why \cref{sec:loso} finds an absolute score threshold does not survive a change of
-site.
+Duplicate suppression at the detection level is mature: Soft-NMS re-scores rather than
+discards overlapping boxes~\cite{bodla2017softnms}, and Confluence replaces the IoU
+criterion with a proximity measure that behaves better on small
+objects~\cite{shuai2021confluence}. All of it operates \emph{within} a frame. The duplicates
+that limit counting here are between \emph{tracks}, separated in time, on the same animal,
+and \cref{sec:nms} tests whether the frame-level tools reach that far. Calibration is the
+other relevant thread. Modern neural networks are systematically
+overconfident~\cite{guo2017calibration}, which is why \cref{sec:calibration} reports a
+calibrated per-track posterior rather than a raw score, and why \cref{sec:loso} finds that
+an absolute score threshold does not survive a change of site.
 
 \subsection{Positioning}
 
@@ -206,7 +208,7 @@ not report the quantity.\label{tab:related}}
 \midrule
 Burke 2019~\cite{burke2019optimizing} & Thermal & UAV & Rabbit & No & No & No & n/r \\
 Karp 2020~\cite{karp2020detecting} & Thermal & Handheld & Hare & No & No & No & n/r \\
-Ul Haq 2021~\cite{ulhaq2021automated} & Thermal & Aircraft & Multiple & No & Yes & No & n/r \\
+Ulhaq 2021~\cite{ulhaq2021automated} & Thermal & Aircraft & Multiple & No & Yes & No & n/r \\
 McMahon 2021~\cite{mcmahon2021comparing} & Thermal & UAV & W.\ deer & No & No & Density & n/r \\
 Corcoran 2019~\cite{corcoran2019automated} & Thermal & UAV & Koala & No & No & No & n/r \\
 Mowen 2022~\cite{mowen2022improving} & Thermal & Vehicle & Multiple & No & Yes & No & n/r \\
@@ -225,23 +227,21 @@ Dolokov 2023~\cite{dolokov2023upper} & RGB & Overhead & Mice & Yes & Yes & No & 
 \end{tabularx}
 \end{table}
 
-\Cref{tab:related} makes the gap specific rather than asserted. Its ``per-individual ID''
-column asks whether each animal is annotated as its own track rather than as anonymous
-per-frame boxes; the last two columns are
-the ones that isolate the gap, namely whether a count of distinct animals is reported end to
-end and whether training and evaluation are separated by video or site rather than by frame. Thermal wildlife datasets with
-per-individual track identity over continuous video are essentially absent: existing thermal
-work annotates per-frame detections or static images, and the RGB video datasets that do carry
-individual identity are either photo-identification collections of still
-crops~\cite{adam2025wildlifereid10k} or controlled laboratory settings with a known, fixed
-number of animals~\cite{dolokov2023upper} rather than open-field transects of unknown
-population. Counting is nearly always evaluated as detection accuracy or per-image density
-rather than as distinct-individual accuracy; we found no prior work reporting whether each real
-animal was counted exactly once across a video. Train--test separation by video or site is
-frequently unclear in the thermal and aerial literature, and our own measurement quantifies what that costs: evaluating on all 32 videos rather than the 13 held out inflates coverage
-by 15.5 points, from 66.3\% to 81.8\% (\cref{tab:leak}). Most distinctively, no prior work
-isolates \emph{which stage} of a detect--track--confirm pipeline loses animals. The literature
-treats detection quality as the binding constraint; our decomposition shows it is not, and that each richer candidate pool we built makes the final count worse. The
-closest conceptual parallel is the detection/association split within HOTA, which measures
-identity preservation but not whether an object should be counted at all, a different
-question when the output is a population tally rather than a surveillance feed.
+\Cref{tab:related} makes the gap specific. Its ``per-individual ID'' column asks whether
+each animal is annotated as its own track rather than as anonymous per-frame boxes. The last
+two columns isolate the gap: whether a count of distinct animals is reported end to end, and
+whether training and evaluation are separated by video or site rather than by frame. Thermal
+datasets with per-individual track identity over continuous video are essentially absent.
+Existing thermal work annotates per-frame detections or static images, and the RGB video
+datasets that carry individual identity are either photo-identification collections of
+still crops~\cite{adam2025wildlifereid10k} or laboratory settings with a known number of
+animals~\cite{dolokov2023upper}. Train--test
+separation by video or site is frequently unclear in the thermal and aerial literature. Our
+own measurement quantifies what that costs: evaluating on all 32 videos rather than the 13
+held out inflates coverage by 15.5 points, from 66.3\% to 81.8\% (\cref{tab:leak}). Most
+distinctively, no prior work isolates \emph{which stage} of a detect--track--confirm
+pipeline loses animals. The literature treats detection quality as the binding constraint;
+our decomposition shows that it is not here, and that each richer candidate pool we built
+made the final count worse. The closest conceptual parallel is the detection/association
+split within HOTA, which measures identity preservation but not whether an object should be
+counted at all.
