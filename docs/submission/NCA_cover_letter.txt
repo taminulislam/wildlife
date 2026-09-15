@@ -1,0 +1,28 @@
+Cover letter for submission to Neural Computing and Applications
+
+Dear Editor,
+
+We submit "Automated Counting of White-Tailed Deer in Vehicle-Mounted Thermal Video: Detector
+Benchmarking and a Staged Error Decomposition" for consideration as an original article in Neural
+Computing and Applications.
+
+The paper asks whether detection accuracy predicts counting accuracy when a deep-learning pipeline
+counts animals in thermal road-transect video. On a new corpus of 32 fully annotated transects with
+236 individually tracked white-tailed deer, we benchmark eleven detectors and decompose the counting
+error of an end-to-end pipeline into detection, association and confirmation. Detection is close to
+solved once scored per animal, while every improvement to the candidate pool makes the final count
+worse, and learned confirmation stages lose to a three-parameter rule. We show why, formally and
+empirically, and give the operating point an abundance survey should use instead of the
+minimum-error one.
+
+The manuscript has not been published and is not under consideration elsewhere. No part of it has
+appeared in a conference or preprint. The corpus, annotations and evaluation code will be deposited
+in Zenodo on acceptance. All authors approved the submission and have no competing interests. The
+study was observational, recorded from public roads, and required no ethics approval.
+
+We have prepared the manuscript for double-blind review and upload the title page separately.
+
+Yours sincerely,
+Taminul Islam (corresponding author), on behalf of all authors
+School of Computing, Southern Illinois University, Carbondale, IL 62901, USA
+taminul.islam@siu.edu
