@@ -21,8 +21,8 @@ Guidelines checked 2026-09-15 at https://link.springer.com/journal/521/submissio
   (checked by the package script). The study area (southern Illinois) stays in the text; a study area is
   not an author identifier.
 - Abstract 204 words (limit 150 to 250). Keywords 6 (limit 4 to 6). Numbered references.
-- Declarations present (title page and the `\blindfalse` build): Funding (Federal Aid Wildlife
-  Restoration Fund W87R), Competing interests, Ethics approval, Consent (not applicable), Data
+- Declarations present (title page and the `\blindfalse` build): Funding (U.S. Fish and Wildlife Service, Federal Aid in Wildlife Restoration Program via the Illinois
+  Department of Natural Resources, project W-87-R; funder registry IDs 10.13039/100000202 and 10.13039/100004887), Competing interests, Ethics approval, Consent (not applicable), Data
   availability, Code availability, Author contributions, Acknowledgements.
 - No page limit. Current length: 44 pages single column, about 13,300 words of body text.
 

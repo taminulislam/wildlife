@@ -1791,3 +1791,10 @@ Springer version only (mdpi_full_version/ untouched). Overleaf commit after this
   `src/viz/evidence_figure.py` (1682x636 px, 379 dpi at its 112.7 mm print width; was 190 dpi).
   Same frames and confidences as before. All other raster figures were already >= 430 dpi.
 - Blinded PDF: 44 pages, fonts embedded, no /Author metadata, no author name or siu.edu string.
+
+- **Funding statement (2026-09-15):** now names the funder: U.S. Fish and Wildlife Service, Federal Aid in
+  Wildlife Restoration Program, administered by IDNR, project W-87-R (funder registry IDs 10.13039/100000202,
+  10.13039/100004887). Updated in main.tex, title_page.tex, the submission package and the dataset card.
+- **Dataset staging (2026-09-15):** /projects/bgte/tislam6/TRACT_hf, 15 GB, 37,905 files: 32 audio-stripped
+  videos (5.8 GB, frame counts verified), detector split yolo_v3 (8.6 GB, byte-identical), CVAT XML +
+  tracks.csv/counts.csv, splits, README dataset card, LICENSE (CC BY 4.0, to confirm), MANIFEST.sha256.
