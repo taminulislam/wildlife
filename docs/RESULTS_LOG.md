@@ -1798,3 +1798,9 @@ Springer version only (mdpi_full_version/ untouched). Overleaf commit after this
 - **Dataset staging (2026-09-15):** /projects/bgte/tislam6/TRACT_hf, 15 GB, 37,905 files: 32 audio-stripped
   videos (5.8 GB, frame counts verified), detector split yolo_v3 (8.6 GB, byte-identical), CVAT XML +
   tracks.csv/counts.csv, splits, README dataset card, LICENSE (CC BY 4.0, to confirm), MANIFEST.sha256.
+
+## 16. Project overview deck (2026-09-28)
+`docs/presentation/TRACT_project_overview.pptx` (6 slides, 16:9, speaker notes, native editable charts) and a PDF
+copy, built by `docs/presentation/build_deck.js` (pptxgenjs; `node build_deck.js <figures_dir> <out.pptx>`).
+Numbers come from the manuscript tables and results/counting_eval/loso_counting.json; no new result.
+Rendering check used a LibreOffice AppImage extracted to /u/tislam6/lo.
