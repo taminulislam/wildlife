@@ -1804,3 +1804,11 @@ Springer version only (mdpi_full_version/ untouched). Overleaf commit after this
 copy, built by `docs/presentation/build_deck.js` (pptxgenjs; `node build_deck.js <figures_dir> <out.pptx>`).
 Numbers come from the manuscript tables and results/counting_eval/loso_counting.json; no new result.
 Rendering check used a LibreOffice AppImage extracted to /u/tislam6/lo.
+
+- **Lab-talk deck (2026-09-28):** `docs/presentation/TRACT_lab_talk.pptx`, 17 slides for the wildlife lab: problem, data,
+  pipeline overview, four step slides drawn from one real held-out scene (GolfDr_SHB frame 3652; `make_step_images.py`
+  reads boxes, confidences and track IDs from the pool C track table, `steps/scene_tracks.csv`), measurement,
+  two output slides, five result slides (native charts), takeaways and next steps. Full speaking script in the
+  notes of every slide and in `TRACT_lab_talk_script.docx` (about 3,200 words). In that scene 6 deer are annotated,
+  5 tracks form, 4 are accepted; track 246 (23 detections, top-5 mean 0.602) is a real annotated deer the rule rejects.
+  Build: `NODE_PATH=/u/tislam6/TRACT_presentation/node_modules node build_deck.js <figures> <steps> <out.pptx> <script.md>`.
